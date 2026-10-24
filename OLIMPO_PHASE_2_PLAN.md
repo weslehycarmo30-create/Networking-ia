@@ -30,6 +30,8 @@ Evoluir o protótipo demonstrativo para um piloto comunitário seguro, começand
 
 **Trabalho:** substituir simulação de respostas por ações autenticadas do destinatário; decidir notificações; criar denúncia, bloqueio, limite de frequência, moderação, auditoria e resposta a abuso. Implementar presença apenas com política de retenção e estados definidos.
 
+O protótipo OLIMPO-019 inclui somente preferências locais para categorias de avisos fictícios; isso não define canal, consentimento de produção, opt-out de e-mail/push ou entrega por servidor.
+
 **Dependência:** identidade, autorização e modelo de dados. Mensagens privadas permanecem fora até avaliação e decisão explícitas.
 
 **Saída:** transições de convite e acesso a sala são validadas no servidor; usuários conseguem denunciar/bloquear conforme política; há procedimento de resposta a incidentes.

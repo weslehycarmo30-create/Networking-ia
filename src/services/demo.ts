@@ -1,5 +1,5 @@
-import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, respondToConnection } from '../domain/rules'
-import type { Avatar, Connection, DemoNotification, DemoReport, EventRegistration, Message, Presence, Profile, TerritoryId } from '../domain/models'
+import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
+import type { Avatar, Connection, DemoNotification, DemoReport, EventRegistration, Message, NotificationPreferences, Presence, Profile, TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import { demoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
@@ -16,7 +16,8 @@ export function createDemoServices(): OlimpoServices {
   let connections: Connection[] = loaded.state?.connections.map((connection) => ({ ...connection })) ?? createInitialConnections()
   let reports: DemoReport[] = loaded.state?.reports.map((report) => ({ ...report })) ?? []
   let eventRegistrations: EventRegistration[] = loaded.state?.eventRegistrations.map((registration) => ({ ...registration })) ?? []
-  let notifications: DemoNotification[] = loaded.state?.notifications.map((notification) => ({ ...notification })) ?? createInitialNotifications(connections)
+  let notificationPreferences: NotificationPreferences = { ...loaded.state?.notificationPreferences ?? defaultNotificationPreferences }
+  let notifications: DemoNotification[] = loaded.state?.notifications.map((notification) => ({ ...notification })) ?? createInitialNotifications(connections, notificationPreferences)
   let currentRoomId: string | undefined
   const findProfile = (profileId: string): Profile | undefined => profileId === currentProfile.id
     ? currentProfile
@@ -34,10 +35,11 @@ export function createDemoServices(): OlimpoServices {
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
 
   function saveState() {
-    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports, eventRegistrations, notifications })
+    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports, eventRegistrations, notifications, notificationPreferences })
   }
 
   function recordEventNotification(eventId: string, action: 'registered' | 'cancelled') {
+    if (!notificationPreferences.eventActivity) return
     notifications.push({
       id: `demo-notification-${crypto.randomUUID()}`,
       kind: 'event_registration',
@@ -212,6 +214,13 @@ export function createDemoServices(): OlimpoServices {
     notifications: {
       list: () => [...notifications].sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt)).map((notification) => ({ ...notification })),
       unreadCount: () => notifications.filter((notification) => !notification.readAt).length,
+      getPreferences: () => ({ ...notificationPreferences }),
+      setPreference: (key, enabled) => {
+        notificationPreferences = { ...notificationPreferences, [key]: enabled }
+        if (!enabled) notifications = notifications.filter((notification) => notificationPreferenceEnabled(notificationPreferences, notification.kind))
+        saveState()
+        return { ...notificationPreferences }
+      },
       markAsRead: (notificationId) => {
         const index = notifications.findIndex((notification) => notification.id === notificationId)
         if (index < 0) throw new Error('Esta notificacao demonstrativa nao existe.')
@@ -240,6 +249,7 @@ export function createDemoServices(): OlimpoServices {
         reports = []
         eventRegistrations = []
         notifications = []
+        notificationPreferences = { ...defaultNotificationPreferences }
         saveState()
         return storage.getStatus()
       },
@@ -254,8 +264,8 @@ function createInitialConnections(): Connection[] {
   ]
 }
 
-function createInitialNotifications(connections: Connection[]): DemoNotification[] {
-  return connections.flatMap((connection): DemoNotification[] => connection.status === 'pending' && connection.toProfileId === demoProfile.id
+function createInitialNotifications(connections: Connection[], preferences: NotificationPreferences): DemoNotification[] {
+  return preferences.connectionInvites ? connections.flatMap((connection): DemoNotification[] => connection.status === 'pending' && connection.toProfileId === demoProfile.id
     ? [{ id: `invite-${connection.id}`, kind: 'connection_invite', connectionId: connection.id, profileId: connection.fromProfileId, createdAt: connection.createdAt }]
-    : [])
+    : []) : []
 }

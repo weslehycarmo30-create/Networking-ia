@@ -1,4 +1,4 @@
-import type { Avatar, CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, GamificationProgress, Message, Presence, Profile, ReportReason, ReportTargetType, TerritoryId, TerritoryRoom } from '../domain/models'
+import type { Avatar, CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, GamificationProgress, Message, NotificationPreferences, Presence, Profile, ReportReason, ReportTargetType, TerritoryId, TerritoryRoom } from '../domain/models'
 import type { DemoPersistenceStatus } from './demo-storage'
 
 export interface RoomService {
@@ -52,6 +52,8 @@ export interface CommunityEventService {
 export interface NotificationService {
   list(): DemoNotification[]
   unreadCount(): number
+  getPreferences(): NotificationPreferences
+  setPreference(key: keyof NotificationPreferences, enabled: boolean): NotificationPreferences
   markAsRead(notificationId: DemoNotification['id']): DemoNotification
   markAllAsRead(): number
 }

@@ -53,6 +53,8 @@
 | P1 | Evolução visual do 3D, mantendo chunk sob demanda e alternativa 2D | Pesquisa de uso, orçamento de performance |
 | P1 | Novos territórios ou eventos | Dados de uso e curadoria comunitária |
 
+**OLIMPO-019 — parcela demonstrativa concluída:** este item estava pendente: o contrato `NotificationService` só expunha lista/leitura e a versão `4` do payload não continha preferências. A central local agora permite optar por categorias de convite e atividade de encontros. A preferência fica no estado namespaced versionado; desativar remove avisos existentes da categoria e evita novos registros locais. Isso não entrega notificações reais nem satisfaz dependências de canal, consentimento ou orçamento para produção.
+
 Mensagens privadas não fazem parte deste backlog entregue; sua necessidade, segurança e impacto de moderação ainda não foram avaliados.
 
 ## Critério geral de conclusão de item

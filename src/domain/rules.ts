@@ -1,6 +1,12 @@
-import type { CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, Message, Profile, ReportReason, ReportTargetType } from './models'
+import type { CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, Message, NotificationPreferences, Profile, ReportReason, ReportTargetType } from './models'
 
 const reportReasons = new Set<ReportReason>(['spam', 'harassment', 'inappropriate', 'scam', 'other'])
+
+export const defaultNotificationPreferences: NotificationPreferences = { connectionInvites: true, eventActivity: true }
+
+export function notificationPreferenceEnabled(preferences: NotificationPreferences, kind: DemoNotification['kind']): boolean {
+  return kind === 'connection_invite' ? preferences.connectionInvites : preferences.eventActivity
+}
 
 export function createDemoReport(input: {
   id: string

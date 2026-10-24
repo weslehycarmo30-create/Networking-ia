@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CommunityEvent, DemoNotification, Profile } from '../domain/models'
+import type { CommunityEvent, DemoNotification, NotificationPreferences, Profile } from '../domain/models'
 import type { NotificationService } from '../services/contracts'
 import type { DemoPersistenceStatus } from '../services/demo-storage'
 
@@ -20,8 +20,22 @@ function notificationTitle(notification: DemoNotification) {
 
 export default function NotificationCenter({ service, profiles, events, getPersistenceStatus, onChange, onFeedback, onOpenProfile, onOpenEvent }: NotificationCenterProps) {
   const [open, setOpen] = useState(false)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
   const notifications = service.list()
   const unreadCount = service.unreadCount()
+  const preferences = service.getPreferences()
+
+  function setPreference(key: keyof NotificationPreferences, enabled: boolean) {
+    try {
+      service.setPreference(key, enabled)
+      onChange()
+      const category = key === 'connectionInvites' ? 'convites de conexão' : 'atividade de encontros'
+      const action = enabled ? `Avisos locais de ${category} ativados` : `Opt-out de ${category} aplicado; avisos existentes foram removidos e novos avisos locais serão omitidos`
+      onFeedback(getPersistenceStatus().persistent ? `${action} nesta demonstração.` : `${action} apenas nesta sessão, pois o armazenamento local está indisponível.`)
+    } catch (error) {
+      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar esta preferência demonstrativa.')
+    }
+  }
 
   function markRead(notificationId: string) {
     try {
@@ -64,7 +78,14 @@ export default function NotificationCenter({ service, profiles, events, getPersi
     </button>
     {open && <section className="notification-panel" id="notification-panel" aria-label="Central de notificações demonstrativas">
       <div className="notification-panel-heading"><div><b>Notificações</b><small>{unreadCount} não lidas</small></div><button type="button" className="notification-close" onClick={() => setOpen(false)} aria-label="Fechar notificações">×</button></div>
-      <p className="notification-local-notice">Demonstração local: itens fictícios desta sessão no navegador. Nenhum aviso chega de outros usuários ou servidores.</p>
+      <p className="notification-local-notice">Demonstração local: itens fictícios do estado deste navegador. Nenhum aviso chega de outros usuários ou servidores.</p>
+      <button type="button" className="notification-settings-trigger" aria-expanded={preferencesOpen} aria-controls={preferencesOpen ? 'notification-preferences' : undefined} onClick={() => setPreferencesOpen((value) => !value)}>{preferencesOpen ? 'Ocultar preferências locais' : 'Preferências locais'}</button>
+      {preferencesOpen && <fieldset className="notification-preferences" id="notification-preferences">
+        <legend>Avisos nesta demonstração</legend>
+        <p>Desativar uma categoria remove os avisos locais existentes dela e impede novos registros dessa categoria. Isso não altera comunicações reais.</p>
+        <label><input type="checkbox" checked={preferences.connectionInvites} onChange={(event) => setPreference('connectionInvites', event.target.checked)} /> Convites fictícios de conexão</label>
+        <label><input type="checkbox" checked={preferences.eventActivity} onChange={(event) => setPreference('eventActivity', event.target.checked)} /> Atividade local de encontros</label>
+      </fieldset>}
       <button type="button" className="notification-read-all" onClick={markAllRead} disabled={unreadCount === 0}>Marcar todas como lidas</button>
       {notifications.length === 0 ? <p className="notification-empty" role="status">Nenhuma notificação demonstrativa por enquanto.</p> : <ul className="notification-list">
         {notifications.map((notification) => {

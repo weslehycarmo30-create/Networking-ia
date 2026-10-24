@@ -107,3 +107,8 @@ export type DemoNotification =
     createdAt: string
     readAt?: string
   }
+
+export type NotificationPreferences = {
+  connectionInvites: boolean
+  eventActivity: boolean
+}

@@ -1,9 +1,10 @@
-import type { Avatar, Connection, CommunityEvent, DemoNotification, DemoReport, EventRegistration, Message, ReportReason } from '../domain/models'
+import type { Avatar, Connection, CommunityEvent, DemoNotification, DemoReport, EventRegistration, Message, NotificationPreferences, ReportReason } from '../domain/models'
+import { defaultNotificationPreferences, notificationPreferenceEnabled } from '../domain/rules'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from '../data/demo'
 import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 4 as const
+export const DEMO_STATE_VERSION = 5 as const
 
 export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
@@ -13,6 +14,7 @@ export type PersistedDemoState = {
   reports: DemoReport[]
   eventRegistrations: EventRegistration[]
   notifications: DemoNotification[]
+  notificationPreferences: NotificationPreferences
 }
 
 export type DemoPersistenceStatus = {
@@ -118,8 +120,13 @@ function initialInviteNotifications(connections: Connection[]): DemoNotification
     : [])
 }
 
+function validateNotificationPreferences(value: unknown): NotificationPreferences | undefined {
+  if (!isRecord(value) || typeof value.connectionInvites !== 'boolean' || typeof value.eventActivity !== 'boolean') return undefined
+  return { connectionInvites: value.connectionInvites, eventActivity: value.eventActivity }
+}
+
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
-  if (!isRecord(value) || (value.version !== 1 && value.version !== 2 && value.version !== 3 && value.version !== DEMO_STATE_VERSION)) return undefined
+  if (!isRecord(value) || (value.version !== 1 && value.version !== 2 && value.version !== 3 && value.version !== 4 && value.version !== DEMO_STATE_VERSION)) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -155,13 +162,16 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   })
   if (eventRegistrations.length !== rawRegistrations.length) return undefined
   if (new Set(eventRegistrations.map((registration) => registration.eventId)).size !== eventRegistrations.length) return undefined
-  const rawNotifications = value.version < DEMO_STATE_VERSION ? initialInviteNotifications(validConnections) : value.notifications
+  const rawNotifications = value.version < 4 ? initialInviteNotifications(validConnections) : value.notifications
   if (!Array.isArray(rawNotifications) || rawNotifications.length > 500) return undefined
   const parsedNotifications = rawNotifications.map((notification) => validateNotification(notification, validConnections))
   if (parsedNotifications.some((notification) => notification === undefined)) return undefined
-  const notifications = parsedNotifications as DemoNotification[]
+  const rawPreferences = value.version < DEMO_STATE_VERSION ? defaultNotificationPreferences : value.notificationPreferences
+  const notificationPreferences = validateNotificationPreferences(rawPreferences)
+  if (!notificationPreferences) return undefined
+  const notifications = (parsedNotifications as DemoNotification[]).filter((notification) => notificationPreferenceEnabled(notificationPreferences, notification.kind))
   if (new Set(notifications.map((notification) => notification.id)).size !== notifications.length) return undefined
-  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports, eventRegistrations, notifications }
+  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports, eventRegistrations, notifications, notificationPreferences }
 }
 
 export function createDemoStateStorage() {
