@@ -1,9 +1,9 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import type { Mesh } from 'three'
-import { territories, type Territory } from '../data/territories'
+import type { TerritoryRoom } from '../domain/models'
 
-function Marker({ item, active, onSelect }: { item: Territory; active: boolean; onSelect: () => void }) {
+function Marker({ item, active, onSelect }: { item: TerritoryRoom; active: boolean; onSelect: () => void }) {
   const mesh = useRef<Mesh>(null)
   useFrame(({ clock }) => { if (mesh.current) mesh.current.position.y = 0.55 + Math.sin(clock.elapsedTime * 1.5 + item.position[0]) * 0.08 })
   return <group position={item.position}>
@@ -14,7 +14,7 @@ function Marker({ item, active, onSelect }: { item: Territory; active: boolean; 
   </group>
 }
 
-function Scene({ activeId, onSelect, onFailure }: { activeId: string; onSelect: (item: Territory) => void; onFailure: () => void }) {
+function Scene({ rooms, activeId, onSelect, onFailure }: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: () => void }) {
   const performanceWindow = useRef({ elapsed: 0, frames: 0, slowWindows: 0, failed: false })
   useFrame((_, delta) => {
     const monitor = performanceWindow.current
@@ -35,14 +35,14 @@ function Scene({ activeId, onSelect, onFailure }: { activeId: string; onSelect: 
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.07, 0]}><ringGeometry args={[1.35, 1.43, 48]} /><meshStandardMaterial color="#bd8f59" emissive="#bd8f59" emissiveIntensity={0.35} /></mesh>
     <mesh position={[0, 0.34, 0]}><cylinderGeometry args={[0.68, 0.85, 0.48, 8]} /><meshStandardMaterial color="#d2c5aa" roughness={0.75} /></mesh>
     <mesh position={[0, 0.72, 0]}><cylinderGeometry args={[0.52, 0.62, 0.28, 8]} /><meshStandardMaterial color="#b88b56" metalness={0.5} roughness={0.35} /></mesh>
-    {territories.map((item) => <Marker key={item.id} item={item} active={item.id === activeId} onSelect={() => onSelect(item)} />)}
+    {rooms.map((item) => <Marker key={item.id} item={item} active={item.id === activeId} onSelect={() => onSelect(item)} />)}
   </>
 }
 
-export default function City3D(props: { activeId: string; onSelect: (item: Territory) => void; onFailure: () => void }) {
+export default function City3D(props: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: () => void }) {
   return <Canvas camera={{ position: [8, 9, 10], fov: 42 }} dpr={[1, 1.25]} onCreated={({ gl }) => {
     gl.domElement.addEventListener('webglcontextlost', (event) => { event.preventDefault(); props.onFailure() }, { once: true })
   }} gl={{ antialias: false, powerPreference: 'low-power' }}>
-    <Scene activeId={props.activeId} onSelect={props.onSelect} onFailure={props.onFailure} />
+    <Scene rooms={props.rooms} activeId={props.activeId} onSelect={props.onSelect} onFailure={props.onFailure} />
   </Canvas>
 }

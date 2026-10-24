@@ -1,0 +1,38 @@
+import type { Avatar, Connection, GamificationProgress, Message, Presence, Profile, TerritoryRoom } from '../domain/models'
+
+export interface RoomService {
+  listRooms(): TerritoryRoom[]
+  getRoom(roomId: string): TerritoryRoom | undefined
+}
+
+export interface ParticipantService {
+  listByRoom(roomId: string): Presence[]
+}
+
+export interface MessageService {
+  listByRoom(roomId: string): Message[]
+  sendToRoom(roomId: string, text: string): Message
+}
+
+export interface ProfileService {
+  getCurrent(): Profile
+  updateAvatar(avatarId: Avatar['id']): Profile
+}
+
+export interface ConnectionService {
+  listConnections(): Connection[]
+  requestConnection(toProfileId: Profile['id']): Connection
+}
+
+export interface GamificationService {
+  getProgress(profileId: Profile['id']): GamificationProgress | undefined
+}
+
+export type OlimpoServices = {
+  rooms: RoomService
+  participants: ParticipantService
+  messages: MessageService
+  profile: ProfileService
+  connections: ConnectionService
+  gamification: GamificationService
+}

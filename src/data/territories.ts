@@ -1,14 +1,6 @@
-export type Territory = {
-  id: string
-  name: string
-  domain: string
-  symbol: string
-  description: string
-  people: number
-  color: string
-  position: [number, number, number]
-  prompt: string
-}
+import type { Profile, TerritoryRoom } from '../domain/models'
+
+export type Territory = TerritoryRoom
 
 export const territories: Territory[] = [
   { id: 'athena', name: 'Templo de Atena', domain: 'IA', symbol: '⌘', description: 'Inteligência artificial, ideias e ferramentas para o futuro.', people: 18, color: '#70d8d0', position: [-3.4, 0, -2.2], prompt: 'Qual ideia você quer transformar em realidade com IA?' },
@@ -19,12 +11,8 @@ export const territories: Territory[] = [
   { id: 'ares', name: 'Arena de Ares', domain: 'Lazer', symbol: '⚡', description: 'Jogos, desafios e diversão entre uma tarefa e outra.', people: 7, color: '#ff8176', position: [3.4, 0, 2.2], prompt: 'Alguém topa um desafio rápido?' },
 ]
 
-export const guide = { name: 'Zeus', role: 'Anfitrião da Praça Central', avatar: '⚡' }
-
-export const initialMessages = [
-  { id: 'm1', author: 'Lia', avatar: '🌿', time: '10:42', text: 'Oi, pessoal! Cheguei agora. O que estão criando por aqui?' },
-  { id: 'm2', author: 'Caio', avatar: '🛠️', time: '10:44', text: 'Bem-vinda! Estou explorando ferramentas de IA para meu produto.' },
-  { id: 'm3', author: 'Nina', avatar: '🌙', time: '10:46', text: 'Que legal. Depois compartilha o que encontrar!' },
-]
-
-export const demoProfile = { name: 'Alex', handle: '@alex.explora', avatar: '🧭', note: 'Construindo ideias, um passo de cada vez.' }
+export const guide: Profile & { role: string } = {
+  id: 'zeus-guide', displayName: 'Zeus', handle: '@zeus.guia', role: 'Anfitrião da Praça Central',
+  avatar: { id: 'guide', label: 'Guia', emoji: '⚡' }, bio: 'Anfitrião da praça.', interests: [],
+  gamification: { level: 1, points: 0, badges: [] },
+}
