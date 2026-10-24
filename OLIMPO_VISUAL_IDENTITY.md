@@ -6,7 +6,7 @@
 
 OLIMPO combina referências à mitologia grega e à disciplina visual espartana com uma cidade futurista. A direção desejada usa pedra, bronze, luz mineral e tecnologia integrada à arquitetura; armaduras tecnológicas podem aparecer em personagens e ilustrações futuras.
 
-**Estado real:** o protótipo já usa nomes mitológicos, um monograma circular, anéis e formas inspiradas em praça/colunata, fundos escuros, bronze e ciano. A cena Three.js atual é uma composição geométrica simples da praça e marcadores coloridos. Armaduras tecnológicas e personagens 3D detalhados são uma direção futura, não elementos já implementados.
+**Estado real:** o protótipo já usa nomes mitológicos, um monograma circular, anéis e formas inspiradas em praça/colunata, fundos escuros, bronze e ciano. A praça 3D mostra o Santuário de Zeus como marco central e formas procedurais distintas para os seis territórios; as colunas repetidas usam instancing. A vista 2D também identifica o santuário no centro do mapa orbital. Armaduras tecnológicas e personagens 3D detalhados continuam sendo uma direção futura.
 
 ## Paleta observada no código
 

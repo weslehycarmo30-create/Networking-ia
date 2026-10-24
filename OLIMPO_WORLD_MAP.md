@@ -4,7 +4,7 @@
 
 ## Praça Central
 
-A Praça Central é o ponto de entrada após a escolha de avatar. Oferece vista 2D por padrão e opção 3D carregada somente após ação explícita. Um guia fictício, Zeus, apresenta o lugar. A praça também exibe perfis fictícios para abrir e conhecer.
+A Praça Central é o ponto de entrada após a escolha de avatar. Oferece vista 2D por padrão e opção 3D carregada somente após ação explícita. O Santuário de Zeus é o marco central, mostrado no centro do mapa orbital e como templo circular de mármore e bronze na cena 3D. Caminhos radiais ligam o santuário aos seis territórios. Zeus é um guia fictício; a praça também exibe perfis fictícios para abrir e conhecer.
 
 ## Territórios implementados
 
@@ -18,6 +18,8 @@ A Praça Central é o ponto de entrada após a escolha de avatar. Oferece vista 
 | **Arena de Ares** | Lazer | Jogos, desafios e diversão entre uma tarefa e outra. | Alguém topa um desafio rápido? |
 
 Cada território atualmente possui sala de chat demonstrativa, mensagens iniciais fictícias e uma lista local de presença associada ao ID da sala. As listas não representam atividade comunitária real.
+
+Na cena 3D, cada local tem um marco geométrico procedural correspondente ao tema: colunata no Templo de Atena, fornalha na Forja de Hefesto, pavilhão na Ágora de Hermes, cristal no Oráculo de Delfos, árvores nos Jardins de Dionísio e arena circular em Ares. Nomes e controles HTML continuam identificando e selecionando cada território.
 
 ## Navegação existente
 
