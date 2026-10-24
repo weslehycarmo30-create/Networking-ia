@@ -1,8 +1,9 @@
-import type { Avatar, Connection, DemoReport, Message, ReportReason } from '../domain/models'
+import type { Avatar, Connection, CommunityEvent, DemoReport, EventRegistration, Message, ReportReason } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from '../data/demo'
+import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 2 as const
+export const DEMO_STATE_VERSION = 3 as const
 
 export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
@@ -10,6 +11,7 @@ export type PersistedDemoState = {
   messages: Record<string, Message[]>
   connections: Connection[]
   reports: DemoReport[]
+  eventRegistrations: EventRegistration[]
 }
 
 export type DemoPersistenceStatus = {
@@ -24,6 +26,7 @@ const knownProfiles = [demoProfile, ...demoCommunityProfiles]
 const knownProfileById = new Map(knownProfiles.map((profile) => [profile.id, profile]))
 const knownAvatars = new Map(demoAvatars.map((avatar) => [avatar.id, avatar]))
 const roomIds = demoTerritories.map((room) => room.id)
+const knownEvents = new Map(demoEvents.map((event) => [event.id, event]))
 const allowedStatuses = new Set<Connection['status']>(['pending', 'accepted', 'declined', 'cancelled'])
 const allowedReportReasons = new Set<ReportReason>(['spam', 'harassment', 'inappropriate', 'scam', 'other'])
 
@@ -90,7 +93,7 @@ function validateReport(value: unknown, messages: Record<string, Message[]>): De
 }
 
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
-  if (!isRecord(value) || (value.version !== 1 && value.version !== DEMO_STATE_VERSION)) return undefined
+  if (!isRecord(value) || (value.version !== 1 && value.version !== 2 && value.version !== DEMO_STATE_VERSION)) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -117,7 +120,16 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   if (new Set(validReports.map((report) => report.id)).size !== validReports.length) return undefined
   const reportTargets = validReports.map((report) => `${report.targetType}:${report.targetId}`)
   if (new Set(reportTargets).size !== reportTargets.length) return undefined
-  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports }
+  const rawRegistrations = value.version < DEMO_STATE_VERSION ? [] : value.eventRegistrations
+  if (!Array.isArray(rawRegistrations) || rawRegistrations.length > knownEvents.size) return undefined
+  const eventRegistrations = rawRegistrations.flatMap((registration): EventRegistration[] => {
+    if (!isRecord(registration) || typeof registration.eventId !== 'string' || !knownEvents.has(registration.eventId)) return []
+    if (registration.profileId !== demoProfile.id) return []
+    return [{ eventId: registration.eventId as CommunityEvent['id'], profileId: demoProfile.id }]
+  })
+  if (eventRegistrations.length !== rawRegistrations.length) return undefined
+  if (new Set(eventRegistrations.map((registration) => registration.eventId)).size !== eventRegistrations.length) return undefined
+  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports, eventRegistrations }
 }
 
 export function createDemoStateStorage() {
@@ -140,6 +152,7 @@ export function createDemoStateStorage() {
           return { status }
         }
         status = { persistent: true }
+        if (isRecord(parsed) && parsed.version !== DEMO_STATE_VERSION) status = this.save(state)
         return { state, status }
       } catch {
         status = { persistent: false, message: localOnlyMessage }

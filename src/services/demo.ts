@@ -1,6 +1,7 @@
-import { cancelConnection, createConnection, createDemoReport, createMessage, findConnectionBetween, hasPendingConnection, respondToConnection } from '../domain/rules'
-import type { Avatar, Connection, DemoReport, Message, Presence, Profile } from '../domain/models'
+import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, findConnectionBetween, hasPendingConnection, respondToConnection } from '../domain/rules'
+import type { Avatar, Connection, DemoReport, EventRegistration, Message, Presence, Profile, TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
+import { demoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
 import { createDemoStateStorage, DEMO_STATE_VERSION } from './demo-storage'
 
@@ -14,6 +15,7 @@ export function createDemoServices(): OlimpoServices {
   }
   let connections: Connection[] = loaded.state?.connections.map((connection) => ({ ...connection })) ?? createInitialConnections()
   let reports: DemoReport[] = loaded.state?.reports.map((report) => ({ ...report })) ?? []
+  let eventRegistrations: EventRegistration[] = loaded.state?.eventRegistrations.map((registration) => ({ ...registration })) ?? []
   let currentRoomId: string | undefined
   const findProfile = (profileId: string): Profile | undefined => profileId === currentProfile.id
     ? currentProfile
@@ -31,7 +33,7 @@ export function createDemoServices(): OlimpoServices {
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
 
   function saveState() {
-    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports })
+    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports, eventRegistrations })
   }
 
   return {
@@ -163,6 +165,34 @@ export function createDemoServices(): OlimpoServices {
     gamification: {
       getProgress: (profileId) => profileId === currentProfile.id ? { ...currentProfile.gamification, badges: [...currentProfile.gamification.badges] } : undefined,
     },
+    events: {
+      listEvents: (territoryId?: TerritoryId) => demoEvents
+        .filter((event) => !territoryId || event.territoryId === territoryId)
+        .map((event) => ({
+          ...event,
+          participantCount: event.participantCount + eventRegistrations.filter((registration) => registration.eventId === event.id).length,
+        })),
+      isRegistered: (eventId, profileId) => eventRegistrations.some((registration) => registration.eventId === eventId && registration.profileId === profileId),
+      register: (eventId, profileId) => {
+        const event = demoEvents.find((candidate) => candidate.id === eventId)
+        if (!event) throw new Error('Este encontro nao existe nesta demonstracao.')
+        if (profileId !== currentProfile.id) throw new Error('Somente o participante atual pode se inscrever nesta demonstracao.')
+        if (eventRegistrations.some((registration) => registration.eventId === eventId && registration.profileId === profileId)) {
+          throw new Error('A inscricao neste encontro ja esta ativa.')
+        }
+        const registration = createEventRegistration(event, profileId)
+        eventRegistrations.push(registration)
+        saveState()
+        return { ...registration }
+      },
+      cancelRegistration: (eventId, profileId) => {
+        if (profileId !== currentProfile.id) throw new Error('Somente o participante atual pode cancelar esta inscricao.')
+        const index = eventRegistrations.findIndex((registration) => registration.eventId === eventId && registration.profileId === profileId)
+        if (index < 0) throw new Error('Esta inscricao demonstrativa nao esta ativa.')
+        eventRegistrations.splice(index, 1)
+        saveState()
+      },
+    },
     demoState: {
       getStatus: () => storage.getStatus(),
       reset: () => {
@@ -172,6 +202,7 @@ export function createDemoServices(): OlimpoServices {
         messages = createInitialMessages()
         connections = createInitialConnections()
         reports = []
+        eventRegistrations = []
         return status
       },
     },

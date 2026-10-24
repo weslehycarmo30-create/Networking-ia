@@ -1,4 +1,4 @@
-import type { Connection, DemoReport, Message, Profile, ReportReason, ReportTargetType } from './models'
+import type { CommunityEvent, Connection, DemoReport, EventRegistration, Message, Profile, ReportReason, ReportTargetType } from './models'
 
 const reportReasons = new Set<ReportReason>(['spam', 'harassment', 'inappropriate', 'scam', 'other'])
 
@@ -16,6 +16,10 @@ export function createDemoReport(input: {
   if (input.note && input.note.length > 240) throw new Error('A observação deve ter no máximo 240 caracteres.')
   const note = input.note?.trim()
   return { id: input.id, targetType: input.targetType, targetId: input.targetId, reason: input.reason, ...(note ? { note } : {}), createdAt: input.createdAt }
+}
+
+export function createEventRegistration(event: CommunityEvent, profileId: Profile['id']): EventRegistration {
+  return { eventId: event.id, profileId }
 }
 
 export function normalizeMessageText(value: string): string {

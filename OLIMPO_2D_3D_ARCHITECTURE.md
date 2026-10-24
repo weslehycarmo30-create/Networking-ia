@@ -17,8 +17,8 @@ src/ui/App.tsx ──┬── services/contracts.ts
 ## Camadas implementadas
 
 - **Domínio:** `Avatar`, `Profile`, `TerritoryRoom`, `Message`, `Presence`, `Connection` e `GamificationProgress`; validação de mensagens, convites e transições de conexão.
-- **Serviços:** interfaces de salas, participantes, mensagens, perfil, conexões e gamificação.
-- **Adaptador demo:** associa mensagens e presença a `roomId`; fornece perfis e conteúdo fictícios. Entrada/saída de sala é controlada por `ParticipantService` e a presença do perfil atual existe apenas em memória. Avatar, mensagens e conexões são serializados de forma versionada no `localStorage` por `src/services/demo-storage.ts`; presença e restante do estado temporário ficam fora desse payload. Não é uma implementação de autenticação, realtime ou persistência de produção.
+- **Serviços:** interfaces de salas, participantes, mensagens, perfil, conexões, encontros e gamificação.
+- **Adaptador demo:** associa mensagens e presença a `roomId`; fornece perfis e conteúdo fictícios. Entrada/saída de sala é controlada por `ParticipantService` e a presença do perfil atual existe apenas em memória. Avatar, mensagens, conexões e inscrições de encontros são serializados de forma versionada no `localStorage` por `src/services/demo-storage.ts`; presença e restante do estado temporário ficam fora desse payload. Não é uma implementação de autenticação, realtime ou persistência de produção.
 - **Apresentação:** `App.tsx` coordena navegação, seleção e consumo dos serviços. `ProfilePicker.tsx` é reutilizado na praça 2D e sobre a cena 3D.
 - **Cena:** `City3D.tsx` recebe salas, perfis e callbacks do estado compartilhado. Não consulta uma fonte de dados independente.
 

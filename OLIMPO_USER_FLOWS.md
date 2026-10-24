@@ -79,3 +79,12 @@ O perfil próprio lista relações aceitas. No perfil comunitário, o estado inf
 ## Acessibilidade do fluxo
 
 Os seletores e ações são botões HTML com rótulos; feedback usa região de status; foco visível e layout mobile vêm dos estilos globais. A vista 2D é a alternativa completa ao Canvas. Ver [arquitetura](OLIMPO_2D_3D_ARCHITECTURE.md) e [segurança](OLIMPO_SECURITY.md).
+
+## 9. Explorar encontros da comunidade
+
+1. Na Praça Central, em 2D ou 3D (incluindo o layout mobile 2D), a pessoa abre **Encontros da comunidade**.
+2. A lista mostra encontros fictícios com descrição, data e horário em pt-BR, território, perfil de quem organiza e quantidade demonstrativa de participantes.
+3. A pessoa pode filtrar por território, abrir o perfil organizador pelo fluxo de perfil existente e inscrever-se ou cancelar sua inscrição.
+4. A contagem é atualizada a partir da inscrição local. O cartão indica quando a própria inscrição está ativa; resultados filtrados sem encontros têm estado vazio e controle para limpar o filtro.
+
+Encontros e inscrições são apenas dados desta demonstração no navegador atual; não são publicados nem compartilhados com outros usuários. O armazenamento versionado migra estados anteriores sem inscrições e valida registros locais. **Reiniciar demonstração** limpa inscrições e restaura os encontros fictícios. Não há criação de encontros, convite privado, notificação, calendário ou presença ao vivo.

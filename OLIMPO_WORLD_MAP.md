@@ -30,3 +30,7 @@ Landing → escolha de avatar → Praça Central → seleção de território �
 Novos territórios, subáreas, eventos, áreas privadas ou regras de acesso são ideias ainda não priorizadas nem definidas. A lista atual de seis é o catálogo do protótipo, não um compromisso de conteúdo futuro.
 
 Ver também [fluxos de usuário](OLIMPO_USER_FLOWS.md), [identidade visual](OLIMPO_VISUAL_IDENTITY.md) e [especificação do produto](OLIMPO_PRODUCT_SPEC.md).
+
+## Encontros demonstrativos
+
+A Praça Central oferece **Encontros da comunidade** junto às vistas 2D e 3D. Cada encontro fictício pertence a um dos seis territórios e abre o perfil fictício de quem organiza. Inscrições locais atualizam a contagem apenas nesta demonstração; não são publicadas nem compartilhadas com outros usuários. O filtro por território e a lista também funcionam no layout mobile 2D.

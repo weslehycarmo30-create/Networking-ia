@@ -74,3 +74,18 @@ export type DemoReport = {
   note?: string
   createdAt: string
 }
+
+export type CommunityEvent = {
+  id: string
+  title: string
+  description: string
+  startsAt: string
+  territoryId: TerritoryId
+  organizerProfileId: Profile['id']
+  participantCount: number
+}
+
+export type EventRegistration = {
+  eventId: CommunityEvent['id']
+  profileId: Profile['id']
+}

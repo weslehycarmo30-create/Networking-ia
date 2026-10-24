@@ -34,7 +34,7 @@ Comunidades digitais podem ser difíceis de explorar quando toda a atividade apa
 
 ### Demonstrativo/local
 
-`createDemoServices()` mantém o perfil atual, mensagens e conexões em memória e salva uma cópia validada de avatar, mensagens por sala e conexões no `localStorage` namespaced deste navegador. Uma recarga restaura somente esses dados demonstrativos. Presença, navegação, vista selecionada, rascunhos e feedback temporário continuam efêmeros. **Reiniciar demonstração** remove apenas a chave do OLIMPO e restaura os dados fictícios iniciais. Se o armazenamento estiver indisponível, a aplicação continua em memória e avisa que as mudanças duram apenas a sessão. As listas de salas, mensagens iniciais, presença e perfis vêm de dados fictícios em `src/data/`. Não há conta, servidor, autenticação ou atualização em tempo real; `localStorage` não é persistência de produção.
+`createDemoServices()` mantém o perfil atual, mensagens e conexões em memória e salva uma cópia validada de avatar, mensagens por sala, conexões e inscrições locais de encontros no `localStorage` namespaced deste navegador. Uma recarga restaura somente esses dados demonstrativos. Presença, navegação, vista selecionada, rascunhos e feedback temporário continuam efêmeros. **Reiniciar demonstração** remove apenas a chave do OLIMPO e restaura os dados fictícios iniciais. Se o armazenamento estiver indisponível, a aplicação continua em memória e avisa que as mudanças duram apenas a sessão. As listas de salas, mensagens iniciais, presença e perfis vêm de dados fictícios em `src/data/`. Não há conta, servidor, autenticação ou atualização em tempo real; `localStorage` não é persistência de produção.
 
 Os pontos, níveis e medalhas são exemplos estáticos; não existe um mecanismo que calcule ou conceda progresso. A presença representa uma lista demonstrativa, não pessoas realmente online. Os convites simulam decisões de perfis fictícios dentro da interface.
 
@@ -64,3 +64,9 @@ Planejar métricas somente após definir privacidade, consentimento e retenção
 ## Documentos relacionados
 
 [Identidade visual](OLIMPO_VISUAL_IDENTITY.md) · [Arquitetura 2D/3D](OLIMPO_2D_3D_ARCHITECTURE.md) · [Mapa do mundo](OLIMPO_WORLD_MAP.md) · [Fluxos](OLIMPO_USER_FLOWS.md) · [Modelo de dados](OLIMPO_DATA_MODEL.md) · [Segurança](OLIMPO_SECURITY.md) · [Backlog do MVP](OLIMPO_MVP_BACKLOG.md) · [Plano de fase 2](OLIMPO_PHASE_2_PLAN.md).
+
+## Encontros da comunidade
+
+**Implementado no protótipo:** a Praça Central oferece uma lista demonstrativa de encontros fictícios, com filtro por território, data/hora em pt-BR, perfil de organização e contagem de participantes. O participante atual pode se inscrever ou cancelar; a contagem local acompanha a inscrição. O estado usa o adaptador e o armazenamento versionado namespaced já existentes.
+
+**Demonstrativo/local:** encontros são dados fixos fictícios e inscrições ficam apenas no navegador atual. Não são publicadas ou compartilhadas com outros usuários. Reiniciar a demonstração remove as inscrições e restaura a lista inicial. Não há criação real de eventos, convite privado, notificação, integração de calendário ou presença ao vivo.
