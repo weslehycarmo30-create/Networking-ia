@@ -1,6 +1,6 @@
 import type { Territory } from '../data/territories'
 
-export type Screen = 'landing' | 'city' | 'room' | 'profile'
+export type Screen = 'landing' | 'avatar' | 'city' | 'room' | 'profile'
 export type NavigationState = { screen: Screen; territoryId?: string }
 
 export function navigateToTerritory(territory: Territory): NavigationState {
