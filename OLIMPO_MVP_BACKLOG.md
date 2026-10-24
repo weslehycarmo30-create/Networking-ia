@@ -33,6 +33,8 @@
 | P0 | Definir observabilidade sem coletar conteúdo sensível desnecessário, backups e resposta a incidentes. | Privacidade e operação |
 | P0 | Medir custo e desempenho em cenários de sala/presença definidos; publicar limites de operação internos. | Arquitetura e hipótese de escala |
 
+As decisões do proprietário que bloqueiam esses itens e a prontidão do produto estão enumeradas em [OLIMPO_OWNER_DECISIONS.md](OLIMPO_OWNER_DECISIONS.md) (D-01 a D-08). Validações técnicas pendentes, incluindo acessibilidade manual e desempenho 3D, estão separadas naquele documento; o P0 de acessibilidade continua parcial até haver evidência manual.
+
 ### Acompanhamento OLIMPO-017/018 — acessibilidade dos fluxos críticos
 
 **Status: parcial; P0 permanece aberto.** A revisão estática confirmou controles HTML para entrada/avatar, navegação, salas, chat, perfis, conexões, encontros, notificações e reset; foco visível global para botões e campos, e regra `prefers-reduced-motion`. O mapa 3D oferece controles HTML adjacentes e o código mantém a vista 2D/fallback. A medição WCAG de combinações sólidas identificou texto pequeno insuficiente em `.section-count` e `.territory-number`; ambos agora usam `--muted`.
