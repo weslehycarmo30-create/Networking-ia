@@ -87,4 +87,13 @@ Os seletores e ações são botões HTML com rótulos; feedback usa região de s
 3. A pessoa pode filtrar por território, abrir o perfil organizador pelo fluxo de perfil existente e inscrever-se ou cancelar sua inscrição.
 4. A contagem é atualizada a partir da inscrição local. O cartão indica quando a própria inscrição está ativa; resultados filtrados sem encontros têm estado vazio e controle para limpar o filtro.
 
-Encontros e inscrições são apenas dados desta demonstração no navegador atual; não são publicados nem compartilhados com outros usuários. O armazenamento versionado migra estados anteriores sem inscrições e valida registros locais. **Reiniciar demonstração** limpa inscrições e restaura os encontros fictícios. Não há criação de encontros, convite privado, notificação, calendário ou presença ao vivo.
+Encontros e inscrições são apenas dados desta demonstração no navegador atual; não são publicados nem compartilhados com outros usuários. O armazenamento versionado migra estados anteriores sem inscrições e valida registros locais. **Reiniciar demonstração** limpa inscrições e restaura os encontros fictícios. Não há criação de encontros, convite privado, notificação push, calendário ou presença ao vivo.
+
+## 10. Consultar notificações demonstrativas
+
+1. No cabeçalho da aplicação, a pessoa abre **Notificações**; o indicador mostra a quantidade de itens não lidos.
+2. A central identifica os itens como locais e fictícios. Pode haver o convite de exemplo já existente no protótipo e avisos gerados apenas quando a inscrição local em um encontro é criada ou cancelada.
+3. A pessoa pode abrir o perfil associado ao convite ou navegar até o encontro associado ao aviso de inscrição. Abrir um destino também marca o item como lido.
+4. A pessoa pode marcar um item individual ou todos como lidos. A lista informa claramente quando está vazia.
+
+Os itens e datas de leitura são validados e salvos na chave namespaced da demonstração. O estado é local a este navegador (ou apenas à sessão se o armazenamento falhar). Não há notificações push, realtime, comunicação recebida de outros usuários, abas, dispositivos ou servidores. **Reiniciar demonstração** limpa a lista e os estados de leitura.

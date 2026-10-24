@@ -5,14 +5,16 @@
 ## Estado de segurança do protótipo
 
 - Dados e perfis de catálogo são fictícios.
-- Avatar escolhido, mensagens, convites/conexões e registros de denúncia da demonstração são salvos localmente no navegador sob `olimpo:demo-state`, com versão e validação de conteúdo. Presença e estado de interface não são salvos. A demonstração não envia esses dados a um backend.
+- Avatar escolhido, mensagens, convites/conexões, denúncias, inscrições locais em eventos e notificações demonstrativas com estados de leitura são salvos no navegador sob `olimpo:demo-state`, com versão e validação de conteúdo. Presença e estado de interface não são salvos. A demonstração não envia esses dados a um backend.
 - Se o acesso ao `localStorage` falhar ou exceder a quota, a demonstração continua em memória e mostra um aviso de que as mudanças duram apenas a sessão. Dados inválidos voltam aos valores iniciais fictícios.
-- O controle **Reiniciar demonstração** apaga apenas a chave `olimpo:demo-state`, incluindo os registros locais de denúncia; não limpa outras chaves do site ou do navegador.
+- O controle **Reiniciar demonstração** remove o snapshot anterior de `olimpo:demo-state` e restaura os dados fictícios iniciais, deixando inscrições e notificações vazias no novo estado namespaced; não limpa outras chaves do site ou do navegador.
 - Limite de 300 caracteres e validação de mensagem vazia são regras de domínio locais.
 - O adaptador valida sala existente, duplicidade de convite pendente, destinatário de convite e remetente de cancelamento.
 - Não há Supabase, Auth, banco, Storage, Realtime, analytics ou serviço externo.
 
 Essas validações e a chave namespaced melhoram a demonstração, mas **não são uma fronteira de segurança nem armazenamento de produção**: código cliente e `localStorage` podem ser inspecionados/alterados pelo usuário, e o estado não é compartilhado. Não inserir dados sensíveis ou pessoais em campos de demonstração. O aviso de armazenamento local não deve sugerir sincronização ou backup.
+
+A central de notificações mostra somente o convite fictício já existente e alterações locais de inscrição em eventos feitas nesta demonstração. Os itens não chegam de outros usuários, abas, dispositivos, push ou servidor; a interface identifica explicitamente seu caráter local. A lista e o estado de leitura ficam na chave namespaced. Isso não é recebimento de comunicação real nem um canal confiável de alertas.
 
 ## Requisitos antes de produção
 

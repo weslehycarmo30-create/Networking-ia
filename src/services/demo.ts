@@ -1,5 +1,5 @@
-import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, findConnectionBetween, hasPendingConnection, respondToConnection } from '../domain/rules'
-import type { Avatar, Connection, DemoReport, EventRegistration, Message, Presence, Profile, TerritoryId } from '../domain/models'
+import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, respondToConnection } from '../domain/rules'
+import type { Avatar, Connection, DemoNotification, DemoReport, EventRegistration, Message, Presence, Profile, TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import { demoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
@@ -16,6 +16,7 @@ export function createDemoServices(): OlimpoServices {
   let connections: Connection[] = loaded.state?.connections.map((connection) => ({ ...connection })) ?? createInitialConnections()
   let reports: DemoReport[] = loaded.state?.reports.map((report) => ({ ...report })) ?? []
   let eventRegistrations: EventRegistration[] = loaded.state?.eventRegistrations.map((registration) => ({ ...registration })) ?? []
+  let notifications: DemoNotification[] = loaded.state?.notifications.map((notification) => ({ ...notification })) ?? createInitialNotifications(connections)
   let currentRoomId: string | undefined
   const findProfile = (profileId: string): Profile | undefined => profileId === currentProfile.id
     ? currentProfile
@@ -33,8 +34,21 @@ export function createDemoServices(): OlimpoServices {
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
 
   function saveState() {
-    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports, eventRegistrations })
+    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports, eventRegistrations, notifications })
   }
+
+  function recordEventNotification(eventId: string, action: 'registered' | 'cancelled') {
+    notifications.push({
+      id: `demo-notification-${crypto.randomUUID()}`,
+      kind: 'event_registration',
+      eventId,
+      action,
+      createdAt: new Date().toISOString(),
+    })
+    if (notifications.length > 500) notifications.shift()
+  }
+
+  if (!loaded.state && notifications.length > 0) saveState()
 
   return {
     rooms: {
@@ -182,6 +196,7 @@ export function createDemoServices(): OlimpoServices {
         }
         const registration = createEventRegistration(event, profileId)
         eventRegistrations.push(registration)
+        recordEventNotification(eventId, 'registered')
         saveState()
         return { ...registration }
       },
@@ -190,20 +205,43 @@ export function createDemoServices(): OlimpoServices {
         const index = eventRegistrations.findIndex((registration) => registration.eventId === eventId && registration.profileId === profileId)
         if (index < 0) throw new Error('Esta inscricao demonstrativa nao esta ativa.')
         eventRegistrations.splice(index, 1)
+        recordEventNotification(eventId, 'cancelled')
         saveState()
+      },
+    },
+    notifications: {
+      list: () => [...notifications].sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt)).map((notification) => ({ ...notification })),
+      unreadCount: () => notifications.filter((notification) => !notification.readAt).length,
+      markAsRead: (notificationId) => {
+        const index = notifications.findIndex((notification) => notification.id === notificationId)
+        if (index < 0) throw new Error('Esta notificacao demonstrativa nao existe.')
+        if (!notifications[index].readAt) {
+          notifications[index] = markNotificationRead(notifications[index], new Date().toISOString())
+          saveState()
+        }
+        return { ...notifications[index] }
+      },
+      markAllAsRead: () => {
+        const unread = notifications.filter((notification) => !notification.readAt).length
+        if (unread === 0) return 0
+        notifications = markNotificationsRead(notifications, new Date().toISOString())
+        saveState()
+        return unread
       },
     },
     demoState: {
       getStatus: () => storage.getStatus(),
       reset: () => {
-        const status = storage.reset()
+        storage.reset()
         currentRoomId = undefined
         currentProfile = structuredClone(demoProfile)
         messages = createInitialMessages()
         connections = createInitialConnections()
         reports = []
         eventRegistrations = []
-        return status
+        notifications = []
+        saveState()
+        return storage.getStatus()
       },
     },
   }
@@ -214,4 +252,10 @@ function createInitialConnections(): Connection[] {
     { id: 'demo-invite-lia', fromProfileId: 'lia', toProfileId: demoProfile.id, status: 'pending', createdAt: '2026-10-24T10:35:00.000Z' },
     { id: 'demo-connection-caio', fromProfileId: demoProfile.id, toProfileId: 'caio', status: 'accepted', createdAt: '2026-10-23T14:20:00.000Z' },
   ]
+}
+
+function createInitialNotifications(connections: Connection[]): DemoNotification[] {
+  return connections.flatMap((connection): DemoNotification[] => connection.status === 'pending' && connection.toProfileId === demoProfile.id
+    ? [{ id: `invite-${connection.id}`, kind: 'connection_invite', connectionId: connection.id, profileId: connection.fromProfileId, createdAt: connection.createdAt }]
+    : [])
 }

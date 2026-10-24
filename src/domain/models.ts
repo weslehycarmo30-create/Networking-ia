@@ -89,3 +89,21 @@ export type EventRegistration = {
   eventId: CommunityEvent['id']
   profileId: Profile['id']
 }
+
+export type DemoNotification =
+  | {
+    id: string
+    kind: 'connection_invite'
+    connectionId: Connection['id']
+    profileId: Profile['id']
+    createdAt: string
+    readAt?: string
+  }
+  | {
+    id: string
+    kind: 'event_registration'
+    eventId: CommunityEvent['id']
+    action: 'registered' | 'cancelled'
+    createdAt: string
+    readAt?: string
+  }

@@ -1,9 +1,9 @@
-import type { Avatar, Connection, CommunityEvent, DemoReport, EventRegistration, Message, ReportReason } from '../domain/models'
+import type { Avatar, Connection, CommunityEvent, DemoNotification, DemoReport, EventRegistration, Message, ReportReason } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from '../data/demo'
 import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 3 as const
+export const DEMO_STATE_VERSION = 4 as const
 
 export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
@@ -12,6 +12,7 @@ export type PersistedDemoState = {
   connections: Connection[]
   reports: DemoReport[]
   eventRegistrations: EventRegistration[]
+  notifications: DemoNotification[]
 }
 
 export type DemoPersistenceStatus = {
@@ -92,8 +93,33 @@ function validateReport(value: unknown, messages: Record<string, Message[]>): De
   }
 }
 
+function validateNotification(value: unknown, connections: Connection[]): DemoNotification | undefined {
+  if (!isRecord(value) || !isShortString(value.id, 160) || !isValidDate(value.createdAt)) return undefined
+  if (value.readAt !== undefined && !isValidDate(value.readAt)) return undefined
+  const readAt = typeof value.readAt === 'string' ? value.readAt : undefined
+  if (value.kind === 'connection_invite') {
+    if (!isShortString(value.connectionId, 120) || !isShortString(value.profileId, 80)) return undefined
+    const connection = connections.find((item) => item.id === value.connectionId)
+    if (!connection || connection.toProfileId !== demoProfile.id || connection.fromProfileId !== value.profileId) return undefined
+    if (value.id !== `invite-${connection.id}`) return undefined
+    return { id: value.id, kind: 'connection_invite', connectionId: connection.id, profileId: connection.fromProfileId, createdAt: value.createdAt, ...(readAt ? { readAt } : {}) }
+  }
+  if (value.kind === 'event_registration') {
+    if (typeof value.eventId !== 'string' || !knownEvents.has(value.eventId)) return undefined
+    if (value.action !== 'registered' && value.action !== 'cancelled') return undefined
+    return { id: value.id, kind: 'event_registration', eventId: value.eventId, action: value.action, createdAt: value.createdAt, ...(readAt ? { readAt } : {}) }
+  }
+  return undefined
+}
+
+function initialInviteNotifications(connections: Connection[]): DemoNotification[] {
+  return connections.flatMap((connection): DemoNotification[] => connection.status === 'pending' && connection.toProfileId === demoProfile.id
+    ? [{ id: `invite-${connection.id}`, kind: 'connection_invite', connectionId: connection.id, profileId: connection.fromProfileId, createdAt: connection.createdAt }]
+    : [])
+}
+
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
-  if (!isRecord(value) || (value.version !== 1 && value.version !== 2 && value.version !== DEMO_STATE_VERSION)) return undefined
+  if (!isRecord(value) || (value.version !== 1 && value.version !== 2 && value.version !== 3 && value.version !== DEMO_STATE_VERSION)) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -120,7 +146,7 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   if (new Set(validReports.map((report) => report.id)).size !== validReports.length) return undefined
   const reportTargets = validReports.map((report) => `${report.targetType}:${report.targetId}`)
   if (new Set(reportTargets).size !== reportTargets.length) return undefined
-  const rawRegistrations = value.version < DEMO_STATE_VERSION ? [] : value.eventRegistrations
+  const rawRegistrations = value.version < 3 ? [] : value.eventRegistrations
   if (!Array.isArray(rawRegistrations) || rawRegistrations.length > knownEvents.size) return undefined
   const eventRegistrations = rawRegistrations.flatMap((registration): EventRegistration[] => {
     if (!isRecord(registration) || typeof registration.eventId !== 'string' || !knownEvents.has(registration.eventId)) return []
@@ -129,7 +155,13 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   })
   if (eventRegistrations.length !== rawRegistrations.length) return undefined
   if (new Set(eventRegistrations.map((registration) => registration.eventId)).size !== eventRegistrations.length) return undefined
-  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports, eventRegistrations }
+  const rawNotifications = value.version < DEMO_STATE_VERSION ? initialInviteNotifications(validConnections) : value.notifications
+  if (!Array.isArray(rawNotifications) || rawNotifications.length > 500) return undefined
+  const parsedNotifications = rawNotifications.map((notification) => validateNotification(notification, validConnections))
+  if (parsedNotifications.some((notification) => notification === undefined)) return undefined
+  const notifications = parsedNotifications as DemoNotification[]
+  if (new Set(notifications.map((notification) => notification.id)).size !== notifications.length) return undefined
+  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports, eventRegistrations, notifications }
 }
 
 export function createDemoStateStorage() {

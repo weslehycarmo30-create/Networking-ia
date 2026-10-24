@@ -1,4 +1,4 @@
-import type { Avatar, CommunityEvent, Connection, DemoReport, EventRegistration, GamificationProgress, Message, Presence, Profile, ReportReason, ReportTargetType, TerritoryId, TerritoryRoom } from '../domain/models'
+import type { Avatar, CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, GamificationProgress, Message, Presence, Profile, ReportReason, ReportTargetType, TerritoryId, TerritoryRoom } from '../domain/models'
 import type { DemoPersistenceStatus } from './demo-storage'
 
 export interface RoomService {
@@ -49,6 +49,13 @@ export interface CommunityEventService {
   cancelRegistration(eventId: CommunityEvent['id'], profileId: Profile['id']): void
 }
 
+export interface NotificationService {
+  list(): DemoNotification[]
+  unreadCount(): number
+  markAsRead(notificationId: DemoNotification['id']): DemoNotification
+  markAllAsRead(): number
+}
+
 export interface DemoStateService {
   getStatus(): DemoPersistenceStatus
   reset(): DemoPersistenceStatus
@@ -63,5 +70,6 @@ export type OlimpoServices = {
   reports: ReportService
   gamification: GamificationService
   events: CommunityEventService
+  notifications: NotificationService
   demoState: DemoStateService
 }

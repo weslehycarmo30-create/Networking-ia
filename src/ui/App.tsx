@@ -9,6 +9,7 @@ import ProfilePicker from './ProfilePicker'
 import MemberDiscovery from './MemberDiscovery'
 import ReportDialog from './ReportDialog'
 import CommunityEvents from './CommunityEvents'
+import NotificationCenter from './NotificationCenter'
 
 const City3D = lazy(() => import('../scenes/City3D'))
 
@@ -35,6 +36,7 @@ export default function App() {
   const [selectedProfileId, setSelectedProfileId] = useState('')
   const [view, setView] = useState<'2d' | '3d'>('2d')
   const [showEvents, setShowEvents] = useState(false)
+  const [focusEventId, setFocusEventId] = useState('')
   const [mapSelectedId, setMapSelectedId] = useState('athena')
   const [webgl, setWebgl] = useState(true)
   const [draft, setDraft] = useState('')
@@ -79,6 +81,11 @@ export default function App() {
     services.participants.clearCurrentPresence()
     setNav({ screen: 'discover' })
   }
+  const openEvent = (eventId: string) => {
+    goCity()
+    setShowEvents(true)
+    setFocusEventId(eventId)
+  }
   const enterCity = () => { setWebgl(hasWebGL()); setNav({ screen: 'city' }) }
   const failScene = () => { setView('2d'); setWebgl(false) }
 
@@ -94,6 +101,18 @@ export default function App() {
   }
 
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 4000); return () => window.clearTimeout(timer) }, [toast])
+  useEffect(() => {
+    if (!focusEventId || nav.screen !== 'city' || !showEvents) return
+    const frame = window.requestAnimationFrame(() => {
+      const eventCard = document.getElementById(`community-event-${focusEventId}`)
+      if (eventCard) {
+        eventCard.focus({ preventScroll: true })
+        eventCard.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' })
+      }
+      setFocusEventId('')
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [focusEventId, nav.screen, showEvents])
   useEffect(() => {
     if (!reportTarget && reportTrigger.current) {
       reportTrigger.current.focus()
@@ -171,7 +190,7 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar">
       <button className="wordmark" onClick={goCity} aria-label="OLIMPO, início"><span className="brand-mark">O</span><span>OLIMPO<small>CIDADE DAS IDEIAS</small></span></button>
-      {nav.screen !== 'landing' && nav.screen !== 'avatar' && <nav className="top-nav" aria-label="Navegação principal"><button onClick={goCity} className={nav.screen === 'city' ? 'selected' : ''}>Praça Central</button><button onClick={() => openProfile(profile.id)} className={nav.screen === 'profile' && isOwnProfile ? 'selected' : ''}>Meu perfil</button></nav>}
+      {nav.screen !== 'landing' && nav.screen !== 'avatar' && <nav className="top-nav" aria-label="Navegação principal"><button onClick={goCity} className={nav.screen === 'city' ? 'selected' : ''}>Praça Central</button><button onClick={() => openProfile(profile.id)} className={nav.screen === 'profile' && isOwnProfile ? 'selected' : ''}>Meu perfil</button></nav>}{nav.screen !== 'landing' && nav.screen !== 'avatar' && <NotificationCenter service={services.notifications} profiles={communityProfiles} events={services.events.listEvents()} getPersistenceStatus={services.demoState.getStatus} onChange={refreshServices} onFeedback={setToast} onOpenProfile={openProfile} onOpenEvent={openEvent} />}
       {nav.screen !== 'landing' && nav.screen !== 'avatar' && <button className="profile-chip" onClick={() => openProfile(profile.id)}><span>{avatar}</span><span className="profile-chip-name">{profile.displayName}</span><i /></button>}
     </header>
     <div className={`demo-storage-status ${persistenceStatus.persistent ? '' : 'memory-only'}`} role={persistenceStatus.message ? 'status' : undefined} aria-live={persistenceStatus.message ? 'polite' : undefined}>

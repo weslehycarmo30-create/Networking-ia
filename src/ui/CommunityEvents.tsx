@@ -66,7 +66,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
         const territory = territories.find((item) => item.id === event.territoryId)
         const organizer = organizers.find((profile) => profile.id === event.organizerProfileId)
         const registered = service.isRegistered(event.id, currentProfileId)
-        return <article className="event-card" key={event.id}>
+        return <article className="event-card" id={`community-event-${event.id}`} tabIndex={-1} key={event.id}>
           <div className="event-territory">{territory?.symbol} {territory?.name ?? 'Território demonstrativo'}</div>
           <h3>{event.title}</h3>
           <p className="event-description">{event.description}</p>

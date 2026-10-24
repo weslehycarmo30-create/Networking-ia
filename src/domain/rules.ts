@@ -1,4 +1,4 @@
-import type { CommunityEvent, Connection, DemoReport, EventRegistration, Message, Profile, ReportReason, ReportTargetType } from './models'
+import type { CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, Message, Profile, ReportReason, ReportTargetType } from './models'
 
 const reportReasons = new Set<ReportReason>(['spam', 'harassment', 'inappropriate', 'scam', 'other'])
 
@@ -20,6 +20,15 @@ export function createDemoReport(input: {
 
 export function createEventRegistration(event: CommunityEvent, profileId: Profile['id']): EventRegistration {
   return { eventId: event.id, profileId }
+}
+
+export function markNotificationRead(notification: DemoNotification, readAt: string): DemoNotification {
+  if (!Number.isFinite(Date.parse(readAt))) throw new Error('O horario de leitura da notificacao e invalido.')
+  return notification.readAt ? { ...notification } : { ...notification, readAt }
+}
+
+export function markNotificationsRead(notifications: DemoNotification[], readAt: string): DemoNotification[] {
+  return notifications.map((notification) => markNotificationRead(notification, readAt))
 }
 
 export function normalizeMessageText(value: string): string {
