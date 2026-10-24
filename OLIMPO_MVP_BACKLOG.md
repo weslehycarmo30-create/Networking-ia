@@ -33,9 +33,13 @@
 | P0 | Definir observabilidade sem coletar conteúdo sensível desnecessário, backups e resposta a incidentes. | Privacidade e operação |
 | P0 | Medir custo e desempenho em cenários de sala/presença definidos; publicar limites de operação internos. | Arquitetura e hipótese de escala |
 
-### Acompanhamento OLIMPO-016 — acessibilidade dos fluxos críticos
+### Acompanhamento OLIMPO-017 — acessibilidade dos fluxos críticos
 
-**Status: parcial no protótipo.** A revisão do código confirmou navegação HTML por teclado, foco visível para botões/inputs, layout 2D mobile, controles HTML ao redor do 3D e fallback para 2D. Esta missão estende o foco visível a `select` e `textarea` e reduz transições/animações quando `prefers-reduced-motion` está ativo. Ainda falta validar com leitores de tela, combinações de contraste e dispositivos/navegadores reais; o item P0 continua aberto para produção.
+**Status: parcial; P0 permanece aberto.** A revisão estática confirmou controles HTML para entrada/avatar, navegação, salas, chat, perfis, conexões, encontros, notificações e reset; foco visível global para botões e campos, e regra `prefers-reduced-motion`. O mapa 3D oferece controles HTML adjacentes e o código mantém a vista 2D/fallback. A medição WCAG de combinações sólidas identificou texto pequeno insuficiente em `.section-count` e `.territory-number`; ambos agora usam `--muted`.
+
+**Evidência e limites:** proporções calculadas a partir dos valores CSS reais: `#75817e` sobre `#101820` = 4,43:1 e sobre `#172229` = 4,01:1 (abaixo de 4,5:1 para texto normal); após a correção, `#9ca7a6` sobre esses fundos = 7,24:1 e 6,55:1. Também foram medidos `#e9e5dc` sobre `#101820` = 14,24:1, foco `#75d9d0` sobre `#101820`/`#172229`/`#23413d` = 10,73:1/9,71:1/6,65:1, placeholder `#84908c` sobre `#111c21` = 5,24:1 e estado ativo `#c8efe3` sobre `#23413d` = 8,92:1. São amostras de pares sólidos, não uma auditoria exaustiva de gradientes, estados, territórios ou renderização real. O CSS declara layout mínimo de 320 px e breakpoints em 900, 760, 680 e 380 px; renderização nessas larguras ainda precisa ser observada em navegador.
+
+**Validação manual pendente:** (1) percorrer cada fluxo só com Tab/Shift+Tab/Enter/Espaço/Esc e conferir ordem, retorno de foco e ausência de armadilha; (2) testar leitor de tela disponível e verificar nomes/atualizações; (3) revisar contraste de texto, foco e estados dinâmicos sobre gradientes e cores territoriais; (4) inspecionar larguras 320, 390, 768 e 1280 px em navegador real; (5) desativar WebGL ou provocar falha e confirmar acesso 2D. Repetição: iniciar `npm.cmd run dev -- --host 127.0.0.1`, abrir `http://127.0.0.1:5173/` no navegador, completar os fluxos acima e registrar leitor/versão, viewport, resultado e falha encontrada. Nesta execução a automação CUA reiniciou após `trusted Node process exited unexpectedly; kernel reset`, listou Chrome/Edge, mas não conseguiu vincular a janela porque não determinou a URL atual com confiança. Nenhuma etapa de navegador ou leitor de tela foi considerada verificada. Não declarar o P0 concluído até registrar esses resultados.
 
 ## P1 — após validação do núcleo
 

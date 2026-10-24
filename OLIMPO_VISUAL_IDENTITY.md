@@ -39,11 +39,11 @@ Os seis territórios também usam cores próprias definidas em `src/data/territo
 
 Manter contraste de texto e estados, rótulos visíveis, áreas de toque adequadas, foco evidente, operação por teclado e estado não comunicado apenas por cor ou hover. Respeitar `prefers-reduced-motion`. O 2D deve continuar funcional se WebGL estiver indisponível ou o 3D falhar.
 
-**Acessibilidade no código (OLIMPO-016):** `:focus-visible` apresenta contorno ciano em botões, campos de texto, seletores e áreas de texto; a preferência `prefers-reduced-motion` reduz transições e animações. Isso melhora o protótipo, mas não substitui validação com leitores de tela, medições formais de contraste nem revisão em dispositivos reais.
+**Acessibilidade no código (OLIMPO-016/017):** `:focus-visible` apresenta contorno ciano em botões, campos de texto, seletores e áreas de texto; `prefers-reduced-motion` reduz transições e animações. Na auditoria OLIMPO-017, texto principal `#e9e5dc` sobre `#101820` mediu 14,24:1, foco `#75d9d0` sobre `#101820` 10,73:1, placeholder `#84908c` sobre `#111c21` 5,24:1 e estado ativo `#c8efe3` sobre `#23413d` 8,92:1. Os textos pequenos `#75817e` de `.section-count` e `.territory-number` ficaram em 4,43:1 sobre `#101820` e 4,01:1 sobre `#172229`; foram trocados por `var(--muted)` (`#9ca7a6`), que mede 7,24:1 e 6,55:1, respectivamente. A checagem foi estática em cores sólidas; gradientes, estados adicionais, leitor de tela e dispositivos reais ainda precisam de validação.
 
 ## Em aberto
 
 - Escolher fontes de marca e uma escala tipográfica final.
-- Definir tokens formais de contraste e validar combinações com ferramenta de auditoria.
+- Revisar todas as combinações de contraste, incluindo gradientes, estados e cores individuais dos territórios, com ferramenta de auditoria e navegador renderizado.
 - Definir como armaduras tecnológicas, avatares e símbolos mitológicos se relacionam sem competir com a leitura.
 - Validar se as cores individuais dos seis territórios atendem contraste em texto, ícones e foco.

@@ -78,7 +78,7 @@ O perfil próprio lista relações aceitas. No perfil comunitário, o estado inf
 
 ## Acessibilidade do fluxo
 
-Os seletores e ações são botões HTML com rótulos; feedback usa região de status; foco visível e layout mobile vêm dos estilos globais. A vista 2D é a alternativa completa ao Canvas. Ver [arquitetura](OLIMPO_2D_3D_ARCHITECTURE.md) e [segurança](OLIMPO_SECURITY.md).
+Os seletores e ações são botões e campos HTML com rótulos; feedback usa regiões de status; há foco visível e regra de movimento reduzido nos estilos globais. A vista 2D é a alternativa completa ao Canvas. A auditoria OLIMPO-017 verificou a estrutura por leitura de código e mediu pares de contraste sólidos; corrigiu dois rótulos pequenos com razão inferior a 4,5:1. Navegação real por teclado, leitor de tela, combinações sobre gradientes/estados, viewports de navegador e fallback forçado ainda não foram verificados. A checklist reproduzível está em [backlog do MVP](OLIMPO_MVP_BACKLOG.md). Ver também [arquitetura](OLIMPO_2D_3D_ARCHITECTURE.md) e [segurança](OLIMPO_SECURITY.md).
 
 ## 9. Explorar encontros da comunidade
 
