@@ -2,19 +2,22 @@ import { cancelConnection, createConnection, createMessage, findConnectionBetwee
 import type { Avatar, Connection, Message, Presence, Profile } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import type { OlimpoServices } from './contracts'
+import { createDemoStateStorage, DEMO_STATE_VERSION } from './demo-storage'
 
 export function createDemoServices(): OlimpoServices {
+  const storage = createDemoStateStorage()
+  const loaded = storage.load()
   let currentProfile: Profile = structuredClone(demoProfile)
-  const connections: Connection[] = [
-    { id: 'demo-invite-lia', fromProfileId: 'lia', toProfileId: demoProfile.id, status: 'pending', createdAt: '2026-10-24T10:35:00.000Z' },
-    { id: 'demo-connection-caio', fromProfileId: demoProfile.id, toProfileId: 'caio', status: 'accepted', createdAt: '2026-10-23T14:20:00.000Z' },
-  ]
+  if (loaded.state) {
+    const avatar = demoAvatars.find((candidate) => candidate.id === loaded.state?.avatarId)
+    if (avatar) currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
+  }
+  let connections: Connection[] = loaded.state?.connections.map((connection) => ({ ...connection })) ?? createInitialConnections()
   const findProfile = (profileId: string): Profile | undefined => profileId === currentProfile.id
     ? currentProfile
     : demoCommunityProfiles.find((candidate) => candidate.id === profileId)
-  let nextMessageId = 1
   const rooms = demoTerritories.map((room) => ({ ...room, position: [...room.position] as [number, number, number] }))
-  const messages: Record<string, Message[]> = Object.fromEntries(rooms.map((room) => [room.id, (messageSeeds[room.id] ?? []).map((seed) => ({
+  const createInitialMessages = (): Record<string, Message[]> => Object.fromEntries(rooms.map((room) => [room.id, (messageSeeds[room.id] ?? []).map((seed) => ({
     id: `${room.id}-seed-${seed.id}`,
     roomId: room.id,
     authorId: seed.authorId,
@@ -23,6 +26,11 @@ export function createDemoServices(): OlimpoServices {
     createdAt: seed.createdAt,
     text: seed.text,
   }))]))
+  let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
+
+  function saveState() {
+    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections })
+  }
 
   return {
     rooms: {
@@ -55,13 +63,14 @@ export function createDemoServices(): OlimpoServices {
       sendToRoom: (roomId, text) => {
         if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
         const message = createMessage({
-          id: `demo-message-${nextMessageId++}`,
+          id: `demo-message-${crypto.randomUUID()}`,
           roomId,
           profile: currentProfile,
           text,
           createdAt: new Date().toISOString(),
         })
         messages[roomId].push(message)
+        saveState()
         return { ...message, avatar: structuredClone(message.avatar) }
       },
     },
@@ -76,6 +85,7 @@ export function createDemoServices(): OlimpoServices {
         const avatar: Avatar | undefined = demoAvatars.find((candidate) => candidate.id === avatarId)
         if (!avatar) throw new Error('O avatar selecionado não existe.')
         currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
+        saveState()
         return structuredClone(currentProfile)
       },
     },
@@ -94,6 +104,7 @@ export function createDemoServices(): OlimpoServices {
           createdAt: new Date().toISOString(),
         })
         connections.push(connection)
+        saveState()
         return { ...connection }
       },
       respondToInvite: (inviteId, recipientProfileId, decision) => {
@@ -102,6 +113,7 @@ export function createDemoServices(): OlimpoServices {
         if (!findProfile(recipientProfileId)) throw new Error('O perfil destinatário não existe na demonstração.')
         const updated = respondToConnection(connections[index], recipientProfileId, decision)
         connections[index] = updated
+        saveState()
         return { ...updated }
       },
       cancelInvite: (inviteId, senderProfileId) => {
@@ -109,11 +121,29 @@ export function createDemoServices(): OlimpoServices {
         if (index < 0) throw new Error('Este convite não existe na demonstração.')
         const updated = cancelConnection(connections[index], senderProfileId)
         connections[index] = updated
+        saveState()
         return { ...updated }
       },
     },
     gamification: {
       getProgress: (profileId) => profileId === currentProfile.id ? { ...currentProfile.gamification, badges: [...currentProfile.gamification.badges] } : undefined,
     },
+    demoState: {
+      getStatus: () => storage.getStatus(),
+      reset: () => {
+        const status = storage.reset()
+        currentProfile = structuredClone(demoProfile)
+        messages = createInitialMessages()
+        connections = createInitialConnections()
+        return status
+      },
+    },
   }
+}
+
+function createInitialConnections(): Connection[] {
+  return [
+    { id: 'demo-invite-lia', fromProfileId: 'lia', toProfileId: demoProfile.id, status: 'pending', createdAt: '2026-10-24T10:35:00.000Z' },
+    { id: 'demo-connection-caio', fromProfileId: demoProfile.id, toProfileId: 'caio', status: 'accepted', createdAt: '2026-10-23T14:20:00.000Z' },
+  ]
 }

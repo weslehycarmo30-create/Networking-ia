@@ -5,12 +5,14 @@
 ## Estado de segurança do protótipo
 
 - Dados e perfis de catálogo são fictícios.
-- Mensagens digitadas, convites, avatar atual e estados ficam na memória do processo React; a demonstração não envia esses dados a um backend nem os mantém após recarregar.
+- Avatar escolhido, mensagens de demonstração e convites/conexões são salvos localmente no navegador sob a chave namespaced `olimpo:demo-state`, com versão e validação de conteúdo. Presença e estado de interface não são salvos. A demonstração não envia esses dados a um backend.
+- Se o acesso ao `localStorage` falhar ou exceder a quota, a demonstração continua em memória e mostra um aviso de que as mudanças duram apenas a sessão. Dados inválidos voltam aos valores iniciais fictícios.
+- O controle **Reiniciar demonstração** apaga apenas a chave `olimpo:demo-state`; não limpa outras chaves do site ou do navegador.
 - Limite de 300 caracteres e validação de mensagem vazia são regras de domínio locais.
 - O adaptador valida sala existente, duplicidade de convite pendente, destinatário de convite e remetente de cancelamento.
 - Não há Supabase, Auth, banco, Storage, Realtime, analytics ou serviço externo.
 
-Essas validações melhoram a demonstração, mas **não são uma fronteira de segurança**: código cliente pode ser alterado pelo usuário e o estado não é compartilhado. Não inserir dados sensíveis ou pessoais em campos de demonstração.
+Essas validações e a chave namespaced melhoram a demonstração, mas **não são uma fronteira de segurança nem armazenamento de produção**: código cliente e `localStorage` podem ser inspecionados/alterados pelo usuário, e o estado não é compartilhado. Não inserir dados sensíveis ou pessoais em campos de demonstração. O aviso de armazenamento local não deve sugerir sincronização ou backup.
 
 ## Requisitos antes de produção
 

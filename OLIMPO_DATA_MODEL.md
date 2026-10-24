@@ -4,7 +4,7 @@
 
 ## Modelo conceitual implementado
 
-Os tipos estão em `src/domain/models.ts`. Os objetos são usados em memória pelo adaptador `createDemoServices()` e são preenchidos com dados inteiramente fictícios.
+Os tipos estão em `src/domain/models.ts`. Os objetos são usados pelo adaptador `createDemoServices()` e são preenchidos com dados inteiramente fictícios. Uma parte do estado demonstrativo fica em memória e uma whitelist serializada é salva apenas no `localStorage` do navegador.
 
 | Conceito | Campos atuais principais | Observações |
 |---|---|---|
@@ -20,7 +20,9 @@ Os tipos estão em `src/domain/models.ts`. Os objetos são usados em memória pe
 
 `src/services/contracts.ts` define interfaces para salas, participantes, mensagens, perfil, conexões e progresso. `src/services/demo.ts` implementa as interfaces em memória. `src/domain/rules.ts` contém validações de mensagens e transições de conexão, fora dos componentes visuais.
 
-O serviço inicia com mensagens distintas por sala e registros fictícios de conexão (convite recebido de Lia e conexão aceita com Caio). Alterações da sessão são perdidas ao recarregar ou fechar a aplicação. Não há armazenamento local persistente, banco ou sincronização.
+O serviço inicia com mensagens distintas por sala e registros fictícios de conexão (convite recebido de Lia e conexão aceita com Caio). `src/services/demo-storage.ts` usa a chave namespaced `olimpo:demo-state` e payload com versão de schema `1`. O payload inclui somente ID do avatar atual, mensagens demonstrativas indexadas por sala e conexões. Mensagens e conexões são validadas contra IDs, salas, perfis, avatares, status, datas e limites conhecidos antes de uso. Versões ou dados inválidos retornam aos dados iniciais fictícios; falha de leitura/escrita/quota mantém o serviço em memória e expõe um aviso.
+
+Presença, estado de navegação/visualização, rascunhos e notificações transitórias não entram no payload. **Reiniciar demonstração** remove somente `olimpo:demo-state` e repõe o avatar, mensagens e conexões iniciais em memória sem recarregar. Não há conta, backend, banco ou sincronização entre dispositivos; essa persistência local não é armazenamento de produção.
 
 ## Relações conceituais
 

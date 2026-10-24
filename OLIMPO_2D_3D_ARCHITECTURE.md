@@ -18,7 +18,7 @@ src/ui/App.tsx ──┬── services/contracts.ts
 
 - **Domínio:** `Avatar`, `Profile`, `TerritoryRoom`, `Message`, `Presence`, `Connection` e `GamificationProgress`; validação de mensagens, convites e transições de conexão.
 - **Serviços:** interfaces de salas, participantes, mensagens, perfil, conexões e gamificação.
-- **Adaptador demo:** cria um estado em memória; associa mensagens e presença a `roomId`; fornece perfis e conteúdo fictícios. Não é uma implementação de autenticação ou persistência.
+- **Adaptador demo:** associa mensagens e presença a `roomId`; fornece perfis e conteúdo fictícios. Avatar, mensagens e conexões são serializados de forma versionada no `localStorage` por `src/services/demo-storage.ts`; o restante do estado fica em memória. Não é uma implementação de autenticação ou persistência de produção.
 - **Apresentação:** `App.tsx` coordena navegação, seleção e consumo dos serviços. `ProfilePicker.tsx` é reutilizado na praça 2D e sobre a cena 3D.
 - **Cena:** `City3D.tsx` recebe salas, perfis e callbacks do estado compartilhado. Não consulta uma fonte de dados independente.
 
@@ -38,7 +38,8 @@ O uso direto de `@react-three/drei` foi removido; geometria, antialiasing e DPR 
 
 ## Limites atuais
 
-- O adaptador é síncrono e em memória; uma recarga reinicia as mudanças de sessão.
+- O adaptador é síncrono. Avatar, mensagens e conexões fictícios sobrevivem a recargas no mesmo navegador; presença e estado de interface reiniciam. O reset remove somente a chave namespaced do OLIMPO.
+- Dados persistidos inválidos retornam aos dados iniciais fictícios; erros de leitura/escrita e quota mantêm fallback em memória com aviso na interface.
 - Não há API, banco, autenticação, sincronização entre navegadores ou presença real.
 - A cena 3D não é necessária para acessar mensagens, perfis ou networking.
 - O `package.json` não inclui Supabase nem outros serviços externos.

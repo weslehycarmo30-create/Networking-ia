@@ -34,13 +34,13 @@ Comunidades digitais podem ser difíceis de explorar quando toda a atividade apa
 
 ### Demonstrativo/local
 
-`createDemoServices()` mantém o perfil atual, mensagens, presença e conexões em memória na execução da aplicação. Uma recarga reinicia esse estado. As listas de salas, mensagens iniciais, presença e perfis vêm de dados fictícios em `src/data/`. Não há conta, servidor, autenticação, persistência ou atualização em tempo real.
+`createDemoServices()` mantém o perfil atual, mensagens e conexões em memória e salva uma cópia validada de avatar, mensagens por sala e conexões no `localStorage` namespaced deste navegador. Uma recarga restaura somente esses dados demonstrativos. Presença, navegação, vista selecionada, rascunhos e feedback temporário continuam efêmeros. **Reiniciar demonstração** remove apenas a chave do OLIMPO e restaura os dados fictícios iniciais. Se o armazenamento estiver indisponível, a aplicação continua em memória e avisa que as mudanças duram apenas a sessão. As listas de salas, mensagens iniciais, presença e perfis vêm de dados fictícios em `src/data/`. Não há conta, servidor, autenticação ou atualização em tempo real; `localStorage` não é persistência de produção.
 
 Os pontos, níveis e medalhas são exemplos estáticos; não existe um mecanismo que calcule ou conceda progresso. A presença representa uma lista demonstrativa, não pessoas realmente online. Os convites simulam decisões de perfis fictícios dentro da interface.
 
 ### Fora do escopo implementado
 
-Contas reais, mensagens privadas, sincronização entre participantes, persistência entre sessões, moderação operacional, notificações externas, pagamentos, administração de comunidade e serviços de produção.
+Contas reais, mensagens privadas, sincronização entre participantes/dispositivos, persistência de produção, moderação operacional, notificações externas, pagamentos, administração de comunidade e serviços de produção.
 
 ## Princípios do produto
 

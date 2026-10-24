@@ -1,4 +1,5 @@
 import type { Avatar, Connection, GamificationProgress, Message, Presence, Profile, TerritoryRoom } from '../domain/models'
+import type { DemoPersistenceStatus } from './demo-storage'
 
 export interface RoomService {
   listRooms(): TerritoryRoom[]
@@ -33,6 +34,11 @@ export interface GamificationService {
   getProgress(profileId: Profile['id']): GamificationProgress | undefined
 }
 
+export interface DemoStateService {
+  getStatus(): DemoPersistenceStatus
+  reset(): DemoPersistenceStatus
+}
+
 export type OlimpoServices = {
   rooms: RoomService
   participants: ParticipantService
@@ -40,4 +46,5 @@ export type OlimpoServices = {
   profile: ProfileService
   connections: ConnectionService
   gamification: GamificationService
+  demoState: DemoStateService
 }
