@@ -1,14 +1,15 @@
-import type { Avatar, Connection, Message } from '../domain/models'
+import type { Avatar, Connection, DemoReport, Message, ReportReason } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from '../data/demo'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 1 as const
+export const DEMO_STATE_VERSION = 2 as const
 
 export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
   avatarId: Avatar['id']
   messages: Record<string, Message[]>
   connections: Connection[]
+  reports: DemoReport[]
 }
 
 export type DemoPersistenceStatus = {
@@ -24,6 +25,7 @@ const knownProfileById = new Map(knownProfiles.map((profile) => [profile.id, pro
 const knownAvatars = new Map(demoAvatars.map((avatar) => [avatar.id, avatar]))
 const roomIds = demoTerritories.map((room) => room.id)
 const allowedStatuses = new Set<Connection['status']>(['pending', 'accepted', 'declined', 'cancelled'])
+const allowedReportReasons = new Set<ReportReason>(['spam', 'harassment', 'inappropriate', 'scam', 'other'])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -68,8 +70,27 @@ function validateConnection(value: unknown): Connection | undefined {
   }
 }
 
+function validateReport(value: unknown, messages: Record<string, Message[]>): DemoReport | undefined {
+  if (!isRecord(value) || !isShortString(value.id, 120)) return undefined
+  if (value.targetType !== 'message' && value.targetType !== 'profile') return undefined
+  if (!isShortString(value.targetId, 120) || !isValidDate(value.createdAt)) return undefined
+  if (typeof value.reason !== 'string' || !allowedReportReasons.has(value.reason as ReportReason)) return undefined
+  if (value.note !== undefined && (typeof value.note !== 'string' || value.note.trim().length === 0 || value.note.length > 240)) return undefined
+  if (value.targetType === 'profile') {
+    if (!knownProfileById.has(value.targetId) || value.targetId === demoProfile.id) return undefined
+  } else if (!Object.values(messages).some((roomMessages) => roomMessages.some((message) => message.id === value.targetId))) return undefined
+  return {
+    id: value.id,
+    targetType: value.targetType,
+    targetId: value.targetId,
+    reason: value.reason as ReportReason,
+    ...(typeof value.note === 'string' ? { note: value.note } : {}),
+    createdAt: value.createdAt,
+  }
+}
+
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
-  if (!isRecord(value) || value.version !== DEMO_STATE_VERSION) return undefined
+  if (!isRecord(value) || (value.version !== 1 && value.version !== DEMO_STATE_VERSION)) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -88,7 +109,15 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   if (connections.some((connection) => connection === undefined)) return undefined
   const validConnections = connections as Connection[]
   if (new Set(validConnections.map((connection) => connection.id)).size !== validConnections.length) return undefined
-  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections }
+  const rawReports = value.version === 1 && value.reports === undefined ? [] : value.reports
+  if (!Array.isArray(rawReports) || rawReports.length > 4000) return undefined
+  const parsedReports = rawReports.map((report) => validateReport(report, messages))
+  if (parsedReports.some((report) => report === undefined)) return undefined
+  const validReports = parsedReports as DemoReport[]
+  if (new Set(validReports.map((report) => report.id)).size !== validReports.length) return undefined
+  const reportTargets = validReports.map((report) => `${report.targetType}:${report.targetId}`)
+  if (new Set(reportTargets).size !== reportTargets.length) return undefined
+  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports }
 }
 
 export function createDemoStateStorage() {

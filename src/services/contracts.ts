@@ -1,4 +1,4 @@
-import type { Avatar, Connection, GamificationProgress, Message, Presence, Profile, TerritoryRoom } from '../domain/models'
+import type { Avatar, Connection, DemoReport, GamificationProgress, Message, Presence, Profile, ReportReason, ReportTargetType, TerritoryRoom } from '../domain/models'
 import type { DemoPersistenceStatus } from './demo-storage'
 
 export interface RoomService {
@@ -33,6 +33,11 @@ export interface ConnectionService {
   cancelInvite(inviteId: Connection['id'], senderProfileId: Profile['id']): Connection
 }
 
+export interface ReportService {
+  hasReport(targetType: ReportTargetType, targetId: DemoReport['targetId']): boolean
+  submit(input: { targetType: ReportTargetType; targetId: DemoReport['targetId']; reason: ReportReason; note?: string }): DemoReport
+}
+
 export interface GamificationService {
   getProgress(profileId: Profile['id']): GamificationProgress | undefined
 }
@@ -48,6 +53,7 @@ export type OlimpoServices = {
   messages: MessageService
   profile: ProfileService
   connections: ConnectionService
+  reports: ReportService
   gamification: GamificationService
   demoState: DemoStateService
 }

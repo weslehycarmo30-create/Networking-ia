@@ -5,9 +5,9 @@
 ## Estado de segurança do protótipo
 
 - Dados e perfis de catálogo são fictícios.
-- Avatar escolhido, mensagens de demonstração e convites/conexões são salvos localmente no navegador sob a chave namespaced `olimpo:demo-state`, com versão e validação de conteúdo. Presença e estado de interface não são salvos. A demonstração não envia esses dados a um backend.
+- Avatar escolhido, mensagens, convites/conexões e registros de denúncia da demonstração são salvos localmente no navegador sob `olimpo:demo-state`, com versão e validação de conteúdo. Presença e estado de interface não são salvos. A demonstração não envia esses dados a um backend.
 - Se o acesso ao `localStorage` falhar ou exceder a quota, a demonstração continua em memória e mostra um aviso de que as mudanças duram apenas a sessão. Dados inválidos voltam aos valores iniciais fictícios.
-- O controle **Reiniciar demonstração** apaga apenas a chave `olimpo:demo-state`; não limpa outras chaves do site ou do navegador.
+- O controle **Reiniciar demonstração** apaga apenas a chave `olimpo:demo-state`, incluindo os registros locais de denúncia; não limpa outras chaves do site ou do navegador.
 - Limite de 300 caracteres e validação de mensagem vazia são regras de domínio locais.
 - O adaptador valida sala existente, duplicidade de convite pendente, destinatário de convite e remetente de cancelamento.
 - Não há Supabase, Auth, banco, Storage, Realtime, analytics ou serviço externo.
@@ -30,12 +30,12 @@ Essas validações e a chave namespaced melhoram a demonstração, mas **não s�
 - Codificar conteúdo como texto; se rich text for introduzido, sanitizar no servidor e evitar HTML arbitrário.
 - Estabelecer acesso a histórico, exclusão, exportação, retenção e tratamento de mensagens reportadas.
 
-Não há moderação, denúncia, bloqueio, rate limiting ou mensagens privadas implementados no protótipo.
+O fluxo de denúncia é somente uma simulação local: os registros ficam neste navegador (ou apenas na sessão se o armazenamento falhar) e **não são enviados nem recebidos por moderadores**. Nenhuma ação real de moderação é tomada. Os registros não são exibidos a outros participantes; não há painel administrativo, bloqueio, banimento, moderação automática, rate limiting ou mensagens privadas.
 
 ### Privacidade e dados
 
 - Definir finalidade e base legal, aviso de privacidade, minimização, retenção e exclusão antes de coletar perfis reais.
-- Evitar gravar conteúdo de chat, identificadores ou texto em logs de diagnóstico sem necessidade e controle de acesso.
+- Evitar gravar conteúdo de chat, identificadores, observações de denúncias ou texto em logs de diagnóstico sem necessidade e controle de acesso. As observações locais são opcionais e limitadas a 240 caracteres.
 - Rever riscos de exposição de presença, grafos de conexão e interesses; estes dados podem revelar relações e preferências.
 - O código atual não usa dados pessoais reais; nomes e apresentações de exemplo são fictícios.
 

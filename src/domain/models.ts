@@ -62,3 +62,15 @@ export type Connection = {
   status: 'pending' | 'accepted' | 'declined' | 'cancelled'
   createdAt: string
 }
+
+export type ReportTargetType = 'message' | 'profile'
+export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'scam' | 'other'
+
+export type DemoReport = {
+  id: string
+  targetType: ReportTargetType
+  targetId: Message['id'] | Profile['id']
+  reason: ReportReason
+  note?: string
+  createdAt: string
+}

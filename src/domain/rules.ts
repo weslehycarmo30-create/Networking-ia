@@ -1,4 +1,22 @@
-import type { Connection, Message, Profile } from './models'
+import type { Connection, DemoReport, Message, Profile, ReportReason, ReportTargetType } from './models'
+
+const reportReasons = new Set<ReportReason>(['spam', 'harassment', 'inappropriate', 'scam', 'other'])
+
+export function createDemoReport(input: {
+  id: string
+  targetType: ReportTargetType
+  targetId: DemoReport['targetId']
+  reason: ReportReason
+  note?: string
+  createdAt: string
+}): DemoReport {
+  if (input.targetType !== 'message' && input.targetType !== 'profile') throw new Error('O item da denúncia demonstrativa é inválido.')
+  if (!reportReasons.has(input.reason)) throw new Error('Selecione um motivo válido para a denúncia demonstrativa.')
+  if (input.note !== undefined && typeof input.note !== 'string') throw new Error('A observação da denúncia deve ser texto.')
+  if (input.note && input.note.length > 240) throw new Error('A observação deve ter no máximo 240 caracteres.')
+  const note = input.note?.trim()
+  return { id: input.id, targetType: input.targetType, targetId: input.targetId, reason: input.reason, ...(note ? { note } : {}), createdAt: input.createdAt }
+}
 
 export function normalizeMessageText(value: string): string {
   const text = value.trim()

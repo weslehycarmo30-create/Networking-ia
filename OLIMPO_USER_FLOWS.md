@@ -67,6 +67,15 @@ Para demonstrar a outra perspectiva num convite enviado, a página do perfil des
 
 O perfil próprio lista relações aceitas. No perfil comunitário, o estado informa se já há conexão, convite pendente, recusa anterior ou nenhum vínculo. Não há ação de mensagem privada.
 
+## 8. Sinalizar mensagem ou perfil
+
+1. Na sala, a pessoa escolhe **Sinalizar mensagem**; no perfil de outra pessoa, escolhe **Sinalizar este perfil**.
+2. Um diálogo acessível pede um motivo (spam, assédio, conteúdo impróprio, golpe ou outro) e aceita uma observação opcional de até 240 caracteres.
+3. Antes da confirmação, o diálogo informa que é uma simulação local: o registro fica somente neste navegador (ou na sessão se o armazenamento local falhar), **não é enviado nem recebido por moderadores**, e nenhuma ação real de moderação será tomada.
+4. Após confirmar, a interface confirma apenas o registro demonstrativo e impede nova denúncia do mesmo item. Os registros não são mostrados a outros participantes. **Reiniciar demonstração** também os remove.
+
+**Estado:** registros demonstrativos no adaptador local versionado; não existe equipe de moderação ou serviço externo conectado.
+
 ## Acessibilidade do fluxo
 
 Os seletores e ações são botões HTML com rótulos; feedback usa região de status; foco visível e layout mobile vêm dos estilos globais. A vista 2D é a alternativa completa ao Canvas. Ver [arquitetura](OLIMPO_2D_3D_ARCHITECTURE.md) e [segurança](OLIMPO_SECURITY.md).

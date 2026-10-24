@@ -1,5 +1,5 @@
-import { cancelConnection, createConnection, createMessage, findConnectionBetween, hasPendingConnection, respondToConnection } from '../domain/rules'
-import type { Avatar, Connection, Message, Presence, Profile } from '../domain/models'
+import { cancelConnection, createConnection, createDemoReport, createMessage, findConnectionBetween, hasPendingConnection, respondToConnection } from '../domain/rules'
+import type { Avatar, Connection, DemoReport, Message, Presence, Profile } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import type { OlimpoServices } from './contracts'
 import { createDemoStateStorage, DEMO_STATE_VERSION } from './demo-storage'
@@ -13,6 +13,7 @@ export function createDemoServices(): OlimpoServices {
     if (avatar) currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
   }
   let connections: Connection[] = loaded.state?.connections.map((connection) => ({ ...connection })) ?? createInitialConnections()
+  let reports: DemoReport[] = loaded.state?.reports.map((report) => ({ ...report })) ?? []
   let currentRoomId: string | undefined
   const findProfile = (profileId: string): Profile | undefined => profileId === currentProfile.id
     ? currentProfile
@@ -30,7 +31,7 @@ export function createDemoServices(): OlimpoServices {
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
 
   function saveState() {
-    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections })
+    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports })
   }
 
   return {
@@ -142,6 +143,23 @@ export function createDemoServices(): OlimpoServices {
         return { ...updated }
       },
     },
+    reports: {
+      hasReport: (targetType, targetId) => reports.some((report) => report.targetType === targetType && report.targetId === targetId),
+      submit: (input) => {
+        if (reports.some((report) => report.targetType === input.targetType && report.targetId === input.targetId)) {
+          throw new Error('Este item já foi sinalizado nesta demonstração.')
+        }
+        if (input.targetType === 'profile') {
+          if (!findProfile(input.targetId) || input.targetId === currentProfile.id) throw new Error('Este perfil não pode ser sinalizado na demonstração.')
+        } else if (!rooms.some((room) => messages[room.id]?.some((message) => message.id === input.targetId))) {
+          throw new Error('Esta mensagem não existe na demonstração.')
+        }
+        const report = createDemoReport({ ...input, id: `demo-report-${crypto.randomUUID()}`, createdAt: new Date().toISOString() })
+        reports.push(report)
+        saveState()
+        return { ...report }
+      },
+    },
     gamification: {
       getProgress: (profileId) => profileId === currentProfile.id ? { ...currentProfile.gamification, badges: [...currentProfile.gamification.badges] } : undefined,
     },
@@ -153,6 +171,7 @@ export function createDemoServices(): OlimpoServices {
         currentProfile = structuredClone(demoProfile)
         messages = createInitialMessages()
         connections = createInitialConnections()
+        reports = []
         return status
       },
     },

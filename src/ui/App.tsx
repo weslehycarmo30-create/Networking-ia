@@ -1,12 +1,13 @@
-import { Component, lazy, Suspense, useEffect, useState, type CSSProperties, type ErrorInfo, type FormEvent, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type ErrorInfo, type FormEvent, type ReactNode } from 'react'
 import { guide } from '../data/territories'
 import { demoAvatars } from '../data/demo'
 import { findConnectionBetween } from '../domain/rules'
-import type { Connection, Profile, TerritoryRoom } from '../domain/models'
+import type { Connection, Profile, ReportReason, ReportTargetType, TerritoryRoom } from '../domain/models'
 import { createDemoServices } from '../services/demo'
 import { navigateToTerritory, type NavigationState } from '../navigation/routes'
 import ProfilePicker from './ProfilePicker'
 import MemberDiscovery from './MemberDiscovery'
+import ReportDialog from './ReportDialog'
 
 const City3D = lazy(() => import('../scenes/City3D'))
 
@@ -36,6 +37,8 @@ export default function App() {
   const [webgl, setWebgl] = useState(true)
   const [draft, setDraft] = useState('')
   const [toast, setToast] = useState('')
+  const [reportTarget, setReportTarget] = useState<{ targetType: ReportTargetType; targetId: string; itemLabel: string } | null>(null)
+  const reportTrigger = useRef<HTMLButtonElement | null>(null)
 
   const rooms = services.rooms.listRooms()
   const active = services.rooms.getRoom(nav.territoryId ?? '') ?? rooms[0]
@@ -89,6 +92,36 @@ export default function App() {
   }
 
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 4000); return () => window.clearTimeout(timer) }, [toast])
+  useEffect(() => {
+    if (!reportTarget && reportTrigger.current) {
+      reportTrigger.current.focus()
+      reportTrigger.current = null
+    }
+  }, [reportTarget])
+
+  function openReportDialog(targetType: ReportTargetType, targetId: string, itemLabel: string, trigger: HTMLButtonElement) {
+    if (services.reports.hasReport(targetType, targetId)) {
+      setToast('Este item já foi sinalizado nesta demonstração local.')
+      return
+    }
+    reportTrigger.current = trigger
+    setReportTarget({ targetType, targetId, itemLabel })
+  }
+
+  function submitDemoReport(reason: ReportReason, note: string) {
+    if (!reportTarget) return
+    try {
+      services.reports.submit({ ...reportTarget, reason, note })
+      const persistence = services.demoState.getStatus()
+      setReportTarget(null)
+      refreshServices()
+      setToast(persistence.persistent
+        ? 'Registro demonstrativo salvo somente neste navegador. Não foi enviado nem recebido por moderadores; nenhuma ação real de moderação foi tomada.'
+        : 'Registro demonstrativo mantido somente nesta sessão. Não foi enviado nem recebido por moderadores; nenhuma ação real de moderação foi tomada.')
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : 'Não foi possível registrar esta simulação.')
+    }
+  }
 
   function sendMessage(event: FormEvent) {
     event.preventDefault()
@@ -120,7 +153,7 @@ export default function App() {
   }
 
   function resetDemonstration() {
-    if (!window.confirm('Reiniciar a demonstração OLIMPO? Isso apaga somente o estado fictício salvo por OLIMPO neste navegador e restaura os dados iniciais.')) return
+    if (!window.confirm('Reiniciar a demonstração OLIMPO? Isso apaga somente o estado salvo por OLIMPO neste navegador, incluindo os registros de denúncia demonstrativa, e restaura os dados iniciais.')) return
     const status = services.demoState.reset()
     setDraft('')
     setNav({ screen: 'city' })
@@ -162,7 +195,7 @@ export default function App() {
 
     {nav.screen === 'discover' && <MemberDiscovery profiles={communityProfiles} territories={rooms} currentProfileId={profile.id} connections={allConnections} onBack={goCity} onOpenProfile={openProfile} onRequestConnection={requestConnection} onCancelInvite={(inviteId) => cancelInvite(inviteId, profile.id)} />}
 
-    {nav.screen === 'room' && <main className="room-page"><button className="back-link" onClick={goCity}>← Voltar à Praça Central</button><section className="room-heading"><span className="room-icon" style={{ '--territory': active.color } as CSSProperties}>{active.symbol}</span><div><div className="eyebrow">{active.domain} <span>·</span> TERRITÓRIO</div><h1>{active.name}</h1><p>{active.description}</p></div><span className="online-pill"><i/> {participants.length} por aqui</span></section><div className="room-layout"><section className="chat-panel"><div className="chat-top"><div><b>Conversa da praça</b><span>Um espaço aberto para todo mundo</span></div><span className="chat-room-label">{active.name}</span></div><div className="message-list" aria-live="polite">{messages.map((message) => <article className={`message ${message.authorId === profile.id ? 'own-message' : ''}`} key={message.id}><span className="message-avatar" aria-hidden="true">{message.avatar.emoji}</span><div className="message-body"><div><b>{message.authorName}</b><time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time></div><p>{message.text}</p></div></article>)}<div className="room-prompt"><span>✦</span>{active.prompt}</div></div><form className="chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="message">Escreva uma mensagem</label><input id="message" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Escreva uma mensagem…" maxLength={300}/><span className="local-only">DEMO LOCAL</span><button className="send-button" aria-label="Enviar mensagem" disabled={!draft.trim()}>↑</button></form></section><aside className="room-sidebar"><div className="sidebar-card"><div className="sidebar-title">Por aqui agora <span>{participants.length}</span></div>{participants.map((person) => <button type="button" className="person-row participant-button" key={person.id} onClick={() => openProfile(person.profileId)} aria-label={`Abrir perfil de ${person.displayName}`}><span className="person-avatar">{person.avatar.emoji}<i/></span><span><b>{person.displayName}</b><small>{person.role}</small></span><span className="participant-open">Perfil →</span></button>)}</div><div className="sidebar-card room-about"><div className="sidebar-title">Sobre este lugar</div><p>{active.description}</p><span className="demo-badge">✦ Experiência demonstrativa</span></div></aside></div></main>}
+    {nav.screen === 'room' && <main className="room-page"><button className="back-link" onClick={goCity}>← Voltar à Praça Central</button><section className="room-heading"><span className="room-icon" style={{ '--territory': active.color } as CSSProperties}>{active.symbol}</span><div><div className="eyebrow">{active.domain} <span>·</span> TERRITÓRIO</div><h1>{active.name}</h1><p>{active.description}</p></div><span className="online-pill"><i/> {participants.length} por aqui</span></section><div className="room-layout"><section className="chat-panel"><div className="chat-top"><div><b>Conversa da praça</b><span>Um espaço aberto para todo mundo</span></div><span className="chat-room-label">{active.name}</span></div><div className="message-list" aria-live="polite">{messages.map((message) => { const alreadyReported = services.reports.hasReport('message', message.id); return <article className={`message ${message.authorId === profile.id ? 'own-message' : ''}`} key={message.id}><span className="message-avatar" aria-hidden="true">{message.avatar.emoji}</span><div className="message-body"><div><b>{message.authorName}</b><time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time></div><p>{message.text}</p></div><button className="message-report-button" aria-disabled={alreadyReported} onClick={(event) => { if (!alreadyReported) openReportDialog('message', message.id, `mensagem de ${message.authorName}`, event.currentTarget) }} aria-label={alreadyReported ? `Mensagem de ${message.authorName} já sinalizada nesta demonstração` : `Sinalizar mensagem de ${message.authorName}`}>{alreadyReported ? 'Já sinalizada' : 'Sinalizar mensagem'}</button></article> })}<div className="room-prompt"><span>✦</span>{active.prompt}</div></div><form className="chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="message">Escreva uma mensagem</label><input id="message" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Escreva uma mensagem…" maxLength={300}/><span className="local-only">DEMO LOCAL</span><button className="send-button" aria-label="Enviar mensagem" disabled={!draft.trim()}>↑</button></form></section><aside className="room-sidebar"><div className="sidebar-card"><div className="sidebar-title">Por aqui agora <span>{participants.length}</span></div>{participants.map((person) => <button type="button" className="person-row participant-button" key={person.id} onClick={() => openProfile(person.profileId)} aria-label={`Abrir perfil de ${person.displayName}`}><span className="person-avatar">{person.avatar.emoji}<i/></span><span><b>{person.displayName}</b><small>{person.role}</small></span><span className="participant-open">Perfil →</span></button>)}</div><div className="sidebar-card room-about"><div className="sidebar-title">Sobre este lugar</div><p>{active.description}</p><span className="demo-badge">✦ Experiência demonstrativa</span></div></aside></div></main>}
 
     {nav.screen === 'profile' && <main className="profile-page"><button className="back-link" onClick={closeProfile}>← Voltar</button><div className="profile-card"><div className="profile-cover"><span>✦</span><span>OLIMPO · {isOwnProfile ? 'EXPLORADOR' : 'COMUNIDADE'}</span></div><div className="profile-details"><div className="profile-avatar-large" aria-label={`Avatar: ${viewedProfile.avatar.label}`}>{viewedProfile.avatar.emoji}</div><div className="eyebrow">{isOwnProfile ? 'MEU PERFIL DEMONSTRATIVO' : 'PERFIL DA COMUNIDADE'}</div><h1>{viewedProfile.displayName}</h1><span className="handle">{viewedProfile.handle}</span><p>{viewedProfile.bio}</p><div className="profile-interests"><span>ÁREAS DE INTERESSE</span><div>{viewedProfile.interests.map((interest) => <i key={interest}>{interest}</i>)}</div></div><div className="profile-affinities"><span>AFINIDADES COM TERRITÓRIOS</span><ul>{viewedProfile.territoryAffinities.map((territoryId) => { const territory = rooms.find((room) => room.id === territoryId); return territory ? <li key={territoryId}><span aria-hidden="true">{territory.symbol}</span> {territory.name}</li> : null })}</ul></div><div className="profile-gamification"><b>Nível {viewedProgress?.level ?? 1}</b><span>{viewedProgress?.points ?? 0} pontos</span>{viewedProgress?.badges.map((badge) => <i key={badge}>{badge}</i>)}</div>
         {isOwnProfile && <><div className="profile-avatar-picker"><b>Seu avatar</b><div className="avatar-options compact" role="group" aria-label="Trocar avatar">{demoAvatars.map((option) => <button key={option.id} className={`avatar-option ${profile.avatar.id === option.id ? 'selected' : ''}`} aria-label={option.label} aria-pressed={profile.avatar.id === option.id} onClick={() => chooseAvatar(option.id)}><span>{option.emoji}</span></button>)}</div></div><section className="networking-panel"><h2>Networking demonstrativo</h2><button className="reset-demo-button" onClick={resetDemonstration}>Reiniciar demonstração</button>
@@ -170,7 +203,7 @@ export default function App() {
           <div className="network-group"><h3>Convites enviados <span>{outgoingInvites.length}</span></h3>{outgoingInvites.length === 0 && <p className="network-empty">Nenhum convite pendente.</p>}{outgoingInvites.map((invite) => { const person = connectionPerson(invite, profile.id); return person && <article className="network-row" key={invite.id}><button className="network-person" onClick={() => openProfile(person.id)}><span>{person.avatar.emoji}</span><span><b>{person.displayName}</b><small>{person.handle} · Aguardando resposta</small></span></button><button className="network-cancel" onClick={() => cancelInvite(invite.id, profile.id)}>Cancelar convite</button></article> })}</div>
           <div className="network-group"><h3>Conexões aceitas <span>{acceptedConnections.length}</span></h3>{acceptedConnections.length === 0 && <p className="network-empty">Suas conexões aceitas aparecem aqui.</p>}{acceptedConnections.map((connection) => { const person = connectionPerson(connection, profile.id); return person && <button className="network-person accepted-person" key={connection.id} onClick={() => openProfile(person.id)}><span>{person.avatar.emoji}</span><span><b>{person.displayName}</b><small>{person.handle} · Conexão aceita</small></span><span className="connection-check">✓ Conectados</span></button> })}</div>
         </section></>}
-        {!isOwnProfile && <section className="networking-panel profile-connection-panel"><h2>Estado da conexão</h2><div className="connection-state" role="status" aria-live="polite">{viewedConnection?.status === 'accepted' ? 'Vocês já são conexões.' : incomingOnViewedProfile ? `${viewedProfile.displayName} enviou um convite para você.` : outgoingFromCurrentProfile ? 'Seu convite está pendente de resposta.' : viewedConnection?.status === 'declined' ? 'Um convite anterior foi recusado.' : 'Vocês ainda não estão conectados.'}</div>
+        {!isOwnProfile && <section className="networking-panel profile-connection-panel"><button className="profile-report-button" aria-disabled={services.reports.hasReport('profile', viewedProfile.id)} onClick={(event) => { if (!services.reports.hasReport('profile', viewedProfile.id)) openReportDialog('profile', viewedProfile.id, `perfil de ${viewedProfile.displayName}`, event.currentTarget) }}>{services.reports.hasReport('profile', viewedProfile.id) ? 'Perfil já sinalizado nesta demonstração' : 'Sinalizar este perfil'}</button><h2>Estado da conexão</h2><div className="connection-state" role="status" aria-live="polite">{viewedConnection?.status === 'accepted' ? 'Vocês já são conexões.' : incomingOnViewedProfile ? `${viewedProfile.displayName} enviou um convite para você.` : outgoingFromCurrentProfile ? 'Seu convite está pendente de resposta.' : viewedConnection?.status === 'declined' ? 'Um convite anterior foi recusado.' : 'Vocês ainda não estão conectados.'}</div>
           {viewedConnection?.status === 'accepted' && <span className="connection-check">✓ Conectados</span>}
           {incomingOnViewedProfile && <div className="network-actions"><button className="network-accept" onClick={() => respondToInvite(viewedConnection.id, profile.id, 'accepted')}>Aceitar convite</button><button className="network-decline" onClick={() => respondToInvite(viewedConnection.id, profile.id, 'declined')}>Recusar convite</button></div>}
           {outgoingFromCurrentProfile && <><div className="network-actions"><button className="network-cancel" onClick={() => cancelInvite(viewedConnection.id, profile.id)}>Cancelar convite</button></div><div className="recipient-preview"><b>Resposta demonstrativa do destinatário</b><p>Simule como {viewedProfile.displayName} responderia ao convite.</p><div className="network-actions"><button className="network-accept" onClick={() => respondToInvite(viewedConnection.id, viewedProfile.id, 'accepted')}>Aceitar como destinatário</button><button className="network-decline" onClick={() => respondToInvite(viewedConnection.id, viewedProfile.id, 'declined')}>Recusar como destinatário</button></div></div></>}
@@ -178,6 +211,7 @@ export default function App() {
         </section>}
       </div></div></main>}
 
+    {reportTarget && <ReportDialog itemLabel={reportTarget.itemLabel} onCancel={() => setReportTarget(null)} onSubmit={submitDemoReport} />}
     {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
     <footer className="site-footer"><span>OLIMPO <i>·</i> UMA CIDADE EM CONSTRUÇÃO</span><span>FEITO PARA IDEIAS, TRABALHO E CONEXÕES</span></footer>
   </div>
