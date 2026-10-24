@@ -12,7 +12,7 @@ Os tipos estão em `src/domain/models.ts`. Os objetos são usados pelo adaptador
 | `Profile` | `id`, `displayName`, `handle`, `avatar`, `bio`, `interests`, `gamification` | Perfil atual e perfis fictícios da comunidade. |
 | `TerritoryRoom` | `id`, `name`, `domain`, `symbol`, `description`, `people`, `color`, `position`, `prompt` | `id` é a chave usada para separar mensagens e presença. `people` é número ilustrativo. |
 | `Message` | `id`, `roomId`, `authorId`, `authorName`, `avatar`, `createdAt`, `text` | Cada mensagem tem `roomId`; envio é roteado e listado por sala. Limite local de texto: 300 caracteres. |
-| `Presence` | `id`, `roomId`, `profileId`, `displayName`, `avatar`, `role`, `status` | Lista pré-carregada por sala e perfil atual. `online` não é heartbeat ou presença real. |
+| `Presence` | `id`, `roomId`, `profileId`, `displayName`, `avatar`, `role`, `status` | Perfis fictícios de catálogo mais o perfil atual somente na sala em que entrou. O estado atual é temporário em memória; `online` não é heartbeat, realtime ou presença real. |
 | `Connection` | `id`, `fromProfileId`, `toProfileId`, `status`, `createdAt` | Estados: `pending`, `accepted`, `declined`, `cancelled`. Regras validam remetente/destinatário em ações locais. |
 | `GamificationProgress` | `level`, `points`, `badges` | Conteúdo estático demonstrativo. Não existe cálculo, ledger ou concessão de pontos. |
 
@@ -22,7 +22,7 @@ Os tipos estão em `src/domain/models.ts`. Os objetos são usados pelo adaptador
 
 O serviço inicia com mensagens distintas por sala e registros fictícios de conexão (convite recebido de Lia e conexão aceita com Caio). `src/services/demo-storage.ts` usa a chave namespaced `olimpo:demo-state` e payload com versão de schema `1`. O payload inclui somente ID do avatar atual, mensagens demonstrativas indexadas por sala e conexões. Mensagens e conexões são validadas contra IDs, salas, perfis, avatares, status, datas e limites conhecidos antes de uso. Versões ou dados inválidos retornam aos dados iniciais fictícios; falha de leitura/escrita/quota mantém o serviço em memória e expõe um aviso.
 
-Presença, estado de navegação/visualização, rascunhos e notificações transitórias não entram no payload. **Reiniciar demonstração** remove somente `olimpo:demo-state` e repõe o avatar, mensagens e conexões iniciais em memória sem recarregar. Não há conta, backend, banco ou sincronização entre dispositivos; essa persistência local não é armazenamento de produção.
+Presença, estado de navegação/visualização, rascunhos e notificações transitórias não entram no payload. Ao entrar, o serviço associa o participante atual à sala; ao voltar à Praça Central, remove sua presença. A troca de visualização 2D/3D mantém a mesma sala ativa. **Reiniciar demonstração** remove somente `olimpo:demo-state`, limpa a presença temporária e repõe o avatar, mensagens e conexões iniciais em memória sem recarregar. Não há conta, backend, banco ou sincronização entre usuários, abas ou dispositivos; essa persistência local não é armazenamento de produção.
 
 ## Relações conceituais
 

@@ -13,6 +13,7 @@ export function createDemoServices(): OlimpoServices {
     if (avatar) currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
   }
   let connections: Connection[] = loaded.state?.connections.map((connection) => ({ ...connection })) ?? createInitialConnections()
+  let currentRoomId: string | undefined
   const findProfile = (profileId: string): Profile | undefined => profileId === currentProfile.id
     ? currentProfile
     : demoCommunityProfiles.find((candidate) => candidate.id === profileId)
@@ -47,7 +48,7 @@ export function createDemoServices(): OlimpoServices {
           const profile = demoCommunityProfiles.find((candidate) => candidate.id === person.profileId)
           return profile ? [{ ...person, roomId, displayName: profile.displayName, avatar: structuredClone(profile.avatar) }] : []
         })
-        return [...seeded, {
+        const current: Presence[] = currentRoomId === roomId ? [{
           id: `presence-${currentProfile.id}-${roomId}`,
           roomId,
           profileId: currentProfile.id,
@@ -55,8 +56,24 @@ export function createDemoServices(): OlimpoServices {
           avatar: structuredClone(currentProfile.avatar),
           role: 'Você · explorador',
           status: 'online',
-        }]
+        }] : []
+        return [...seeded, ...current]
       },
+      joinRoom: (roomId) => {
+        if (!rooms.some((room) => room.id === roomId)) throw new Error('A sala selecionada não existe.')
+        currentRoomId = roomId
+        return {
+          id: `presence-${currentProfile.id}-${roomId}`,
+          roomId,
+          profileId: currentProfile.id,
+          displayName: currentProfile.displayName,
+          avatar: structuredClone(currentProfile.avatar),
+          role: 'Você · explorador',
+          status: 'online',
+        }
+      },
+      leaveRoom: (roomId) => { if (currentRoomId === roomId) currentRoomId = undefined },
+      clearCurrentPresence: () => { currentRoomId = undefined },
     },
     messages: {
       listByRoom: (roomId) => (messages[roomId] ?? []).map((message) => ({ ...message, avatar: structuredClone(message.avatar) })),
@@ -132,6 +149,7 @@ export function createDemoServices(): OlimpoServices {
       getStatus: () => storage.getStatus(),
       reset: () => {
         const status = storage.reset()
+        currentRoomId = undefined
         currentProfile = structuredClone(demoProfile)
         messages = createInitialMessages()
         connections = createInitialConnections()

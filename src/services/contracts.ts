@@ -8,6 +8,9 @@ export interface RoomService {
 
 export interface ParticipantService {
   listByRoom(roomId: string): Presence[]
+  joinRoom(roomId: string): Presence
+  leaveRoom(roomId: string): void
+  clearCurrentPresence(): void
 }
 
 export interface MessageService {

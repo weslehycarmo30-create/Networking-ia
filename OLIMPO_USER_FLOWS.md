@@ -22,12 +22,12 @@
 ## 3. Entrar em uma sala e conversar
 
 1. A pessoa abre um dos seis territórios.
-2. A sala mostra descrição, participantes fictícios, mensagens iniciais e um prompt de conversa.
+2. Ao entrar, o serviço marca o perfil atual como presente naquela sala sem criar duplicata; a sala mostra a presença temporária do participante atual e os perfis fictícios de catálogo, mensagens iniciais e um prompt de conversa.
 3. A pessoa pode selecionar um participante para abrir seu perfil.
 4. Uma mensagem demonstrativa pode ser enviada. O serviço valida texto vazio e limite de 300 caracteres e a guarda na sala correspondente.
-5. Ao voltar à sala durante a sessão, o estado continua em memória. Recarregar a página reinicia a demonstração.
+5. Voltar à Praça Central remove o perfil atual da presença da sala. Alternar entre as vistas 2D e 3D da praça não altera a presença. Quantidades por sala são mostradas nos cartões e seletores da praça e na sala. Presença é apenas demonstrativa, temporária e local; não há atualização entre usuários, abas ou dispositivos.
 
-**Estado:** implementado localmente. Não há mensagens privadas nem conversa compartilhada entre navegadores.
+**Estado:** implementado localmente. Não há mensagens privadas nem conversa compartilhada entre navegadores. Presença não é persistida no `localStorage`.
 
 ## 4. Enviar um convite de conexão
 
