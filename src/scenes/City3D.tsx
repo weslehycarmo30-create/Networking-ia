@@ -1,7 +1,8 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import type { Mesh } from 'three'
-import type { TerritoryRoom } from '../domain/models'
+import type { Profile, TerritoryRoom } from '../domain/models'
+import ProfilePicker from '../ui/ProfilePicker'
 
 function Marker({ item, active, onSelect }: { item: TerritoryRoom; active: boolean; onSelect: () => void }) {
   const mesh = useRef<Mesh>(null)
@@ -39,10 +40,10 @@ function Scene({ rooms, activeId, onSelect, onFailure }: { rooms: TerritoryRoom[
   </>
 }
 
-export default function City3D(props: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: () => void }) {
-  return <Canvas camera={{ position: [8, 9, 10], fov: 42 }} dpr={[1, 1.25]} onCreated={({ gl }) => {
+export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profile[]; activeId: string; selectedProfileId?: string; onSelect: (item: TerritoryRoom) => void; onSelectProfile: (profile: Profile) => void; onFailure: () => void }) {
+  return <div className="scene-with-profiles"><Canvas camera={{ position: [8, 9, 10], fov: 42 }} dpr={[1, 1.25]} onCreated={({ gl }) => {
     gl.domElement.addEventListener('webglcontextlost', (event) => { event.preventDefault(); props.onFailure() }, { once: true })
   }} gl={{ antialias: false, powerPreference: 'low-power' }}>
     <Scene rooms={props.rooms} activeId={props.activeId} onSelect={props.onSelect} onFailure={props.onFailure} />
-  </Canvas>
+  </Canvas><div className="scene-profile-picker"><ProfilePicker profiles={props.profiles} selectedId={props.selectedProfileId} onSelect={props.onSelectProfile} label="Participantes fictícios da praça" /></div></div>
 }

@@ -36,5 +36,26 @@ export function createConnection(input: {
 }
 
 export function hasPendingConnection(connections: Connection[], fromId: string, toId: string): boolean {
-  return connections.some((connection) => connection.status === 'pending' && connection.fromProfileId === fromId && connection.toProfileId === toId)
+  return connections.some((connection) => connection.status === 'pending' && matchesPair(connection, fromId, toId))
+}
+
+export function findConnectionBetween(connections: Connection[], firstId: string, secondId: string): Connection | undefined {
+  return [...connections].reverse().find((connection) => connection.status !== 'cancelled' && matchesPair(connection, firstId, secondId))
+}
+
+export function respondToConnection(connection: Connection, responderId: string, decision: 'accepted' | 'declined'): Connection {
+  if (connection.status !== 'pending') throw new Error('Este convite não está mais pendente.')
+  if (connection.toProfileId !== responderId) throw new Error('Somente o destinatário pode responder a este convite.')
+  return { ...connection, status: decision }
+}
+
+export function cancelConnection(connection: Connection, senderId: string): Connection {
+  if (connection.status !== 'pending') throw new Error('Somente convites pendentes podem ser cancelados.')
+  if (connection.fromProfileId !== senderId) throw new Error('Somente quem enviou pode cancelar este convite.')
+  return { ...connection, status: 'cancelled' }
+}
+
+function matchesPair(connection: Connection, firstId: string, secondId: string): boolean {
+  return (connection.fromProfileId === firstId && connection.toProfileId === secondId)
+    || (connection.fromProfileId === secondId && connection.toProfileId === firstId)
 }

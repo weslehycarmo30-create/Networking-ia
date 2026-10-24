@@ -27,6 +27,12 @@ const communityAvatars = [
   { id: 'caio', label: 'Caio', emoji: '🛠️' },
   { id: 'nina', label: 'Nina', emoji: '🌙' },
 ]
+export const demoCommunityProfiles: Profile[] = [
+  { id: 'lia', displayName: 'Lia', handle: '@lia.cria', avatar: communityAvatars[0], bio: 'Designer de produto, colecionadora de boas perguntas e ideias simples.', interests: ['Design de produto', 'Comunidades', 'Acessibilidade'], gamification: { level: 2, points: 85, badges: ['Boas-vindas', 'Boa conversa'] } },
+  { id: 'caio', displayName: 'Caio', handle: '@caio.construi', avatar: communityAvatars[1], bio: 'Construindo produtos digitais e compartilhando o que aprende.', interests: ['Desenvolvimento', 'SaaS', 'Inteligência artificial'], gamification: { level: 3, points: 140, badges: ['Construtor'] } },
+  { id: 'nina', displayName: 'Nina', handle: '@nina.descobre', avatar: communityAvatars[2], bio: 'Exploradora de ideias, histórias e novas conexões.', interests: ['Pesquisa', 'Educação', 'Criatividade'], gamification: { level: 1, points: 45, badges: ['Primeiros passos'] } },
+  guide,
+]
 const seedTexts = [
   ['Oi, pessoal! Cheguei agora. O que estão criando por aqui?', 'Bem-vinda! Estou explorando ideias para meu próximo projeto.', 'Que legal. Depois compartilha o que encontrar!'],
   ['Olá! Em que vocês estão trabalhando nesta semana?', 'Estou experimentando uma ideia nova e aprendendo bastante.', 'Adoro trocar aprendizados por aqui!'],

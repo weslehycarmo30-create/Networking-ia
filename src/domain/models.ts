@@ -56,6 +56,6 @@ export type Connection = {
   id: string
   fromProfileId: Profile['id']
   toProfileId: Profile['id']
-  status: 'pending' | 'accepted'
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled'
   createdAt: string
 }

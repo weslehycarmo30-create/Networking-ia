@@ -16,12 +16,17 @@ export interface MessageService {
 
 export interface ProfileService {
   getCurrent(): Profile
+  getProfile(profileId: Profile['id']): Profile | undefined
+  listCommunity(): Profile[]
   updateAvatar(avatarId: Avatar['id']): Profile
 }
 
 export interface ConnectionService {
   listConnections(): Connection[]
+  listForProfile(profileId: Profile['id']): Connection[]
   requestConnection(toProfileId: Profile['id']): Connection
+  respondToInvite(inviteId: Connection['id'], recipientProfileId: Profile['id'], decision: 'accepted' | 'declined'): Connection
+  cancelInvite(inviteId: Connection['id'], senderProfileId: Profile['id']): Connection
 }
 
 export interface GamificationService {
