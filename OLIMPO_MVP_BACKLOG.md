@@ -33,6 +33,10 @@
 | P0 | Definir observabilidade sem coletar conteúdo sensível desnecessário, backups e resposta a incidentes. | Privacidade e operação |
 | P0 | Medir custo e desempenho em cenários de sala/presença definidos; publicar limites de operação internos. | Arquitetura e hipótese de escala |
 
+### Acompanhamento OLIMPO-016 — acessibilidade dos fluxos críticos
+
+**Status: parcial no protótipo.** A revisão do código confirmou navegação HTML por teclado, foco visível para botões/inputs, layout 2D mobile, controles HTML ao redor do 3D e fallback para 2D. Esta missão estende o foco visível a `select` e `textarea` e reduz transições/animações quando `prefers-reduced-motion` está ativo. Ainda falta validar com leitores de tela, combinações de contraste e dispositivos/navegadores reais; o item P0 continua aberto para produção.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |

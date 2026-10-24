@@ -39,6 +39,8 @@ Os seis territórios também usam cores próprias definidas em `src/data/territo
 
 Manter contraste de texto e estados, rótulos visíveis, áreas de toque adequadas, foco evidente, operação por teclado e estado não comunicado apenas por cor ou hover. Respeitar `prefers-reduced-motion`. O 2D deve continuar funcional se WebGL estiver indisponível ou o 3D falhar.
 
+**Acessibilidade no código (OLIMPO-016):** `:focus-visible` apresenta contorno ciano em botões, campos de texto, seletores e áreas de texto; a preferência `prefers-reduced-motion` reduz transições e animações. Isso melhora o protótipo, mas não substitui validação com leitores de tela, medições formais de contraste nem revisão em dispositivos reais.
+
 ## Em aberto
 
 - Escolher fontes de marca e uma escala tipográfica final.
