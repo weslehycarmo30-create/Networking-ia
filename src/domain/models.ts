@@ -4,6 +4,8 @@ export type Avatar = {
   emoji: string
 }
 
+export type TerritoryId = 'athena' | 'hephaestus' | 'hermes' | 'delphi' | 'dionysus' | 'ares'
+
 export type GamificationProgress = {
   level: number
   points: number
@@ -17,6 +19,7 @@ export type Profile = {
   avatar: Avatar
   bio: string
   interests: string[]
+  territoryAffinities: TerritoryId[]
   gamification: GamificationProgress
 }
 

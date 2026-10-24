@@ -22,11 +22,11 @@
 ## 2.1 Descobrir membros na Ágora de Hermes
 
 1. Na Praça Central em 2D ou 3D, a pessoa abre o botão **Descobrir membros · Ágora de Hermes** no cabeçalho.
-2. Pesquisa os perfis fictícios carregados por `ProfileService` por nome, apresentação ou interesse; pode filtrar por um interesse já presente no perfil e limpar os controles.
-3. Abre um resultado para consultar apresentação, interesses e estado da conexão, ou acompanha o estado diretamente no resultado.
+2. Pesquisa os perfis fictícios carregados por `ProfileService` por nome, apresentação ou interesse; pode combinar a busca com filtros por interesse e por afinidade a um território.
+3. Abre um resultado para consultar apresentação, interesses, afinidades temáticas e estado da conexão, ou acompanha o estado diretamente no resultado.
 4. Pode enviar um convite ou cancelar um convite pendente; essas ações atualizam o mesmo serviço demonstrativo usado na praça, nas salas e nos perfis.
 
-Resultados vazios mostram orientação para ajustar a busca. A descoberta é local e demonstrativa, sem filtro territorial porque os modelos atuais não associam perfis a territórios.
+Resultados vazios mostram orientação para ajustar ou limpar os filtros. Afinidades apontam temas que o perfil quer explorar e usam IDs do catálogo atual de territórios; elas não representam a presença atual do perfil numa sala. A presença permanece temporária e independente.
 
 ## 3. Entrar em uma sala e conversar
 

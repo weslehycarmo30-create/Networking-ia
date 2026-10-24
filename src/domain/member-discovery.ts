@@ -1,6 +1,6 @@
-import type { Profile } from './models'
+import type { Profile, TerritoryId } from './models'
 
-export type MemberSearchFilters = { query: string; interest: string }
+export type MemberSearchFilters = { query: string; interest: string; territoryId: TerritoryId | '' }
 
 function normalizeSearchText(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR')
@@ -12,7 +12,8 @@ export function searchCommunityMembers(profiles: Profile[], filters: MemberSearc
     const matchesQuery = !query || [profile.displayName, profile.bio, ...profile.interests]
       .some((value) => normalizeSearchText(value).includes(query))
     const matchesInterest = !filters.interest || profile.interests.includes(filters.interest)
-    return matchesQuery && matchesInterest
+    const matchesTerritory = !filters.territoryId || profile.territoryAffinities.includes(filters.territoryId)
+    return matchesQuery && matchesInterest && matchesTerritory
   })
 }
 

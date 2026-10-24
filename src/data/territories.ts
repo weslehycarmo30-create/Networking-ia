@@ -13,6 +13,6 @@ export const territories: Territory[] = [
 
 export const guide: Profile & { role: string } = {
   id: 'zeus-guide', displayName: 'Zeus', handle: '@zeus.guia', role: 'Anfitrião da Praça Central',
-  avatar: { id: 'guide', label: 'Guia', emoji: '⚡' }, bio: 'Anfitrião da praça.', interests: [],
+  avatar: { id: 'guide', label: 'Guia', emoji: '⚡' }, bio: 'Anfitrião da praça.', interests: [], territoryAffinities: ['hermes'],
   gamification: { level: 1, points: 0, badges: [] },
 }

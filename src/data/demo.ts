@@ -14,6 +14,7 @@ export const demoProfile: Profile = {
   id: 'demo-alex', displayName: 'Alex', handle: '@alex.explora', avatar: demoAvatars[0],
   bio: 'Construindo ideias, um passo de cada vez.',
   interests: ['Inteligência artificial', 'Produtos digitais', 'Novas conexões'],
+  territoryAffinities: ['athena', 'hephaestus', 'hermes'],
   gamification: { level: 1, points: 30, badges: ['Primeiros passos'] },
 }
 
@@ -28,9 +29,9 @@ const communityAvatars = [
   { id: 'nina', label: 'Nina', emoji: '🌙' },
 ]
 export const demoCommunityProfiles: Profile[] = [
-  { id: 'lia', displayName: 'Lia', handle: '@lia.cria', avatar: communityAvatars[0], bio: 'Designer de produto, colecionadora de boas perguntas e ideias simples.', interests: ['Design de produto', 'Comunidades', 'Acessibilidade'], gamification: { level: 2, points: 85, badges: ['Boas-vindas', 'Boa conversa'] } },
-  { id: 'caio', displayName: 'Caio', handle: '@caio.construi', avatar: communityAvatars[1], bio: 'Construindo produtos digitais e compartilhando o que aprende.', interests: ['Desenvolvimento', 'SaaS', 'Inteligência artificial'], gamification: { level: 3, points: 140, badges: ['Construtor'] } },
-  { id: 'nina', displayName: 'Nina', handle: '@nina.descobre', avatar: communityAvatars[2], bio: 'Exploradora de ideias, histórias e novas conexões.', interests: ['Pesquisa', 'Educação', 'Criatividade'], gamification: { level: 1, points: 45, badges: ['Primeiros passos'] } },
+  { id: 'lia', displayName: 'Lia', handle: '@lia.cria', avatar: communityAvatars[0], bio: 'Designer de produto, colecionadora de boas perguntas e ideias simples.', interests: ['Design de produto', 'Comunidades', 'Acessibilidade'], territoryAffinities: ['hermes', 'delphi', 'dionysus'], gamification: { level: 2, points: 85, badges: ['Boas-vindas', 'Boa conversa'] } },
+  { id: 'caio', displayName: 'Caio', handle: '@caio.construi', avatar: communityAvatars[1], bio: 'Construindo produtos digitais e compartilhando o que aprende.', interests: ['Desenvolvimento', 'SaaS', 'Inteligência artificial'], territoryAffinities: ['hephaestus', 'athena'], gamification: { level: 3, points: 140, badges: ['Construtor'] } },
+  { id: 'nina', displayName: 'Nina', handle: '@nina.descobre', avatar: communityAvatars[2], bio: 'Exploradora de ideias, histórias e novas conexões.', interests: ['Pesquisa', 'Educação', 'Criatividade'], territoryAffinities: ['delphi', 'dionysus', 'athena'], gamification: { level: 1, points: 45, badges: ['Primeiros passos'] } },
   guide,
 ]
 const seedTexts = [
