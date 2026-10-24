@@ -36,6 +36,12 @@ O fallback não substitui a necessidade de validar o comportamento em navegadore
 
 O uso direto de `@react-three/drei` foi removido; geometria, antialiasing e DPR foram reduzidos. No build verificado durante OLIMPO-005, o chunk 3D ficou em aproximadamente **872,76 kB** e **235,27 kB gzip**. Esse valor varia com a compilação. Vite ainda avisa que o chunk ultrapassa 500 kB; o projeto não aumenta o limite nem esconde o aviso.
 
+### Auditoria OLIMPO-013
+
+Build local em `codex/olimpo-002-foundation` com Vite 6.4.5: `City3D` **879,72 kB / 236,66 kB gzip**; o chunk principal da aplicação é **272,48 kB / 83,42 kB gzip**. A cena permanece em importação dinâmica, portanto o chunk 3D só é solicitado ao escolher essa visualização. O total necessário à cena 3D é o chunk `City3D` indicado acima.
+
+A inspeção do grafo Rollup identificou `three` como a maior parte do caminho 3D (núcleo, renderer e geometrias), seguido por `@react-three/fiber` (Canvas, eventos e integração React); o módulo da cena contém a construção dos marcos e controles. Não há `drei`, assets externos ou outros pacotes 3D. Todos os imports diretos em `City3D.tsx` são usados: Canvas e monitor de frame do Fiber, hooks de geometria instanciada, constructors de Three.js e seletor de perfis. A árvore já usa imports nomeados, `InstancedMesh` para colunas, sem antialiasing e DPR limitado. A compilação atual fica **6,96 kB / 1,39 kB gzip acima** da referência anterior ao OLIMPO-012. Remover esses recursos para atingir a referência reduziria conteúdo visual ou controles; dividir chunks apenas deslocaria o total transferido. Não foi encontrada dependência ou import não utilizado que pudesse ser removido com segurança. O alerta de Vite continua ativo; redução adicional depende de uma revisão arquitetural da cena ou de redução deliberada de conteúdo, não aprovada aqui.
+
 ## Limites atuais
 
 - O adaptador é síncrono. Avatar, mensagens e conexões fictícios sobrevivem a recargas no mesmo navegador; presença e estado de interface reiniciam. O reset remove somente a chave namespaced do OLIMPO.
