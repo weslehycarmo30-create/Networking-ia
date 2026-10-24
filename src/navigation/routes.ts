@@ -1,6 +1,6 @@
 import type { TerritoryRoom } from '../domain/models'
 
-export type Screen = 'landing' | 'avatar' | 'city' | 'room' | 'profile'
+export type Screen = 'landing' | 'avatar' | 'city' | 'discover' | 'room' | 'profile'
 export type NavigationState = { screen: Screen; territoryId?: string; profileId?: string }
 
 export function navigateToTerritory(territory: TerritoryRoom): NavigationState {
