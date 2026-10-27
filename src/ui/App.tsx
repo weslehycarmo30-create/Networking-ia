@@ -12,6 +12,11 @@ import CommunityEvents from './CommunityEvents'
 import NotificationCenter from './NotificationCenter'
 
 const City3D = lazy(() => import('../scenes/City3D'))
+const plazaGuideSteps = [
+  { title: 'Escolha um território', text: 'Selecione um dos seis territórios no mapa ou nos cartões e use “Entrar na sala”. Perfis, mensagens e contagens são fictícios e locais.' },
+  { title: 'Escolha a visualização', text: 'O mapa 2D está pronto para explorar. Se quiser, use “Explorar 3D · opcional” e volte ao mapa 2D pelo mesmo controle de visualização.' },
+  { title: 'Encontre outros caminhos', text: '“Descobrir membros” e “Encontros da comunidade” ficam nesta Praça. Meu perfil e Notificações ficam no cabeçalho.' },
+]
 
 class SceneBoundary extends Component<{ children: ReactNode; onFailure: () => void }, { failed: boolean }> {
   state = { failed: false }
@@ -36,6 +41,10 @@ export default function App() {
   const [discoveryReturnTo, setDiscoveryReturnTo] = useState<NavigationState>({ screen: 'city' })
   const [selectedProfileId, setSelectedProfileId] = useState('')
   const [view, setView] = useState<'2d' | '3d'>('2d')
+  const [plazaGuideStep, setPlazaGuideStep] = useState<number | null>(null)
+  const [plazaGuideCompleted, setPlazaGuideCompleted] = useState(() => {
+    try { return window.sessionStorage.getItem('olimpo-plaza-guide-completed') === '1' } catch { return false }
+  })
   const [showEvents, setShowEvents] = useState(false)
   const [focusEventId, setFocusEventId] = useState('')
   const [mapSelectedId, setMapSelectedId] = useState('athena')
@@ -44,6 +53,7 @@ export default function App() {
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'warning' | 'error' } | null>(null)
   const [reportTarget, setReportTarget] = useState<{ targetType: ReportTargetType; targetId: string; itemLabel: string } | null>(null)
   const reportTrigger = useRef<HTMLButtonElement | null>(null)
+  const plazaGuideTrigger = useRef<HTMLButtonElement | null>(null)
   const profileFocusOrigin = useRef<HTMLElement | null>(null)
   const pendingRouteFocus = useRef<HTMLElement | null>(null)
   const previousRouteKey = useRef('')
@@ -98,7 +108,17 @@ export default function App() {
     setShowEvents(true)
     setFocusEventId(eventId)
   }
-  const enterCity = () => { setWebgl(hasWebGL()); setNav({ screen: 'city' }) }
+  const enterCity = () => {
+    setWebgl(hasWebGL())
+    if (!plazaGuideCompleted) setPlazaGuideStep(0)
+    setNav({ screen: 'city' })
+  }
+  const closePlazaGuide = () => {
+    setPlazaGuideStep(null)
+    setPlazaGuideCompleted(true)
+    try { window.sessionStorage.setItem('olimpo-plaza-guide-completed', '1') } catch { /* Session storage can be unavailable. */ }
+    window.requestAnimationFrame(() => plazaGuideTrigger.current?.focus({ preventScroll: true }))
+  }
   const failScene = () => { setView('2d'); setWebgl(false) }
 
   function openProfile(profileId: string) {
@@ -269,7 +289,11 @@ export default function App() {
     {nav.screen === 'avatar' && <main className="avatar-page"><div className="avatar-step"><button className="back-link avatar-back" onClick={() => setNav({ screen: 'landing' })}>← Voltar à apresentação</button><div className="eyebrow"><span /> PERSONAGEM DA DEMONSTRAÇÃO</div><h1>Escolha seu avatar</h1><p>Escolha um personagem fictício para representar você nesta demonstração. Nenhuma conta será criada; você pode trocar o avatar depois.</p><div className="avatar-options" role="group" aria-label="Avatares demonstrativos">{demoAvatars.map((option) => <button key={option.id} className={`avatar-option ${profile.avatar.id === option.id ? 'selected' : ''}`} aria-pressed={profile.avatar.id === option.id} onClick={() => chooseAvatar(option.id)}><span aria-hidden="true">{option.emoji}</span><b>{option.label}</b>{profile.avatar.id === option.id && <small>Selecionado</small>}</button>)}</div><div className="avatar-actions"><button className="primary-button" onClick={enterCity}>Continuar para a Praça Central <span>→</span></button><span>Perfis e conversas são fictícios · experiência local.</span></div></div></main>}
 
     {nav.screen === 'city' && <main className="city-page">
-      <section className="city-heading"><div><div className="eyebrow"><span /> VOCÊ ESTÁ NA PRAÇA</div><h1>Praça Central</h1><p>Escolha um território no mapa ou nos cartões. Os números mostram participantes fictícios.</p></div><div className="city-actions"><button className="discovery-link" onClick={goDiscovery}><span aria-hidden="true">☿</span> Descobrir membros · Ágora de Hermes</button><button className="events-link" aria-expanded={showEvents} aria-controls={showEvents ? 'community-events' : undefined} onClick={() => setShowEvents((value) => !value)}>{showEvents ? 'Ocultar encontros' : 'Encontros da comunidade'}</button></div><div className="view-switch" role="group" aria-label="Visualização da praça"><button className={view === '2d' ? 'active' : ''} onClick={() => setView('2d')} aria-pressed={view === '2d'}>▦ <span>Mapa 2D</span></button><button className={view === '3d' && webgl ? 'active' : ''} onClick={() => { if (webgl) setView('3d'); else showFeedback('3D indisponível neste dispositivo. Mapa 2D ativo.', 'warning') }} aria-pressed={view === '3d'} disabled={!webgl}>◇ <span>Explorar 3D · opcional</span></button></div></section>
+      <section className="city-heading"><div><div className="eyebrow"><span /> VOCÊ ESTÁ NA PRAÇA</div><h1>Praça Central</h1><p>Escolha um território no mapa ou nos cartões. Os números mostram participantes fictícios.</p></div><div className="city-actions"><button className="discovery-link" onClick={goDiscovery}><span aria-hidden="true">☿</span> Descobrir membros · Ágora de Hermes</button><button className="events-link" aria-expanded={showEvents} aria-controls={showEvents ? 'community-events' : undefined} onClick={() => setShowEvents((value) => !value)}>{showEvents ? 'Ocultar encontros' : 'Encontros da comunidade'}</button><button type="button" ref={plazaGuideTrigger} className="plaza-guide-trigger" aria-expanded={plazaGuideStep !== null} aria-controls={plazaGuideStep !== null ? 'plaza-first-visit-guide' : undefined} onClick={() => plazaGuideStep === null ? setPlazaGuideStep(0) : closePlazaGuide()}>{plazaGuideStep === null ? 'Abrir guia da Praça' : 'Fechar guia da Praça'}</button></div><div className="view-switch" role="group" aria-label="Visualização da praça"><button className={view === '2d' ? 'active' : ''} onClick={() => setView('2d')} aria-pressed={view === '2d'}>▦ <span>Mapa 2D</span></button><button className={view === '3d' && webgl ? 'active' : ''} onClick={() => { if (webgl) setView('3d'); else showFeedback('3D indisponível neste dispositivo. Mapa 2D ativo.', 'warning') }} aria-pressed={view === '3d'} disabled={!webgl}>◇ <span>Explorar 3D · opcional</span></button></div></section>
+      {plazaGuideStep !== null && <section id="plaza-first-visit-guide" className="plaza-first-visit-guide" aria-labelledby="plaza-guide-title">
+        <div className="plaza-guide-copy"><h2 id="plaza-guide-title">Primeiros passos na Praça</h2><div aria-live="polite" aria-atomic="true"><span className="plaza-guide-progress">Passo {plazaGuideStep + 1} de {plazaGuideSteps.length}</span><h3>{plazaGuideSteps[plazaGuideStep].title}</h3><p>{plazaGuideSteps[plazaGuideStep].text}</p></div></div>
+        <div className="plaza-guide-actions"><button type="button" onClick={closePlazaGuide}>Dispensar</button><button type="button" disabled={plazaGuideStep === 0} onClick={() => setPlazaGuideStep(plazaGuideStep - 1)}>Voltar</button><button type="button" className="plaza-guide-next" onClick={() => plazaGuideStep === plazaGuideSteps.length - 1 ? closePlazaGuide() : setPlazaGuideStep(plazaGuideStep + 1)}>{plazaGuideStep === plazaGuideSteps.length - 1 ? 'Concluir' : 'Próximo'}</button></div>
+      </section>}
       {view === '3d' && webgl && <details className="city-3d-guide">
         <summary>Como explorar a praça 3D</summary>
         <div className="city-3d-guide-content"><ul>
