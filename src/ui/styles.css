@@ -360,6 +360,11 @@
 .discovery-filters input,.discovery-filters select,.report-dialog select,.report-dialog textarea,.events-filter select{border-color:#657376}
 .report-dialog select:invalid{border-color:#e6a766}
 .report-dialog select:valid{border-color:#75d9d0}
+
+/* OLIMPO-038: align shared card corners and event action sizing. */
+.notification-item,.events-empty{border-radius:4px}
+.events-link{min-height:44px}
+.events-link,.events-clear-filter,.event-rsvp{border-radius:3px}
 .discovery-filters input::placeholder{color:#9ca7a6}
 
 /* OLIMPO-037: raise dense supporting copy while keeping compact layouts intact. */
