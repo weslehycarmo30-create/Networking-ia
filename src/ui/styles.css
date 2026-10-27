@@ -325,3 +325,14 @@
 @media(max-width:430px){.city-map{min-height:390px}.map-orbit{top:44%;width:min(93%,274px)}.map-node{width:clamp(74px,24vw,84px)}.map-node b{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.15;text-align:center}.node-1,.node-4{left:0}.node-3,.node-6{right:0}}
 @media(max-width:380px){.topbar{gap:5px}.wordmark{gap:7px;letter-spacing:1px}.brand-mark{width:30px;height:30px;flex:none}.top-nav{gap:2px}.top-nav button{min-width:44px;padding:0 1px;font-size:9px}.profile-chip{min-width:44px;min-height:44px;justify-content:center;padding:4px}.profile-chip-name{display:none}}
 @media(max-width:680px){.message-report-button{min-height:44px}}
+
+/* OLIMPO-032: make field guidance and disabled/validated states explicit. */
+.report-dialog select:invalid{border-color:rgba(230,167,102,.72)}
+.report-dialog select:valid{border-color:rgba(117,217,208,.48)}
+.report-reason-hint,.report-note-hint{display:block;margin-top:6px;color:#c5b79c;font-size:10px;line-height:1.5}
+.report-note-count{color:#c2cec6;font-size:10px}
+.report-confirm-button:disabled,.clear-discovery:disabled,.send-button:disabled,.notification-read-all:disabled{cursor:not-allowed}
+.report-confirm-button:disabled{border-style:dashed!important;background:#25312e;color:#c2c5bc;opacity:1}
+.chat-compose .send-button:disabled{background:#35413d;color:#c2cbc4;opacity:1}
+.chat-compose .local-only{min-width:76px;line-height:1.4}
+@media(max-width:680px){.chat-compose .local-only{max-width:92px;min-width:76px;font-size:8px}.chat-compose input{min-width:0}.report-dialog-actions{gap:10px}}
