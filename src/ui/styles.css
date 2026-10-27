@@ -239,3 +239,57 @@
 .recipient-preview .network-actions{flex-wrap:wrap}
 .profile-connection-panel>.connect-button{min-height:46px}
 @media(max-width:680px){.profile-page{padding-top:27px}.profile-cover{height:126px}.profile-details{padding:0 18px 23px}.profile-details h1{font-size:28px}.profile-interests,.profile-affinities{margin-top:18px;padding-top:15px}.profile-gamification{gap:7px}.networking-panel,.profile-connection-panel{padding:15px 12px}.network-row{grid-template-columns:1fr;gap:7px;padding:8px}.network-row .network-actions{width:100%;flex-wrap:wrap}.network-row .network-actions button{flex:1}.network-row>.network-cancel{width:100%}.network-row .network-person{min-height:50px}.accepted-person{align-items:flex-start;flex-wrap:wrap}.accepted-person .connection-check{margin-left:48px}.recipient-preview .network-actions{flex-direction:column}.recipient-preview .network-actions button{width:100%}.profile-connection-panel>.network-actions{flex-direction:column}.profile-connection-panel>.network-actions button{width:100%}.profile-connection-panel>.connect-button{width:100%}}
+
+/* OLIMPO-028: clearer local notification and event states. */
+.notification-panel{width:min(390px,calc(100vw - 24px));border-color:rgba(193,147,94,.42);background:linear-gradient(150deg,#17262b,#111c21);box-shadow:0 18px 48px rgba(0,0,0,.58)}
+.notification-panel-heading{padding-bottom:10px;border-bottom:1px solid rgba(231,223,207,.12)}
+.notification-panel-heading b{color:#f0e8d9;font-size:18px}
+.notification-panel-heading small{color:#bfcbc2;font-size:10px;line-height:1.5}
+.notification-close{min-width:44px;min-height:44px}
+.notification-local-notice{padding:11px 12px;border:1px solid rgba(193,147,94,.2);border-left:3px solid var(--bronze);border-radius:3px;color:#e0d4bd;font-size:11px;line-height:1.6}
+.notification-settings-trigger{min-height:44px;border-color:rgba(193,147,94,.25);color:#ead6b4}
+.notification-preferences{border-color:rgba(193,147,94,.24);background:rgba(193,147,94,.035)}
+.notification-preferences legend{color:#f0dfc2}
+.notification-preferences p{color:#c3cdc5;font-size:11px;line-height:1.6}
+.notification-preferences label{font-size:12px}
+.notification-read-all,.notification-destination,.notification-mark-read{min-height:44px;border-color:rgba(193,147,94,.2);color:#e8e1d4;font-size:11px}
+.notification-read-all:disabled{color:#c1cbc3;opacity:.62}
+.notification-list{gap:10px;margin-top:14px}
+.notification-item{padding:13px;border-color:rgba(231,223,207,.14);border-left:3px solid var(--aqua);background:linear-gradient(110deg,rgba(117,217,208,.045),#19272d 55%)}
+.notification-item.read{border-left-color:#8b9691;background:#182329;opacity:1}
+.notification-item-heading{align-items:flex-start}
+.notification-item-heading b{color:#f0e9dc;font-size:12px;line-height:1.5}
+.notification-item-heading .notification-state{flex:none;padding:4px 7px;border:1px solid rgba(117,217,208,.28);border-radius:12px;color:#c8efe3;font-size:9px;white-space:nowrap}
+.notification-item.read .notification-item-heading .notification-state{border-color:rgba(193,147,94,.22);color:#d2c5aa}
+.notification-item p{color:#c4cec6;font-size:11px;line-height:1.6}
+.notification-destination,.notification-mark-read{margin:4px 6px 0 0}
+.notification-destination{background:rgba(193,147,94,.06);color:#f0d2a4}
+.notification-mark-read{background:#202f34;color:#d5e7dc}
+.notification-empty{padding:20px 14px;border-color:rgba(193,147,94,.35);background:rgba(193,147,94,.035);text-align:center}
+.notification-empty>b{display:block;color:#f0e5d2;font-size:13px}
+.notification-empty p{margin:7px 0 0;color:#c1cbc3;font-size:11px;line-height:1.55}
+.community-events{border-color:rgba(193,147,94,.26);background:radial-gradient(ellipse at 0 0,rgba(193,147,94,.055),transparent 48%),linear-gradient(145deg,#19272d,#152127)}
+.events-heading h2{color:#f1e8d9}
+.events-heading .section-count{color:#d6bd94}
+.events-local-notice{border:1px solid rgba(193,147,94,.2);border-left:3px solid var(--bronze);border-radius:3px;background:rgba(193,147,94,.06);color:#e0d4bd;font-size:11px;line-height:1.6}
+.events-filter label{color:#eee5d6;font-size:12px;font-weight:600}
+.events-filter select{min-height:44px;border-color:#485654}
+.events-clear-filter{min-height:44px;border-color:rgba(193,147,94,.25)}
+.event-card{border-color:rgba(193,147,94,.2);background:linear-gradient(145deg,rgba(193,147,94,.045),transparent 45%),#1c2a30}
+.event-territory{color:#e3c38f}
+.event-description{color:#c1cbc3;font-size:13px;line-height:1.65}
+.event-date{color:#d2d9d1;font-size:12px}
+.event-date b{border-color:rgba(117,217,208,.3);color:#d0eee4}
+.event-organizer{min-height:56px;border-color:rgba(231,223,207,.14);background:#172329}
+.event-organizer small{color:#b5c1b9;font-size:10px}
+.event-organizer b{color:#f0e9dc;font-size:13px}
+.event-profile-link{color:#e2c49a;font-size:10px}
+.event-card-bottom{align-items:center;gap:10px}
+.event-count{color:#c6d0c8;font-size:11px;line-height:1.5}
+.event-rsvp{min-height:44px;border-color:rgba(193,147,94,.38);background:#293431;color:#f0dfc2;font-size:11px;font-weight:600}
+.event-rsvp.registered{border-color:rgba(117,217,208,.55);background:#23413d;color:#d0f0e4}
+.event-rsvp-status{margin:10px 0 0;padding:8px 10px;border-left:2px solid rgba(193,147,94,.5);background:rgba(193,147,94,.045);color:#e0d2b9;font-size:10px;line-height:1.5}
+.event-rsvp-status.registered{border-left-color:var(--aqua);background:rgba(117,217,208,.045);color:#c8efe3}
+.event-rsvp-status.not-registered{color:#c4cec6}
+.events-empty{padding:22px;border-color:rgba(193,147,94,.35);border-radius:3px;color:#d4d9d0;font-size:12px;line-height:1.6}
+@media(max-width:680px){.notification-panel{top:62px;right:10px;width:min(390px,calc(100vw - 20px));padding:12px}.notification-panel-heading{gap:8px}.notification-panel-heading small{max-width:230px}.notification-item{padding:11px}.notification-item-heading{gap:7px}.notification-item-heading b{font-size:11px}.notification-item-heading .notification-state{font-size:8px}.notification-destination,.notification-mark-read{width:100%;margin:6px 0 0;text-align:center}.events-heading{gap:12px}.events-heading h2{font-size:19px;line-height:1.35}.events-heading .section-count{max-width:108px}.events-filter select,.events-clear-filter{min-height:46px}.event-card-bottom{align-items:stretch}.event-count{font-size:12px}.event-rsvp{width:100%;min-height:46px}.event-description{font-size:13px}.event-rsvp-status{font-size:11px}}

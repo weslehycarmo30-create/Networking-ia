@@ -77,7 +77,7 @@ export default function NotificationCenter({ service, profiles, events, getPersi
       <span aria-hidden="true">♢</span><span className="notification-trigger-label">Notificações</span>{unreadCount > 0 && <><span className="notification-count" aria-hidden="true">{unreadCount > 99 ? '99+' : unreadCount}</span><span className="sr-only" aria-live="polite">{unreadCount} notificações não lidas</span></>}
     </button>
     {open && <section className="notification-panel" id="notification-panel" aria-label="Central de notificações demonstrativas">
-      <div className="notification-panel-heading"><div><b>Notificações</b><small>{unreadCount} não lidas</small></div><button type="button" className="notification-close" onClick={() => setOpen(false)} aria-label="Fechar notificações">×</button></div>
+      <div className="notification-panel-heading"><div><b>Notificações</b><small>{unreadCount} não lidas · {notifications.length} no total</small></div><button type="button" className="notification-close" onClick={() => setOpen(false)} aria-label="Fechar notificações">×</button></div>
       <p className="notification-local-notice">Demonstração local: itens fictícios do estado deste navegador. Nenhum aviso chega de outros usuários ou servidores.</p>
       <button type="button" className="notification-settings-trigger" aria-expanded={preferencesOpen} aria-controls={preferencesOpen ? 'notification-preferences' : undefined} onClick={() => setPreferencesOpen((value) => !value)}>{preferencesOpen ? 'Ocultar preferências locais' : 'Preferências locais'}</button>
       {preferencesOpen && <fieldset className="notification-preferences" id="notification-preferences">
@@ -87,13 +87,13 @@ export default function NotificationCenter({ service, profiles, events, getPersi
         <label><input type="checkbox" checked={preferences.eventActivity} onChange={(event) => setPreference('eventActivity', event.target.checked)} /> Atividade local de encontros</label>
       </fieldset>}
       <button type="button" className="notification-read-all" onClick={markAllRead} disabled={unreadCount === 0}>Marcar todas como lidas</button>
-      {notifications.length === 0 ? <p className="notification-empty" role="status">Nenhuma notificação demonstrativa por enquanto.</p> : <ul className="notification-list">
+      {notifications.length === 0 ? <div className="notification-empty" role="status"><b>Nenhuma notificação demonstrativa</b><p>Avisos de exemplo podem aparecer aqui após ações locais no OLIMPO.</p></div> : <ul className="notification-list">
         {notifications.map((notification) => {
           const relatedEvent = notification.kind === 'event_registration' ? events.find((event) => event.id === notification.eventId) : undefined
           const relatedProfile = notification.kind === 'connection_invite' ? profiles.find((profile) => profile.id === notification.profileId) : undefined
           const hasDestination = notification.kind === 'connection_invite' ? Boolean(relatedProfile) : Boolean(relatedEvent)
           return <li className={`notification-item ${notification.readAt ? 'read' : 'unread'}`} key={notification.id}>
-            <div className="notification-item-heading"><b>{notificationTitle(notification)}</b>{!notification.readAt && <span>Não lida</span>}</div>
+            <div className="notification-item-heading"><b>{notificationTitle(notification)}</b><span className="notification-state">{notification.readAt ? 'Lida' : 'Não lida'}</span></div>
             <p>{describe(notification)}</p>
             {hasDestination && <button type="button" className="notification-destination" onClick={() => openDestination(notification)}>{notification.kind === 'connection_invite' ? `Abrir perfil de ${relatedProfile?.displayName}` : `Abrir encontro: ${relatedEvent?.title}`}</button>}
             {!notification.readAt && <button type="button" className="notification-mark-read" onClick={() => markRead(notification.id)}>Marcar como lida</button>}

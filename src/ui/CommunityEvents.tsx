@@ -50,7 +50,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
   return <section className="community-events" id="community-events" aria-labelledby="community-events-title">
     <div className="section-title events-heading">
       <div><div className="eyebrow">ENCONTROS DA COMUNIDADE</div><h2 id="community-events-title">Ideias para construir juntos.</h2></div>
-      <span className="section-count">EVENTOS DEMONSTRATIVOS</span>
+      <span className="section-count">{events.length} {events.length === 1 ? 'ENCONTRO LOCAL' : 'ENCONTROS LOCAIS'}</span>
     </div>
     <p className="events-local-notice" role="note">Encontros e inscrições são dados locais desta demonstração; nada é publicado ou compartilhado com outros usuários.</p>
     <div className="events-filter">
@@ -77,7 +77,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
           <div className="event-card-bottom"><span className="event-count" aria-live="polite">{event.participantCount} participantes demonstrativos</span>
             <button type="button" className={`event-rsvp ${registered ? 'registered' : ''}`} aria-pressed={registered} onClick={() => toggleRegistration(event.id)}>{registered ? 'Cancelar inscrição' : 'Inscrever-se'}</button>
           </div>
-          {registered && <p className="event-rsvp-status" role="status">{getPersistenceStatus().persistent ? 'Sua inscrição local está ativa neste navegador.' : 'Sua inscrição está ativa apenas nesta sessão.'}</p>}
+          <p className={`event-rsvp-status ${registered ? 'registered' : 'not-registered'}`} role="status">{registered ? getPersistenceStatus().persistent ? 'Inscrição demonstrativa ativa somente neste navegador; não é compartilhada.' : 'Inscrição demonstrativa ativa somente nesta sessão; não é compartilhada.' : 'Sem inscrição neste encontro demonstrativo.'}</p>
         </article>
       })}
     </div>}
