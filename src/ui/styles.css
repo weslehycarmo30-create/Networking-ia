@@ -293,3 +293,14 @@
 .event-rsvp-status.not-registered{color:#c4cec6}
 .events-empty{padding:22px;border-color:rgba(193,147,94,.35);border-radius:3px;color:#d4d9d0;font-size:12px;line-height:1.6}
 @media(max-width:680px){.notification-panel{top:62px;right:10px;width:min(390px,calc(100vw - 20px));padding:12px}.notification-panel-heading{gap:8px}.notification-panel-heading small{max-width:230px}.notification-item{padding:11px}.notification-item-heading{gap:7px}.notification-item-heading b{font-size:11px}.notification-item-heading .notification-state{font-size:8px}.notification-destination,.notification-mark-read{width:100%;margin:6px 0 0;text-align:center}.events-heading{gap:12px}.events-heading h2{font-size:19px;line-height:1.35}.events-heading .section-count{max-width:108px}.events-filter select,.events-clear-filter{min-height:46px}.event-card-bottom{align-items:stretch}.event-count{font-size:12px}.event-rsvp{width:100%;min-height:46px}.event-description{font-size:13px}.event-rsvp-status{font-size:11px}}
+
+/* OLIMPO-029: active global destinations and compact mobile navigation. */
+.top-nav-label-compact{display:none}
+.top-nav button.selected{color:#f0dfc2}
+.profile-chip{min-width:44px;min-height:44px;justify-content:center}
+.profile-chip.selected{border-color:rgba(193,147,94,.55);background:linear-gradient(145deg,#293533,#1c292f)}
+.notification-trigger[aria-expanded=true]{border-color:rgba(193,147,94,.58);background:#202f32;color:#f0dfc2}
+.notification-trigger,.top-nav button,.profile-chip{flex:none}
+@media(max-width:680px){.topbar{min-width:0}.top-nav{flex:1;justify-content:center}.top-nav button{min-width:44px}.notification-trigger{min-height:44px}.profile-chip{min-height:44px}}
+@media(max-width:440px){.topbar{gap:clamp(5px,1.5vw,8px)}.wordmark small{display:none}.top-nav{gap:3px}.top-nav button{padding:0 3px;font-size:10px}.top-nav-label-full{display:none}.top-nav-label-compact{display:inline}}
+@media(max-width:380px){.topbar{gap:5px}.top-nav{gap:2px}.top-nav button{min-width:44px;padding:0 2px;font-size:10px}.profile-chip{padding:4px}}

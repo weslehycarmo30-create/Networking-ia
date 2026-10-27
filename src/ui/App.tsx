@@ -51,6 +51,8 @@ export default function App() {
   const communityProfiles = services.profile.listCommunity()
   const viewedProfile = nav.profileId ? services.profile.getProfile(nav.profileId) ?? profile : profile
   const isOwnProfile = viewedProfile.id === profile.id
+  const ownProfileIsCurrent = nav.screen === 'profile' && isOwnProfile
+  const plazaIsCurrent = nav.screen === 'city' || nav.screen === 'room' || nav.screen === 'discover' || (nav.screen === 'profile' && !isOwnProfile)
   const avatar = profile.avatar.emoji
   const messages = services.messages.listByRoom(active.id)
   const participants = services.participants.listByRoom(active.id)
@@ -190,8 +192,8 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar">
       <button className="wordmark" onClick={goCity} aria-label="OLIMPO, início"><span className="brand-mark">O</span><span>OLIMPO<small>CIDADE DAS IDEIAS</small></span></button>
-      {nav.screen !== 'landing' && nav.screen !== 'avatar' && <nav className="top-nav" aria-label="Navegação principal"><button onClick={goCity} className={nav.screen === 'city' ? 'selected' : ''}>Praça Central</button><button onClick={() => openProfile(profile.id)} className={nav.screen === 'profile' && isOwnProfile ? 'selected' : ''}>Meu perfil</button></nav>}{nav.screen !== 'landing' && nav.screen !== 'avatar' && <NotificationCenter service={services.notifications} profiles={communityProfiles} events={services.events.listEvents()} getPersistenceStatus={services.demoState.getStatus} onChange={refreshServices} onFeedback={setToast} onOpenProfile={openProfile} onOpenEvent={openEvent} />}
-      {nav.screen !== 'landing' && nav.screen !== 'avatar' && <button className="profile-chip" onClick={() => openProfile(profile.id)}><span>{avatar}</span><span className="profile-chip-name">{profile.displayName}</span><i /></button>}
+      {nav.screen !== 'landing' && nav.screen !== 'avatar' && <nav className="top-nav" aria-label="Navegação principal"><button type="button" onClick={goCity} className={plazaIsCurrent ? 'selected' : ''} aria-current={plazaIsCurrent ? 'page' : undefined} aria-label="Praça Central"><span className="top-nav-label-full">Praça Central</span><span className="top-nav-label-compact" aria-hidden="true">Praça</span></button><button type="button" onClick={() => openProfile(profile.id)} className={ownProfileIsCurrent ? 'selected' : ''} aria-current={ownProfileIsCurrent ? 'page' : undefined} aria-label="Meu perfil"><span className="top-nav-label-full">Meu perfil</span><span className="top-nav-label-compact" aria-hidden="true">Perfil</span></button></nav>}{nav.screen !== 'landing' && nav.screen !== 'avatar' && <NotificationCenter service={services.notifications} profiles={communityProfiles} events={services.events.listEvents()} getPersistenceStatus={services.demoState.getStatus} onChange={refreshServices} onFeedback={setToast} onOpenProfile={openProfile} onOpenEvent={openEvent} />}
+      {nav.screen !== 'landing' && nav.screen !== 'avatar' && <button type="button" className={`profile-chip ${ownProfileIsCurrent ? 'selected' : ''}`} onClick={() => openProfile(profile.id)} aria-label={`Abrir meu perfil demonstrativo, ${profile.displayName}`} aria-current={ownProfileIsCurrent ? 'page' : undefined}><span aria-hidden="true">{avatar}</span><span className="profile-chip-name">{profile.displayName}</span><i aria-hidden="true" /></button>}
     </header>
     <div className={`demo-storage-status ${persistenceStatus.persistent ? '' : 'memory-only'}`} role={persistenceStatus.message ? 'status' : undefined} aria-live={persistenceStatus.message ? 'polite' : undefined}>
       <span>{persistenceStatus.persistent ? 'DEMONSTRAÇÃO LOCAL · alterações ficam neste navegador.' : 'DEMONSTRAÇÃO LOCAL · alterações ficam apenas nesta sessão.'}</span>
