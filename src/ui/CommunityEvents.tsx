@@ -61,7 +61,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
       </select>
       {territoryFilter && <button type="button" className="events-clear-filter" onClick={() => setTerritoryFilter('')}>Limpar filtro</button>}
     </div>
-    {events.length === 0 ? <p className="events-empty" role="status">{territoryFilter ? 'Nenhum encontro demonstrativo neste território.' : 'Nenhum encontro demonstrativo disponível.'}</p> : <div className="events-grid">
+    {events.length === 0 ? <div className="events-empty" role="status"><span className="empty-state-mark" aria-hidden="true">✧</span><b>{territoryFilter ? 'Nenhum encontro neste território' : 'Nenhum encontro demonstrativo disponível'}</b><p>{territoryFilter ? 'O filtro atual não encontrou encontros. Limpe o filtro acima para ver outros territórios.' : 'Não há encontros fictícios nesta demonstração no momento.'}</p></div> : <div className="events-grid">
       {events.map((event) => {
         const territory = territories.find((item) => item.id === event.territoryId)
         const organizer = organizers.find((profile) => profile.id === event.organizerProfileId)

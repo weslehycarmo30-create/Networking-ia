@@ -336,3 +336,15 @@
 .chat-compose .send-button:disabled{background:#35413d;color:#c2cbc4;opacity:1}
 .chat-compose .local-only{min-width:76px;line-height:1.4}
 @media(max-width:680px){.chat-compose .local-only{max-width:92px;min-width:76px;font-size:8px}.chat-compose input{min-width:0}.report-dialog-actions{gap:10px}}
+
+/* OLIMPO-033: shared visual treatment and clear next steps for empty lists. */
+.empty-state-mark{display:grid;place-items:center;width:36px;height:36px;margin:0 auto 10px;border:1px solid rgba(193,147,94,.38);border-radius:50%;background:rgba(193,147,94,.07);color:#e2c49a;font-size:17px;line-height:1}
+.network-empty{display:flex;align-items:flex-start;gap:9px;line-height:1.55}
+.network-empty .empty-state-mark{width:22px;height:22px;flex:none;margin:0;border:0;background:transparent;font-size:14px}
+.network-empty-action{min-height:44px;margin:0 0 4px;padding:9px 12px;border:1px solid rgba(193,147,94,.34);border-radius:3px;background:#202f34;color:#ead6b4;font-size:11px}
+.events-empty{text-align:center;line-height:1.6}
+.events-empty b{display:block;color:#eee5d6;font-size:13px}
+.events-empty p{margin:7px 0 0;color:#c1cbc3;font-size:11px}
+.message-empty,.participant-empty{padding:16px 12px;border:1px dashed rgba(193,147,94,.3);border-radius:4px;background:rgba(193,147,94,.035);color:#d2d8d0;font-size:12px;line-height:1.6;text-align:center}
+.participant-empty{margin:12px 0 0}
+.notification-empty .notification-destination{min-height:44px;margin:10px 0 0}

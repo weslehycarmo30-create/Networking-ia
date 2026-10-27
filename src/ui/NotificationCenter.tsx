@@ -91,7 +91,7 @@ export default function NotificationCenter({ service, profiles, events, getPersi
         <label><input type="checkbox" checked={preferences.eventActivity} onChange={(event) => setPreference('eventActivity', event.target.checked)} /> Atividade local de encontros</label>
       </fieldset>}
       <button type="button" className="notification-read-all" onClick={markAllRead} disabled={unreadCount === 0}>Marcar todas como lidas</button>
-      {notifications.length === 0 ? <div className="notification-empty" role="status"><b>Nenhuma notificação demonstrativa</b><p>Avisos de exemplo podem aparecer aqui após ações locais no OLIMPO.</p></div> : <ul className="notification-list">
+      {notifications.length === 0 ? <div className="notification-empty"><div role="status"><span className="empty-state-mark" aria-hidden="true">✧</span><b>Nenhuma notificação demonstrativa</b><p>Nenhum aviso local foi gerado ainda. Um convite fictício ou uma inscrição em encontro pode criar avisos de exemplo aqui.</p></div>{events[0] && <button type="button" className="notification-destination" onClick={() => onOpenEvent(events[0].id)}>Explorar encontros demonstrativos</button>}</div> : <ul className="notification-list">
         {notifications.map((notification) => {
           const relatedEvent = notification.kind === 'event_registration' ? events.find((event) => event.id === notification.eventId) : undefined
           const relatedProfile = notification.kind === 'connection_invite' ? profiles.find((profile) => profile.id === notification.profileId) : undefined
