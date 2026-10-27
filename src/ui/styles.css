@@ -317,3 +317,11 @@
 .toast-error{border-color:#d78678;background:#3a2526;}
 .toast-error .toast-kind{background:rgba(215,134,120,.17);color:#ffd0c8;}
 @media(max-width:520px){.toast{bottom:max(14px,env(safe-area-inset-bottom));grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;width:calc(100vw - 24px);max-height:38vh;padding:10px}.toast-kind{grid-column:1;grid-row:1}.toast-message{grid-column:1;grid-row:2;padding-bottom:3px}.toast>button{grid-column:2;grid-row:1 / span 2;align-self:center;width:44px;height:44px}}
+
+/* OLIMPO-031: keep the 2D map, discovery and chat usable at compact widths. */
+@media(max-width:900px){.city-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px}.city-heading>div:first-child{min-width:0}.city-actions{grid-column:1/-1;width:100%;justify-content:flex-start}.view-switch{margin-left:0}}
+@media(max-width:800px){.member-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.city-heading{display:flex}.member-results{grid-template-columns:1fr}}
+@media(max-width:430px){.city-map{min-height:390px}.map-orbit{top:44%;width:min(93%,274px)}.map-node{width:clamp(74px,24vw,84px)}.map-node b{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.15;text-align:center}.node-1,.node-4{left:0}.node-3,.node-6{right:0}}
+@media(max-width:380px){.topbar{gap:5px}.wordmark{gap:7px;letter-spacing:1px}.brand-mark{width:30px;height:30px;flex:none}.top-nav{gap:2px}.top-nav button{min-width:44px;padding:0 1px;font-size:9px}.profile-chip{min-width:44px;min-height:44px;justify-content:center;padding:4px}.profile-chip-name{display:none}}
+@media(max-width:680px){.message-report-button{min-height:44px}}
