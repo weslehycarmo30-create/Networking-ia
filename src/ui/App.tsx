@@ -44,6 +44,9 @@ export default function App() {
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'warning' | 'error' } | null>(null)
   const [reportTarget, setReportTarget] = useState<{ targetType: ReportTargetType; targetId: string; itemLabel: string } | null>(null)
   const reportTrigger = useRef<HTMLButtonElement | null>(null)
+  const profileFocusOrigin = useRef<HTMLElement | null>(null)
+  const pendingRouteFocus = useRef<HTMLElement | null>(null)
+  const previousRouteKey = useRef('')
   const toastDismiss = useRef<HTMLButtonElement | null>(null)
   const toastOrigin = useRef<HTMLElement | null>(null)
   const toastSequence = useRef(0)
@@ -70,6 +73,7 @@ export default function App() {
   const outgoingFromCurrentProfile = viewedConnection?.status === 'pending' && viewedConnection.fromProfileId === profile.id
   const viewedProgress = isOwnProfile ? services.gamification.getProgress(profile.id) : viewedProfile.gamification
   const persistenceStatus = services.demoState.getStatus()
+  const routeKey = `${nav.screen}:${nav.territoryId ?? ''}:${nav.profileId ?? ''}`
 
   const refreshServices = () => setRevision((revision) => revision + 1)
   const goCity = () => {
@@ -98,12 +102,15 @@ export default function App() {
   const failScene = () => { setView('2d'); setWebgl(false) }
 
   function openProfile(profileId: string) {
+    profileFocusOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setProfileReturnTo(nav.screen === 'profile' ? profileReturnTo : nav)
     setSelectedProfileId(profileId)
     setNav(profileId === profile.id ? { screen: 'profile' } : { screen: 'profile', profileId })
   }
 
   function closeProfile() {
+    pendingRouteFocus.current = profileFocusOrigin.current
+    profileFocusOrigin.current = null
     if (profileReturnTo.screen === 'room' && profileReturnTo.territoryId) services.participants.joinRoom(profileReturnTo.territoryId)
     setNav(profileReturnTo)
     setSelectedProfileId('')
@@ -158,6 +165,26 @@ export default function App() {
       reportTrigger.current = null
     }
   }, [reportTarget])
+
+  useEffect(() => {
+    const previousRoute = previousRouteKey.current
+    previousRouteKey.current = routeKey
+    if (!previousRoute || previousRoute === routeKey || (nav.screen === 'city' && focusEventId)) return
+    const frame = window.requestAnimationFrame(() => {
+      const returnTarget = pendingRouteFocus.current
+      pendingRouteFocus.current = null
+      if (returnTarget?.isConnected) {
+        returnTarget.focus()
+        return
+      }
+      const heading = document.querySelector<HTMLElement>('.app-shell main h1')
+      if (heading) {
+        heading.tabIndex = -1
+        heading.focus()
+      }
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [routeKey])
 
   function openReportDialog(targetType: ReportTargetType, targetId: string, itemLabel: string, trigger: HTMLButtonElement) {
     if (services.reports.hasReport(targetType, targetId)) {

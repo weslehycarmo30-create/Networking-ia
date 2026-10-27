@@ -337,6 +337,9 @@
 .chat-compose .local-only{min-width:76px;line-height:1.4}
 @media(max-width:680px){.chat-compose .local-only{max-width:92px;min-width:76px;font-size:8px}.chat-compose input{min-width:0}.report-dialog-actions{gap:10px}}
 
+/* OLIMPO-035: keep the active page title visible after keyboard navigation. */
+.app-shell main h1[tabindex="-1"]:focus{outline:2px solid var(--aqua);outline-offset:5px;border-radius:2px}
+
 /* OLIMPO-033: shared visual treatment and clear next steps for empty lists. */
 .empty-state-mark{display:grid;place-items:center;width:36px;height:36px;margin:0 auto 10px;border:1px solid rgba(193,147,94,.38);border-radius:50%;background:rgba(193,147,94,.07);color:#e2c49a;font-size:17px;line-height:1}
 .network-empty{display:flex;align-items:flex-start;gap:9px;line-height:1.55}

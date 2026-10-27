@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CommunityEvent, DemoNotification, NotificationPreferences, Profile } from '../domain/models'
 import type { NotificationService } from '../services/contracts'
 import type { DemoPersistenceStatus } from '../services/demo-storage'
@@ -21,9 +21,31 @@ function notificationTitle(notification: DemoNotification) {
 export default function NotificationCenter({ service, profiles, events, getPersistenceStatus, onChange, onFeedback, onOpenProfile, onOpenEvent }: NotificationCenterProps) {
   const [open, setOpen] = useState(false)
   const [preferencesOpen, setPreferencesOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
   const notifications = service.list()
   const unreadCount = service.unreadCount()
   const preferences = service.getPreferences()
+
+  function closePanel() {
+    setOpen(false)
+    window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }))
+  }
+
+  function togglePanel() {
+    if (open) closePanel()
+    else setOpen(true)
+  }
+
+  useEffect(() => {
+    if (!open) return
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape' || document.querySelector('dialog[open]')) return
+      event.preventDefault()
+      closePanel()
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [open])
 
   function setPreference(key: keyof NotificationPreferences, enabled: boolean) {
     try {
@@ -77,11 +99,11 @@ export default function NotificationCenter({ service, profiles, events, getPersi
   }
 
   return <div className="notification-center">
-    <button type="button" className="notification-trigger" aria-label={`Notificações demonstrativas${unreadCount ? `, ${unreadCount} não lidas` : ''}`} aria-expanded={open} aria-controls={open ? 'notification-panel' : undefined} onClick={() => setOpen((value) => !value)}>
+    <button ref={triggerRef} type="button" className="notification-trigger" aria-label={`Notificações demonstrativas${unreadCount ? `, ${unreadCount} não lidas` : ''}`} aria-expanded={open} aria-controls={open ? 'notification-panel' : undefined} onClick={togglePanel}>
       <span aria-hidden="true">♢</span><span className="notification-trigger-label">Notificações</span>{unreadCount > 0 && <><span className="notification-count" aria-hidden="true">{unreadCount > 99 ? '99+' : unreadCount}</span><span className="sr-only">{unreadCount} notificações não lidas</span></>}
     </button>
     {open && <section className="notification-panel" id="notification-panel" aria-label="Central de notificações demonstrativas">
-      <div className="notification-panel-heading"><div><b>Notificações</b><small>{unreadCount} não lidas · {notifications.length} no total</small></div><button type="button" className="notification-close" onClick={() => setOpen(false)} aria-label="Fechar notificações">×</button></div>
+      <div className="notification-panel-heading"><div><b>Notificações</b><small>{unreadCount} não lidas · {notifications.length} no total</small></div><button type="button" className="notification-close" onClick={closePanel} aria-label="Fechar notificações">×</button></div>
       <p className="notification-local-notice">Demonstração local: itens fictícios do estado deste navegador. Nenhum aviso chega de outros usuários ou servidores.</p>
       <button type="button" className="notification-settings-trigger" aria-expanded={preferencesOpen} aria-controls={preferencesOpen ? 'notification-preferences' : undefined} onClick={() => setPreferencesOpen((value) => !value)}>{preferencesOpen ? 'Ocultar preferências locais' : 'Preferências locais'}</button>
       {preferencesOpen && <fieldset className="notification-preferences" id="notification-preferences">
