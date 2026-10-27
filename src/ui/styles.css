@@ -386,3 +386,14 @@
 .event-organizer small,.event-profile-link{font-size:11px}
 .event-rsvp-status{font-size:12px;line-height:1.6}
 .discovery-filter-hint,.report-reason-hint,.report-note-hint{font-size:11px;line-height:1.55}
+
+/* OLIMPO-045: visible, keyboard-operable camera controls for the 3D plaza. */
+.scene-camera-controls{position:absolute;z-index:5;right:10px;bottom:62px;display:grid;justify-items:center;gap:5px;padding:8px 10px;border:1px solid rgba(193,147,94,.36);border-radius:4px;background:rgba(16,24,32,.92);color:#e9e5dc}
+.scene-camera-buttons{display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(2,40px);gap:3px}
+.scene-camera-buttons button{min-width:40px;min-height:40px;border:1px solid rgba(193,147,94,.42);border-radius:3px;background:#202f34;color:#f0dfc2;font-size:16px}
+.scene-camera-buttons button:nth-child(1){grid-column:2;grid-row:1}
+.scene-camera-buttons button:nth-child(2){grid-column:1;grid-row:2}
+.scene-camera-buttons button:nth-child(3){grid-column:2;grid-row:2}
+.scene-camera-buttons button:nth-child(4){grid-column:3;grid-row:2}
+.scene-camera-controls small{max-width:174px;color:#c1cbc3;font-size:10px;line-height:1.4;text-align:center}
+@media(max-width:680px){.scene-camera-controls{display:none}}
