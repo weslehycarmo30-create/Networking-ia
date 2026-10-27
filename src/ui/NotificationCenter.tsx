@@ -9,7 +9,7 @@ type NotificationCenterProps = {
   events: CommunityEvent[]
   getPersistenceStatus: () => DemoPersistenceStatus
   onChange: () => void
-  onFeedback: (message: string) => void
+  onFeedback: (message: string, tone?: 'success' | 'warning' | 'error') => void
   onOpenProfile: (profileId: Profile['id']) => void
   onOpenEvent: (eventId: CommunityEvent['id']) => void
 }
@@ -33,7 +33,7 @@ export default function NotificationCenter({ service, profiles, events, getPersi
       const action = enabled ? `Avisos locais de ${category} ativados` : `Opt-out de ${category} aplicado; avisos existentes foram removidos e novos avisos locais serão omitidos`
       onFeedback(getPersistenceStatus().persistent ? `${action} nesta demonstração.` : `${action} apenas nesta sessão, pois o armazenamento local está indisponível.`)
     } catch (error) {
-      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar esta preferência demonstrativa.')
+      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar esta preferência demonstrativa.', 'error')
     }
   }
 
@@ -41,16 +41,20 @@ export default function NotificationCenter({ service, profiles, events, getPersi
     try {
       service.markAsRead(notificationId)
       onChange()
-      if (!getPersistenceStatus().persistent) onFeedback('Leitura mantida somente nesta sessão porque o armazenamento local está indisponível.')
+      if (!getPersistenceStatus().persistent) onFeedback('Leitura mantida somente nesta sessão porque o armazenamento local está indisponível.', 'warning')
     } catch (error) {
-      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar esta notificação demonstrativa.')
+      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar esta notificação demonstrativa.', 'error')
     }
   }
 
   function markAllRead() {
-    const count = service.markAllAsRead()
-    onChange()
-    if (count > 0) onFeedback(`${count} notificação${count === 1 ? '' : 'ões'} demonstrativa${count === 1 ? '' : 's'} marcada${count === 1 ? '' : 's'} como lida${count === 1 ? '' : 's'}.`)
+    try {
+      const count = service.markAllAsRead()
+      onChange()
+      if (count > 0) onFeedback(`${count} notificação${count === 1 ? '' : 'ões'} demonstrativa${count === 1 ? '' : 's'} marcada${count === 1 ? '' : 's'} como lida${count === 1 ? '' : 's'}.`)
+    } catch (error) {
+      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar as notificações demonstrativas.', 'error')
+    }
   }
 
   function openDestination(notification: DemoNotification) {
@@ -74,7 +78,7 @@ export default function NotificationCenter({ service, profiles, events, getPersi
 
   return <div className="notification-center">
     <button type="button" className="notification-trigger" aria-label={`Notificações demonstrativas${unreadCount ? `, ${unreadCount} não lidas` : ''}`} aria-expanded={open} aria-controls={open ? 'notification-panel' : undefined} onClick={() => setOpen((value) => !value)}>
-      <span aria-hidden="true">♢</span><span className="notification-trigger-label">Notificações</span>{unreadCount > 0 && <><span className="notification-count" aria-hidden="true">{unreadCount > 99 ? '99+' : unreadCount}</span><span className="sr-only" aria-live="polite">{unreadCount} notificações não lidas</span></>}
+      <span aria-hidden="true">♢</span><span className="notification-trigger-label">Notificações</span>{unreadCount > 0 && <><span className="notification-count" aria-hidden="true">{unreadCount > 99 ? '99+' : unreadCount}</span><span className="sr-only">{unreadCount} notificações não lidas</span></>}
     </button>
     {open && <section className="notification-panel" id="notification-panel" aria-label="Central de notificações demonstrativas">
       <div className="notification-panel-heading"><div><b>Notificações</b><small>{unreadCount} não lidas · {notifications.length} no total</small></div><button type="button" className="notification-close" onClick={() => setOpen(false)} aria-label="Fechar notificações">×</button></div>

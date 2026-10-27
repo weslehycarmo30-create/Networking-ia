@@ -11,7 +11,7 @@ type CommunityEventsProps = {
   getPersistenceStatus: () => DemoPersistenceStatus
   onOpenProfile: (profileId: Profile['id']) => void
   onRegistrationChange: () => void
-  onFeedback: (message: string) => void
+  onFeedback: (message: string, tone?: 'success' | 'warning' | 'error') => void
 }
 
 function formatEventDate(value: string) {
@@ -43,7 +43,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
       }
       onRegistrationChange()
     } catch (error) {
-      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar esta inscrição demonstrativa.')
+      onFeedback(error instanceof Error ? error.message : 'Não foi possível atualizar esta inscrição demonstrativa.', 'error')
     }
   }
 
@@ -74,10 +74,10 @@ export default function CommunityEvents({ service, territories, organizers, curr
           {organizer && <button type="button" className="event-organizer" onClick={() => onOpenProfile(organizer.id)} aria-label={`Abrir perfil de quem organiza: ${organizer.displayName}`}>
             <span className="event-organizer-avatar" aria-hidden="true">{organizer.avatar.emoji}</span><span><small>Organizado por</small><b>{organizer.displayName}</b></span><span className="event-profile-link">Ver perfil →</span>
           </button>}
-          <div className="event-card-bottom"><span className="event-count" aria-live="polite">{event.participantCount} participantes demonstrativos</span>
+          <div className="event-card-bottom"><span className="event-count">{event.participantCount} participantes demonstrativos</span>
             <button type="button" className={`event-rsvp ${registered ? 'registered' : ''}`} aria-pressed={registered} onClick={() => toggleRegistration(event.id)}>{registered ? 'Cancelar inscrição' : 'Inscrever-se'}</button>
           </div>
-          <p className={`event-rsvp-status ${registered ? 'registered' : 'not-registered'}`} role="status">{registered ? getPersistenceStatus().persistent ? 'Inscrição demonstrativa ativa somente neste navegador; não é compartilhada.' : 'Inscrição demonstrativa ativa somente nesta sessão; não é compartilhada.' : 'Sem inscrição neste encontro demonstrativo.'}</p>
+          <p className={`event-rsvp-status ${registered ? 'registered' : 'not-registered'}`}>{registered ? getPersistenceStatus().persistent ? 'Inscrição demonstrativa ativa somente neste navegador; não é compartilhada.' : 'Inscrição demonstrativa ativa somente nesta sessão; não é compartilhada.' : 'Sem inscrição neste encontro demonstrativo.'}</p>
         </article>
       })}
     </div>}

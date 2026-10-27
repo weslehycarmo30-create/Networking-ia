@@ -304,3 +304,16 @@
 @media(max-width:680px){.topbar{min-width:0}.top-nav{flex:1;justify-content:center}.top-nav button{min-width:44px}.notification-trigger{min-height:44px}.profile-chip{min-height:44px}}
 @media(max-width:440px){.topbar{gap:clamp(5px,1.5vw,8px)}.wordmark small{display:none}.top-nav{gap:3px}.top-nav button{padding:0 3px;font-size:10px}.top-nav-label-full{display:none}.top-nav-label-compact{display:inline}}
 @media(max-width:380px){.topbar{gap:5px}.top-nav{gap:2px}.top-nav button{min-width:44px;padding:0 2px;font-size:10px}.profile-chip{padding:4px}}
+
+/* OLIMPO-030: readable, dismissible feedback shared by demo actions. */
+.toast{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:min(620px,calc(100vw - 28px));max-height:min(45vh,220px);overflow:auto;padding:10px 12px;border-radius:5px;font-size:12px;line-height:1.55;}
+.toast-kind{align-self:start;padding:3px 7px;border-radius:3px;background:rgba(117,217,208,.12);color:#d3f3e8;font:10px var(--mono);letter-spacing:.35px;text-transform:uppercase;}
+.toast-message{min-width:0;overflow-wrap:anywhere;color:#f0ece2;}
+.toast>button{display:grid;place-items:center;flex:none;width:44px;height:44px;border:1px solid rgba(231,223,207,.22);border-radius:3px;background:rgba(255,255,255,.04);color:#f1eadf;font-size:22px;line-height:1;}
+.toast>button:hover{background:rgba(255,255,255,.1);}
+.toast-success{border-color:rgba(117,217,208,.48);background:#203238;color:#f0ece2;}
+.toast-warning{border-color:rgba(226,183,126,.68);background:#352d22;}
+.toast-warning .toast-kind{background:rgba(226,183,126,.15);color:#ffe0ad;}
+.toast-error{border-color:#d78678;background:#3a2526;}
+.toast-error .toast-kind{background:rgba(215,134,120,.17);color:#ffd0c8;}
+@media(max-width:520px){.toast{bottom:max(14px,env(safe-area-inset-bottom));grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;width:calc(100vw - 24px);max-height:38vh;padding:10px}.toast-kind{grid-column:1;grid-row:1}.toast-message{grid-column:1;grid-row:2;padding-bottom:3px}.toast>button{grid-column:2;grid-row:1 / span 2;align-self:center;width:44px;height:44px}}
