@@ -53,3 +53,24 @@
 .avatar-option.selected>small{padding:4px 8px;border:1px solid rgba(117,217,208,.3);border-radius:20px;background:#172b2c;color:#bce9df;font-size:9px}
 .avatar-actions>span{max-width:270px;padding:9px 11px;border-left:2px solid var(--bronze);background:rgba(193,147,94,.07);color:#c7c7bb;line-height:1.5}
 @media(max-width:680px){.landing-footer{font-size:7px;letter-spacing:.45px}.avatar-option{min-height:90px}.avatar-actions>span{max-width:none}}
+
+/* OLIMPO-024: make territory selection and room entry consistent in both maps. */
+.city-heading .view-switch button.active{border:1px solid rgba(193,147,94,.42);background:linear-gradient(145deg,#33403e,#2b3739);color:#f0dfc2}
+.map-enter{min-height:44px;padding:9px 12px;border-color:rgba(193,147,94,.55);background:#263433;color:#f0dfc2;font-weight:600}
+.map-enter b{color:#f4e8d4}
+.map-enter span{color:var(--bronze)}
+.territory-section .section-count{max-width:210px;text-align:right;line-height:1.5}
+.territory-card{min-height:194px;background:linear-gradient(145deg,rgba(193,147,94,.045),transparent 44%),linear-gradient(145deg,#1b282e,#172229)}
+.territory-card:focus-visible{outline-offset:4px;border-color:var(--aqua)}
+.territory-card>b{color:#f0e8d9}
+.territory-description{color:#b0bbb4;font-size:11px}
+.territory-bottom{flex-wrap:wrap;gap:7px;color:#c4c9bf;font-size:10px}
+.people-avatars{flex:none}
+.territory-presence{color:#c1c9c0;white-space:nowrap}
+.territory-entry{display:inline-flex;align-items:center;gap:4px;margin-left:auto;color:#e2bc88;font-size:10px;font-weight:700;white-space:nowrap}
+.territory-entry .card-arrow{margin:0;color:inherit}
+.map-node.selected{border-color:var(--bronze);background:linear-gradient(145deg,rgba(42,62,60,.98),rgba(25,37,42,.98));box-shadow:0 0 0 2px rgba(117,217,208,.27),0 0 18px rgba(193,147,94,.15)}
+.map-node.selected>span{color:var(--bronze)}
+.scene-territories button.selected{background:rgba(41,61,58,.98);color:#f0d5aa;box-shadow:0 0 0 1px rgba(117,217,208,.2)}
+.map-legend{padding:5px 8px;border:1px solid rgba(231,223,207,.1);border-radius:3px;background:rgba(16,24,32,.82)}
+@media(max-width:680px){.city-heading .view-switch button span{font-size:10px}.territory-section .section-count{max-width:132px;font-size:7px}.territory-card{min-height:182px}.territory-description{font-size:12px}.territory-bottom{font-size:10px}.map-enter{max-width:calc(100% - 18px);min-height:44px}.map-legend{bottom:9px;left:9px;font-size:8px}}
