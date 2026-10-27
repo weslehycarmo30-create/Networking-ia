@@ -361,3 +361,23 @@
 .report-dialog select:invalid{border-color:#e6a766}
 .report-dialog select:valid{border-color:#75d9d0}
 .discovery-filters input::placeholder{color:#9ca7a6}
+
+/* OLIMPO-037: raise dense supporting copy while keeping compact layouts intact. */
+.landing-footer,.site-footer{font-size:9px}
+.territory-domain{font-size:10px}
+.territory-description{font-size:12px;line-height:1.6}
+.room-about p{font-size:12px;line-height:1.65}
+.chat-top span,.message-body time{font-size:11px}
+.member-result-interests li,.member-result-affinities li,.profile-interests i{font-size:11px;line-height:1.4}
+.discovery-demo-note,.community-profile-copy small{font-size:11px;line-height:1.55}
+.scene-profile-picker .community-profile-copy small{font-size:10px}
+.network-group h3{font-size:11px}
+.network-person small{font-size:11px}
+.notification-panel-heading small{font-size:11px}
+.notification-local-notice{font-size:12px;line-height:1.6}
+.notification-item-heading .notification-state{font-size:10px}
+.notification-item p{font-size:12px;line-height:1.6}
+.events-local-notice{font-size:12px;line-height:1.6}
+.event-organizer small,.event-profile-link{font-size:11px}
+.event-rsvp-status{font-size:12px;line-height:1.6}
+.discovery-filter-hint,.report-reason-hint,.report-note-hint{font-size:11px;line-height:1.55}
