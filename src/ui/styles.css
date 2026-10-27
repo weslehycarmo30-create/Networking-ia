@@ -124,3 +124,51 @@
 .room-about p{color:#bdc6be;font-size:12px;line-height:1.65}
 .demo-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid rgba(193,147,94,.2);border-radius:3px;background:rgba(193,147,94,.055);color:#e2c49a;font-size:10px}
 @media(max-width:680px){.room-back{margin-bottom:17px}.room-heading{align-items:flex-start;gap:10px;padding:15px 13px}.room-heading>div{flex:1 1 calc(100% - 58px)}.room-heading h1{margin-top:6px;font-size:24px;overflow-wrap:anywhere}.room-heading p{font-size:12px;line-height:1.6}.room-presence{max-width:none;margin-left:55px;padding:7px 9px;font-size:8px}.room-layout{gap:12px;margin-top:13px}.chat-panel{min-height:470px}.chat-top{align-items:flex-start;padding:13px 11px}.chat-top b{font-size:13px}.chat-top span{font-size:10px}.chat-room-label{max-width:42%;font-size:9px;overflow-wrap:anywhere}.message-list{gap:11px;padding:13px 9px}.message{max-width:98%;padding:9px;gap:7px}.message-body{flex:1 1 calc(100% - 46px)}.message-body p{font-size:13px}.message-report-button{width:100%;min-height:40px;margin:0;font-size:10px}.room-prompt{max-width:100%;font-size:11px}.chat-compose{margin:0 8px 8px;padding:6px;gap:5px}.chat-compose input{font-size:13px}.local-only{max-width:82px;padding:4px;font-size:7px;white-space:normal;line-height:1.3}.send-button{width:44px;height:44px}.room-sidebar{gap:10px}.room-sidebar .sidebar-card{padding:13px}.presence-demo-note{font-size:11px}.participant-button{min-height:56px}.participant-open{font-size:10px}}
+
+/* OLIMPO-026: discovery clarity and explicit shared connection states. */
+.discovery-page .back-link{display:inline-flex;align-items:center;min-height:44px;margin-bottom:22px;padding:0 12px;border:1px solid rgba(193,147,94,.28);border-radius:3px;color:#e2c49a}
+.discovery-page .back-link:hover{border-color:rgba(117,217,208,.45);color:#c8efe3}
+.discovery-heading{padding:18px;border:1px solid rgba(193,147,94,.2);border-radius:5px;background:radial-gradient(ellipse at 0 50%,rgba(193,147,94,.1),transparent 60%),linear-gradient(115deg,#1b292e,#172329)}
+.discovery-heading h1{color:#f1e8d9}
+.discovery-heading p{color:#c0c9c1;font-size:13px}
+.discovery-filters{border-color:rgba(193,147,94,.25);background:linear-gradient(145deg,#1a282e,#172329)}
+.discovery-filters label{color:#eee5d6;font-size:12px;font-weight:600}
+.discovery-filter-hint{display:block;margin-top:6px;color:#c6b28f;font-size:10px;line-height:1.45}
+.clear-discovery{min-height:44px}
+.clear-discovery:disabled{color:#aab5af;opacity:.72}
+.discovery-result-count{color:#d7c39f}
+.member-result{padding:17px;border-color:rgba(193,147,94,.2);background:linear-gradient(145deg,rgba(193,147,94,.055),transparent 44%),linear-gradient(145deg,#1b282e,#172229)}
+.member-result-top{min-height:48px}
+.member-result-avatar{border-color:rgba(193,147,94,.38);background:radial-gradient(circle at 35% 25%,#495650,#263439 75%)}
+.member-result h2{font-size:18px}
+.member-result-identity>span{color:#bdc8c0;font-size:11px}
+.member-result-bio{min-height:64px;margin:13px 0;color:#d0d7cf;font-size:12px;line-height:1.65}
+.member-tag-group{margin-top:8px}
+.member-tag-group>span{color:#bdc7bf;font:9px var(--mono);letter-spacing:.55px;text-transform:uppercase}
+.member-tag-group.affinity-group>span{color:#e2bc88}
+.member-result-interests,.member-result-affinities{margin-top:7px}
+.member-result-interests li{padding:6px 8px;border-color:rgba(117,217,208,.27);background:rgba(117,217,208,.055);color:#d0e4da;font-size:10px}
+.member-result-affinities li{padding:6px 8px;border-color:rgba(193,147,94,.38);background:rgba(193,147,94,.07);color:#f0d9b5;font-size:10px}
+.member-connection-state{min-height:38px;display:flex;align-items:center;margin:13px 0 10px;padding:8px 10px;border:1px solid rgba(231,223,207,.14);border-left:3px solid #9ca7a6;border-radius:3px;background:rgba(16,24,32,.55);color:#e0e5dc;font-size:11px;font-weight:600}
+.member-connection-state.status-none{border-left-color:#9ca7a6}
+.member-connection-state.status-outgoing{border-left-color:#e2bc88;color:#f0d9b5}
+.member-connection-state.status-incoming{border-left-color:#75d9d0;color:#c8efe3}
+.member-connection-state.status-connected{border-left-color:#83d9ad;color:#c7edda}
+.member-connection-state.status-declined{border-left-color:#d89078;color:#efc5b8}
+.member-result-actions{align-items:stretch;gap:8px}
+.member-result-actions>button,.member-result-actions .connection-check{min-height:44px}
+.member-result-actions .member-profile-button{color:#e8e3d9}
+.member-result-actions .connect-button{font-size:11px}
+.member-result-actions .network-cancel{min-height:44px;border-color:rgba(226,188,136,.35);background:#302b27;color:#f0d9b5;font-size:11px}
+.member-invite-actions{display:flex;flex:1;gap:7px;min-width:0}
+.member-result-actions .member-invite-actions button{min-height:44px;flex:1;padding:8px;border:1px solid var(--line);border-radius:3px;font-size:11px}
+.member-result-actions .member-invite-actions .network-accept{border-color:rgba(117,217,208,.45);background:#26413d;color:#c8efe3}
+.member-result-actions .member-invite-actions .network-decline{border-color:rgba(216,144,120,.36);background:#342724;color:#f0cabc}
+.member-result-actions .connection-check{align-self:center;padding:8px 10px;border:1px solid rgba(131,217,173,.3);border-radius:3px;background:rgba(131,217,173,.07);font-weight:600}
+.discovery-empty{padding:34px 20px;border-color:rgba(193,147,94,.45);background:radial-gradient(ellipse at 50% 0,rgba(193,147,94,.09),transparent 75%)}
+.discovery-empty>b{font-size:20px}
+.discovery-empty p{color:#c2cbc3;font-size:13px;line-height:1.6}
+.discovery-empty .text-button{display:inline-flex;align-items:center;justify-content:center;margin-top:4px;padding:0 12px;border:1px solid rgba(193,147,94,.35);border-radius:3px}
+.discovery-demo-note{color:#b0bcb4}
+@media(max-width:760px){.discovery-filters{gap:12px}.member-results{gap:10px}}
+@media(max-width:680px){.discovery-page .back-link{margin-bottom:17px}.discovery-heading{padding:14px}.discovery-heading p{font-size:12px}.member-results{grid-template-columns:1fr}.member-result-bio{min-height:0}.member-result-actions{flex-direction:column}.member-invite-actions{width:100%}.member-result-actions .member-invite-actions button{width:auto}.member-result-actions .connection-check{align-self:stretch;justify-content:center}.member-connection-state{font-size:12px}.discovery-filter-hint{font-size:11px}}
