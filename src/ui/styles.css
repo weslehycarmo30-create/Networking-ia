@@ -74,3 +74,53 @@
 .scene-territories button.selected{background:rgba(41,61,58,.98);color:#f0d5aa;box-shadow:0 0 0 1px rgba(117,217,208,.2)}
 .map-legend{padding:5px 8px;border:1px solid rgba(231,223,207,.1);border-radius:3px;background:rgba(16,24,32,.82)}
 @media(max-width:680px){.city-heading .view-switch button span{font-size:10px}.territory-section .section-count{max-width:132px;font-size:7px}.territory-card{min-height:182px}.territory-description{font-size:12px}.territory-bottom{font-size:10px}.map-enter{max-width:calc(100% - 18px);min-height:44px}.map-legend{bottom:9px;left:9px;font-size:8px}}
+
+/* OLIMPO-025: room context, local activity, and readable conversation. */
+.room-back{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:0 0 22px;padding:0 12px;border:1px solid rgba(193,147,94,.3);border-radius:3px;background:rgba(193,147,94,.055);color:#e2c49a}
+.room-back:hover{border-color:rgba(117,217,208,.45);color:#c8efe3}
+.room-heading{align-items:center;padding:20px 18px;border:1px solid rgba(193,147,94,.24);border-radius:5px;background:radial-gradient(ellipse at 0 50%,rgba(193,147,94,.09),transparent 58%),linear-gradient(115deg,#1c292e,#172329)}
+.room-heading>div{min-width:0;flex:1}
+.room-heading h1{color:#f1e8d9;font-size:clamp(25px,3vw,34px)}
+.room-heading p{max-width:660px;color:#b9c3bb;font-size:13px;line-height:1.65}
+.room-presence{display:inline-flex;align-items:center;gap:7px;max-width:210px;padding:8px 10px;border:1px solid rgba(193,147,94,.34);border-radius:20px;background:rgba(193,147,94,.08);color:#ead1aa;font:9px var(--mono);letter-spacing:.3px;text-align:center}
+.room-presence>span{color:var(--aqua)}
+.room-layout{align-items:start;gap:18px;margin-top:18px}
+.chat-panel{min-width:0;min-height:540px;overflow:hidden;border-color:rgba(193,147,94,.2);background:linear-gradient(180deg,#172329,#131e23)}
+.chat-top{gap:12px;padding:16px 18px;border-color:rgba(193,147,94,.2);background:linear-gradient(100deg,rgba(193,147,94,.075),transparent 60%)}
+.chat-top b{color:#f1e8d9;font-size:14px}
+.chat-top span{color:#b6c1ba;font-size:11px;line-height:1.5}
+.chat-room-label{flex:none;padding:7px 9px;border:1px solid rgba(193,147,94,.23);border-radius:3px;color:#e5c89a;text-align:right}
+.chat-room-label small{display:block;margin-top:4px;color:#aebbb3;font:8px var(--mono);letter-spacing:.5px}
+.message-list{gap:13px;padding:18px}
+.message{flex-wrap:wrap;max-width:90%;gap:8px 10px;padding:11px;border:1px solid rgba(231,223,207,.1);border-left:2px solid rgba(193,147,94,.55);border-radius:4px;background:linear-gradient(110deg,rgba(193,147,94,.055),rgba(23,34,41,.82) 42%)}
+.message.own-message{border-left-color:var(--aqua);background:linear-gradient(110deg,rgba(117,217,208,.075),rgba(29,45,47,.86) 42%)}
+.message-avatar{width:34px;height:34px;border:1px solid rgba(193,147,94,.24);background:#344044;font-size:17px}
+.own-message .message-avatar{border-color:rgba(117,217,208,.3);background:#2c403f}
+.message-body{min-width:0;flex:1}
+.message-body>div{flex-wrap:wrap;justify-content:space-between;gap:5px 9px}
+.message-body b{display:inline-flex;align-items:center;gap:7px;color:#eee8dc;font-size:12px}
+.message-body time{color:#adbab3;font-size:10px}
+.message-you{padding:3px 6px;border:1px solid rgba(117,217,208,.26);border-radius:12px;color:#bce9df;font:8px var(--mono);letter-spacing:.3px}
+.message-body p{margin-top:7px;overflow-wrap:anywhere;color:#d0d6ce;font-size:13px;line-height:1.65}
+.own-message .message-body p{background:#293b39;text-align:left}
+.message-report-button{min-height:36px;margin-left:auto;border-color:rgba(193,147,94,.28);color:#e2c49a;font-size:9px}
+.room-prompt{max-width:min(90%,560px);padding:11px 14px;border-color:rgba(193,147,94,.3);background:rgba(193,147,94,.055);color:#d3c3a8;font-size:11px;line-height:1.55}
+.chat-compose{min-height:62px;border-color:rgba(193,147,94,.25);background:#111c21}
+.chat-compose:focus-within{border-color:rgba(117,217,208,.55);box-shadow:0 0 0 1px rgba(117,217,208,.12)}
+.chat-compose input{min-height:44px;color:#f0ece3;font-size:13px}
+.chat-compose input::placeholder{color:#a3b0aa}
+.local-only{padding:5px 7px;border:1px solid rgba(193,147,94,.23);border-radius:3px;color:#e2c49a;font-size:8px;text-align:center}
+.send-button{width:42px;height:42px;flex:none;font-size:19px}
+.room-sidebar{min-width:0}
+.room-sidebar .sidebar-card{border-color:rgba(193,147,94,.19);background:linear-gradient(145deg,#1b292e,#172329)}
+.room-sidebar .sidebar-title{color:#eee7d9;font-size:13px}
+.room-sidebar .sidebar-title>span{padding:5px 7px;border:1px solid rgba(193,147,94,.22);border-radius:12px;color:#e4c69a}
+.presence-demo-note{margin:-6px 0 12px;color:#b0bcb4;font-size:10px;line-height:1.55}
+.participant-button{min-height:54px;margin:5px 0;padding:7px;border:1px solid rgba(231,223,207,.08);border-radius:3px}
+.participant-button:hover{border-color:rgba(117,217,208,.3);background:#202f33}
+.participant-button b{color:#eee9df;font-size:12px}
+.participant-button small{color:#b3beb7;font-size:10px}
+.participant-open{color:#e0bd8c;font-size:10px}
+.room-about p{color:#bdc6be;font-size:12px;line-height:1.65}
+.demo-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid rgba(193,147,94,.2);border-radius:3px;background:rgba(193,147,94,.055);color:#e2c49a;font-size:10px}
+@media(max-width:680px){.room-back{margin-bottom:17px}.room-heading{align-items:flex-start;gap:10px;padding:15px 13px}.room-heading>div{flex:1 1 calc(100% - 58px)}.room-heading h1{margin-top:6px;font-size:24px;overflow-wrap:anywhere}.room-heading p{font-size:12px;line-height:1.6}.room-presence{max-width:none;margin-left:55px;padding:7px 9px;font-size:8px}.room-layout{gap:12px;margin-top:13px}.chat-panel{min-height:470px}.chat-top{align-items:flex-start;padding:13px 11px}.chat-top b{font-size:13px}.chat-top span{font-size:10px}.chat-room-label{max-width:42%;font-size:9px;overflow-wrap:anywhere}.message-list{gap:11px;padding:13px 9px}.message{max-width:98%;padding:9px;gap:7px}.message-body{flex:1 1 calc(100% - 46px)}.message-body p{font-size:13px}.message-report-button{width:100%;min-height:40px;margin:0;font-size:10px}.room-prompt{max-width:100%;font-size:11px}.chat-compose{margin:0 8px 8px;padding:6px;gap:5px}.chat-compose input{font-size:13px}.local-only{max-width:82px;padding:4px;font-size:7px;white-space:normal;line-height:1.3}.send-button{width:44px;height:44px}.room-sidebar{gap:10px}.room-sidebar .sidebar-card{padding:13px}.presence-demo-note{font-size:11px}.participant-button{min-height:56px}.participant-open{font-size:10px}}
