@@ -397,3 +397,14 @@
 .scene-camera-buttons button:nth-child(4){grid-column:3;grid-row:2}
 .scene-camera-controls small{max-width:174px;color:#c1cbc3;font-size:10px;line-height:1.4;text-align:center}
 @media(max-width:680px){.scene-camera-controls{display:none}}
+
+/* OLIMPO-047: compact, semantic guidance for the interactive 3D plaza. */
+.city-3d-guide{margin:-10px 0 17px;border:1px solid rgba(193,147,94,.3);border-radius:4px;background:linear-gradient(145deg,#1a282e,#172329);color:#e9e5dc}
+.city-3d-guide summary{min-height:44px;padding:12px 14px;color:#f0dfc2;font-size:12px;font-weight:700;cursor:pointer}
+.city-3d-guide summary::marker{color:var(--bronze)}
+.city-3d-guide summary:focus-visible{outline:2px solid var(--aqua);outline-offset:2px}
+.city-3d-guide[open] summary{border-bottom:1px solid var(--line)}
+.city-3d-guide-content{max-width:950px;padding:10px 14px 12px}
+.city-3d-guide-content ul{display:grid;gap:7px;margin:0;padding-left:20px;color:#c1cbc3;font-size:12px;line-height:1.55}
+.city-3d-guide-content b{color:#e2c49a}
+@media(max-width:680px){.city-3d-guide{margin:-8px 0 14px}.city-3d-guide summary{padding:11px 12px}.city-3d-guide-content{padding:9px 12px 11px}.city-3d-guide-content ul{font-size:11px;line-height:1.5}}
