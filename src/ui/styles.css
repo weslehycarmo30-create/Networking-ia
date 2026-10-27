@@ -41,3 +41,15 @@
 .notification-preferences p{margin:0;color:#b1bdb6;font-size:10px;line-height:1.5}
 .notification-preferences label{display:flex;align-items:center;gap:9px;min-height:44px;color:#e7e4dc;font-size:11px;line-height:1.45}
 .notification-preferences input{width:18px;height:18px;flex:none;margin:0;accent-color:#75d9d0}
+
+/* OLIMPO-023: reinforce the local demo context and the avatar choice. */
+.landing-note{max-width:425px;padding:12px 14px;border-left:2px solid var(--bronze);background:linear-gradient(100deg,rgba(193,147,94,.1),rgba(193,147,94,0));color:#c1c8c1}
+.landing-note b{color:#ead7b8}
+.landing-footer{color:#b4bdb6}
+.landing-footer span:last-child{color:#d8bd93}
+.avatar-step{border-color:rgba(193,147,94,.3);background:radial-gradient(ellipse at 100% 0,rgba(193,147,94,.1),transparent 43%),linear-gradient(145deg,#1b292e,#172329 65%,#202a2b)}
+.avatar-option{min-height:104px;transition:border-color .18s,background-color .18s}
+.avatar-option.selected{border-color:var(--bronze);background:linear-gradient(145deg,#2b3737,#203637);box-shadow:inset 0 0 0 1px rgba(117,217,208,.22),0 0 20px rgba(193,147,94,.08)}
+.avatar-option.selected>small{padding:4px 8px;border:1px solid rgba(117,217,208,.3);border-radius:20px;background:#172b2c;color:#bce9df;font-size:9px}
+.avatar-actions>span{max-width:270px;padding:9px 11px;border-left:2px solid var(--bronze);background:rgba(193,147,94,.07);color:#c7c7bb;line-height:1.5}
+@media(max-width:680px){.landing-footer{font-size:7px;letter-spacing:.45px}.avatar-option{min-height:90px}.avatar-actions>span{max-width:none}}
