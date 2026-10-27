@@ -50,7 +50,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
   return <section className="community-events" id="community-events" aria-labelledby="community-events-title">
     <div className="section-title events-heading">
       <div><div className="eyebrow">ENCONTROS DA COMUNIDADE</div><h2 id="community-events-title">Ideias para construir juntos.</h2></div>
-      <span className="section-count">{events.length} {events.length === 1 ? 'ENCONTRO LOCAL' : 'ENCONTROS LOCAIS'}</span>
+      <span className="section-count" role="status">{events.length} {events.length === 1 ? 'ENCONTRO LOCAL' : 'ENCONTROS LOCAIS'}</span>
     </div>
     <p className="events-local-notice" role="note">Encontros e inscrições são dados locais desta demonstração; nada é publicado ou compartilhado com outros usuários.</p>
     <div className="events-filter">
