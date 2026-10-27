@@ -9,13 +9,14 @@ type Props = {
   currentProfileId: Profile['id']
   connections: Connection[]
   onBack: () => void
+  backLabel: string
   onOpenProfile: (profileId: Profile['id']) => void
   onRequestConnection: (profileId: Profile['id']) => void
   onCancelInvite: (inviteId: Connection['id']) => void
   onRespondToInvite: (inviteId: Connection['id'], decision: 'accepted' | 'declined') => void
 }
 
-export default function MemberDiscovery({ profiles, territories, currentProfileId, connections, onBack, onOpenProfile, onRequestConnection, onCancelInvite, onRespondToInvite }: Props) {
+export default function MemberDiscovery({ profiles, territories, currentProfileId, connections, onBack, backLabel, onOpenProfile, onRequestConnection, onCancelInvite, onRespondToInvite }: Props) {
   const [query, setQuery] = useState('')
   const [interest, setInterest] = useState('')
   const [territoryId, setTerritoryId] = useState<TerritoryId | ''>('')
@@ -23,7 +24,7 @@ export default function MemberDiscovery({ profiles, territories, currentProfileI
   const interests = listCommunityInterests(profiles)
 
   return <main className="discovery-page">
-    <button className="back-link" onClick={onBack}>← Voltar à Praça Central</button>
+    <button className="back-link" onClick={onBack}>← {backLabel}</button>
     <header className="discovery-heading">
       <div className="discovery-symbol" aria-hidden="true">☿</div>
       <div><div className="eyebrow">ÁGORA DE HERMES · COMUNIDADE</div><h1>Descobrir membros</h1><p>Encontre pessoas fictícias por nome, apresentação ou interesse.</p></div>
