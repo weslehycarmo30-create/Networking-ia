@@ -55,12 +55,14 @@ function SpartanAvatar({ avatar }: { avatar: Avatar }) {
 
 function CameraOrbit({ azimuth, elevation }: { azimuth: number; elevation: number }) {
   const camera = useThree((state) => state.camera)
+  const invalidate = useThree((state) => state.invalidate)
   useLayoutEffect(() => {
     const distance = 16
     const horizontalDistance = Math.sin(elevation) * distance
     camera.position.set(Math.sin(azimuth) * horizontalDistance, Math.cos(elevation) * distance, Math.cos(azimuth) * horizontalDistance)
     camera.lookAt(0, 0.45, 0)
-  }, [azimuth, camera, elevation])
+    invalidate()
+  }, [azimuth, camera, elevation, invalidate])
   return null
 }
 
@@ -161,19 +163,21 @@ function RadialPath({ room }: { room: TerritoryRoom }) {
   </mesh>
 }
 
-function Scene({ rooms, activeId, onSelect, onFailure }: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: () => void }) {
-  const performanceWindow = useRef({ elapsed: 0, frames: 0, slowWindows: 0, failed: false })
+function Scene({ rooms, activeId, onSelect, onFailure, onSettled }: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: () => void; onSettled: () => void }) {
+  const performanceWindow = useRef({ elapsed: 0, frames: 0, slowWindows: 0, healthyWindows: 0, failed: false, settled: false })
   useFrame((_, delta) => {
     const monitor = performanceWindow.current
-    if (monitor.failed) return
+    if (monitor.failed || monitor.settled) return
     monitor.elapsed += delta
     monitor.frames += 1
     if (monitor.elapsed < 1.5) return
     const fps = monitor.frames / monitor.elapsed
     monitor.slowWindows = fps < 20 ? monitor.slowWindows + 1 : 0
+    monitor.healthyWindows = fps >= 20 ? monitor.healthyWindows + 1 : 0
     monitor.elapsed = 0
     monitor.frames = 0
     if (monitor.slowWindows >= 2) { monitor.failed = true; onFailure() }
+    else if (monitor.healthyWindows >= 2) { monitor.settled = true; onSettled() }
   })
   return <>
     <color attach="background" args={['#111b22']} /><fog attach="fog" args={['#111b22', 14, 27]} />
@@ -189,6 +193,7 @@ function Scene({ rooms, activeId, onSelect, onFailure }: { rooms: TerritoryRoom[
 export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profile[]; avatar: Avatar; activeId: string; selectedProfileId?: string; onSelect: (item: TerritoryRoom) => void; onSelectProfile: (profile: Profile) => void; onFailure: () => void }) {
   const [azimuth, setAzimuth] = useState(0.675)
   const [elevation, setElevation] = useState(0.96)
+  const [monitoring, setMonitoring] = useState(true)
 
   function turnCamera(step: number) {
     setAzimuth((current) => current + step * Math.PI / 8)
@@ -207,11 +212,11 @@ export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profil
     event.preventDefault()
   }
 
-  return <div className="scene-with-profiles"><Canvas camera={{ position: [8, 9, 10], fov: 42 }} dpr={[1, 1.15]} onCreated={({ gl }) => {
+  return <div className="scene-with-profiles"><Canvas frameloop={monitoring ? 'always' : 'demand'} camera={{ position: [8, 9, 10], fov: 42 }} dpr={[1, 1.15]} onCreated={({ gl }) => {
     gl.domElement.addEventListener('webglcontextlost', (event) => { event.preventDefault(); props.onFailure() }, { once: true })
   }} gl={{ antialias: false, powerPreference: 'low-power' }}>
     <CameraOrbit azimuth={azimuth} elevation={elevation} />
-    <Scene rooms={props.rooms} activeId={props.activeId} onSelect={props.onSelect} onFailure={props.onFailure} />
+    <Scene rooms={props.rooms} activeId={props.activeId} onSelect={props.onSelect} onFailure={props.onFailure} onSettled={() => setMonitoring(false)} />
     <SpartanAvatar avatar={props.avatar} />
   </Canvas>
   <div className="scene-camera-controls" role="group" aria-label="Controles da câmera da praça 3D" aria-describedby="scene-camera-help" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown" onKeyDown={handleCameraKeys}>
