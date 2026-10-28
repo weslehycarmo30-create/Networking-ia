@@ -32,7 +32,7 @@ export type TerritoryRoom = {
   people: number
   color: string
   position: [number, number, number]
-  prompt: string
+  suggestions: [string, string]
 }
 
 export type Message = {
