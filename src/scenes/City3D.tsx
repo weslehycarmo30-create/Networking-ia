@@ -26,7 +26,13 @@ function AvatarEmblem({ emoji }: { emoji: string }) {
     return nextTexture
   }, [emoji])
 
-  useEffect(() => () => texture?.dispose(), [texture])
+  const previousTexture = useRef<CanvasTexture | null>(null)
+  useEffect(() => {
+    const replacedTexture = previousTexture.current
+    // R3F disposes the current material map on unmount, but not a replaced map.
+    if (replacedTexture && replacedTexture !== texture) replacedTexture.dispose()
+    previousTexture.current = texture
+  }, [texture])
   if (!texture) return null
   return <mesh position={[-0.39, 0.54, 0.205]}><planeGeometry args={[0.2, 0.2]} /><meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} /></mesh>
 }
@@ -165,6 +171,10 @@ function RadialPath({ room }: { room: TerritoryRoom }) {
 
 function Scene({ rooms, activeId, onSelect, onFailure, onSettled }: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: () => void; onSettled: () => void }) {
   const performanceWindow = useRef({ elapsed: 0, frames: 0, slowWindows: 0, healthyWindows: 0, failed: false, settled: false })
+  useEffect(() => {
+    const originalCursor = document.body.style.cursor
+    return () => { document.body.style.cursor = originalCursor }
+  }, [])
   useFrame((_, delta) => {
     const monitor = performanceWindow.current
     if (monitor.failed || monitor.settled) return
