@@ -219,6 +219,8 @@ export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profil
     <Scene rooms={props.rooms} activeId={props.activeId} onSelect={props.onSelect} onFailure={props.onFailure} onSettled={() => setMonitoring(false)} />
     <SpartanAvatar avatar={props.avatar} />
   </Canvas>
+  <span className="sr-only">Representação espartana do seu avatar: {props.avatar.label} {props.avatar.emoji}.</span>
+  <div className="scene-profile-picker"><ProfilePicker profiles={props.profiles} selectedId={props.selectedProfileId} onSelect={props.onSelectProfile} label="Participantes fictícios da praça" /></div>
   <div className="scene-camera-controls" role="group" aria-label="Controles da câmera da praça 3D" aria-describedby="scene-camera-help" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown" onKeyDown={handleCameraKeys}>
     <div className="scene-camera-buttons">
       <button type="button" aria-label="Inclinar câmera para cima" onClick={() => tiltCamera(-1)}>↑</button>
@@ -228,7 +230,5 @@ export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profil
     </div>
     <small id="scene-camera-help">Foque um controle; use ← → para girar e ↑ ↓ para inclinar.</small>
   </div>
-  <div className="scene-profile-picker"><ProfilePicker profiles={props.profiles} selectedId={props.selectedProfileId} onSelect={props.onSelectProfile} label="Participantes fictícios da praça" /></div>
-  <span className="sr-only">Representação espartana do seu avatar: {props.avatar.label} {props.avatar.emoji}.</span>
   </div>
 }
