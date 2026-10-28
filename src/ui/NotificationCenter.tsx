@@ -81,9 +81,14 @@ export default function NotificationCenter({ service, profiles, events, getPersi
 
   function openDestination(notification: DemoNotification) {
     markRead(notification.id)
-    setOpen(false)
-    if (notification.kind === 'connection_invite') onOpenProfile(notification.profileId)
-    else onOpenEvent(notification.eventId)
+    if (notification.kind === 'connection_invite') {
+      // Keep the panel mounted so returning from the related profile restores
+      // the notification context and its focused destination control.
+      onOpenProfile(notification.profileId)
+    } else {
+      setOpen(false)
+      onOpenEvent(notification.eventId)
+    }
   }
 
   function describe(notification: DemoNotification) {

@@ -128,11 +128,11 @@ export default function App() {
   }
   const failScene = () => { setView('2d'); setWebgl(false) }
 
-  function openProfile(profileId: string) {
+  function openProfile(profileId: string, returnFocusSelector?: string) {
     if (nav.screen !== 'profile') {
       profileFocusOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       setProfileReturnTo(nav)
-      profileReturnFocusSelector.current = nav.screen === 'discover' ? '#member-profile-' + profileId : nav.screen === 'room' ? '#room-participant-' + profileId : '#nav-plaza'
+      profileReturnFocusSelector.current = returnFocusSelector ?? (nav.screen === 'discover' ? '#member-profile-' + profileId : nav.screen === 'room' ? '#room-participant-' + profileId : '#nav-plaza')
     }
     setSelectedProfileId(profileId)
     setNav(profileId === profile.id ? { screen: 'profile' } : { screen: 'profile', profileId })
@@ -152,6 +152,8 @@ export default function App() {
     ? 'Voltar à Ágora de Hermes'
     : profileReturnTo.screen === 'room'
       ? `Voltar à sala ${services.rooms.getRoom(profileReturnTo.territoryId ?? '')?.name ?? ''}`
+      : profileReturnTo.screen === 'city' && showEvents
+        ? 'Voltar aos encontros da comunidade'
       : 'Voltar à Praça Central'
   const discoveryReturnLabel = discoveryReturnTo.screen === 'profile'
     ? 'Voltar ao meu perfil demonstrativo'

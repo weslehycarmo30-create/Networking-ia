@@ -9,7 +9,7 @@ type CommunityEventsProps = {
   organizers: Profile[]
   currentProfileId: Profile['id']
   getPersistenceStatus: () => DemoPersistenceStatus
-  onOpenProfile: (profileId: Profile['id']) => void
+  onOpenProfile: (profileId: Profile['id'], returnFocusSelector?: string) => void
   onRegistrationChange: () => void
   onFeedback: (message: string, tone?: 'success' | 'warning' | 'error') => void
 }
@@ -71,7 +71,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
           <h3>{event.title}</h3>
           <p className="event-description">{event.description}</p>
           <div className="event-date"><time dateTime={event.startsAt}>{formatEventDate(event.startsAt)}</time><b>{formatEventTime(event.startsAt)}</b></div>
-          {organizer && <button type="button" className="event-organizer" onClick={() => onOpenProfile(organizer.id)} aria-label={`Abrir perfil de quem organiza: ${organizer.displayName}`}>
+          {organizer && <button type="button" className="event-organizer" onClick={() => onOpenProfile(organizer.id, `#community-event-${event.id}`)} aria-label={`Abrir perfil de quem organiza: ${organizer.displayName}`}>
             <span className="event-organizer-avatar" aria-hidden="true">{organizer.avatar.emoji}</span><span><small>Organizado por</small><b>{organizer.displayName}</b></span><span className="event-profile-link">Ver perfil →</span>
           </button>}
           <div className="event-card-bottom"><span className="event-count">{event.participantCount} participantes demonstrativos</span>
