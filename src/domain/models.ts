@@ -35,6 +35,14 @@ export type TerritoryRoom = {
   suggestions: [string, string]
 }
 
+export const messageReactionEmojis = ['👍', '💡', '❤️'] as const
+export type MessageReactionEmoji = typeof messageReactionEmojis[number]
+
+export type MessageReaction = {
+  profileId: Profile['id']
+  emoji: MessageReactionEmoji
+}
+
 export type Message = {
   id: string
   roomId: TerritoryRoom['id']
@@ -43,6 +51,7 @@ export type Message = {
   avatar: Avatar
   createdAt: string
   text: string
+  reactions: MessageReaction[]
 }
 
 export type Presence = {

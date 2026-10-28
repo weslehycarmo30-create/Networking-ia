@@ -1,5 +1,5 @@
 import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
-import type { Avatar, Connection, DemoNotification, DemoReport, EventRegistration, Message, NotificationPreferences, Presence, Profile, TerritoryId } from '../domain/models'
+import { messageReactionEmojis, type Avatar, type Connection, type DemoNotification, type DemoReport, type EventRegistration, type Message, type NotificationPreferences, type Presence, type Profile, type TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import { demoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
@@ -31,6 +31,7 @@ export function createDemoServices(): OlimpoServices {
     avatar: structuredClone(seed.avatar),
     createdAt: seed.createdAt,
     text: seed.text,
+    reactions: [],
   }))]))
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
 
@@ -95,7 +96,7 @@ export function createDemoServices(): OlimpoServices {
       clearCurrentPresence: () => { currentRoomId = undefined },
     },
     messages: {
-      listByRoom: (roomId) => (messages[roomId] ?? []).map((message) => ({ ...message, avatar: structuredClone(message.avatar) })),
+      listByRoom: (roomId) => (messages[roomId] ?? []).map((message) => ({ ...message, avatar: structuredClone(message.avatar), reactions: message.reactions.map((reaction) => ({ ...reaction })) })),
       sendToRoom: (roomId, text) => {
         if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
         const message = createMessage({
@@ -108,6 +109,17 @@ export function createDemoServices(): OlimpoServices {
         messages[roomId].push(message)
         saveState()
         return { ...message, avatar: structuredClone(message.avatar) }
+      },
+      toggleReaction: (messageId, emoji) => {
+        if (!messageReactionEmojis.includes(emoji)) throw new Error('Selecione uma reação disponível nesta demonstração.')
+        const message = Object.values(messages).flat().find((candidate) => candidate.id === messageId)
+        if (!message) throw new Error('Esta mensagem não existe nesta demonstração.')
+        const current = message.reactions.find((reaction) => reaction.profileId === currentProfile.id)
+        message.reactions = current?.emoji === emoji
+          ? []
+          : [{ profileId: currentProfile.id, emoji }]
+        saveState()
+        return { ...message, avatar: structuredClone(message.avatar), reactions: message.reactions.map((reaction) => ({ ...reaction })) }
       },
     },
     profile: {

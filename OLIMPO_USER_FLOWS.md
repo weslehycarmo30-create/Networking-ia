@@ -98,3 +98,10 @@ Encontros e inscrições são apenas dados desta demonstração no navegador atu
 5. Em **Preferências locais**, pode ativar/desativar separadamente avisos fictícios de convites e atividade de encontros. Desativar remove avisos existentes da categoria e impede novos registros locais; reativar não recria atividade passada.
 
 Itens, datas de leitura e preferências são validados e salvos na chave namespaced da demonstração (ou apenas em memória se o armazenamento falhar). Versões anteriores migram com ambas as preferências ativadas. A configuração é local e não controla e-mail, push ou qualquer canal externo. Não há notificações push, realtime, comunicação recebida de outros usuários, abas, dispositivos ou servidores. **Reiniciar demonstração** limpa a lista e os estados de leitura e restaura as preferências padrão ativadas.
+
+## 11. Reagir às mensagens da sala (OLIMPO-066)
+
+1. Em cada mensagem da sala, o perfil atual pode escolher 👍 Gostei, 💡 Ideia ou ❤️ Adorei.
+2. Escolher outra opção troca a reação; escolher novamente a opção ativa remove-a. A interface indica a seleção com estado pressionado e identifica a reação como sendo do perfil atual.
+3. A ação altera somente a reação da mensagem no serviço demonstrativo local; não envia a mensagem nem cria reação de outros perfis. A reação fica no navegador atual, ou apenas em memória quando o armazenamento local não está disponível.
+4. Estados salvos anteriores migram sem reações. **Reiniciar demonstração** também remove todas as reações locais.

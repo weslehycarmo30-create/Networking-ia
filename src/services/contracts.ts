@@ -1,4 +1,4 @@
-import type { Avatar, CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, GamificationProgress, Message, NotificationPreferences, Presence, Profile, ReportReason, ReportTargetType, TerritoryId, TerritoryRoom } from '../domain/models'
+import type { Avatar, CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, GamificationProgress, Message, MessageReactionEmoji, NotificationPreferences, Presence, Profile, ReportReason, ReportTargetType, TerritoryId, TerritoryRoom } from '../domain/models'
 import type { DemoPersistenceStatus } from './demo-storage'
 
 export interface RoomService {
@@ -16,6 +16,7 @@ export interface ParticipantService {
 export interface MessageService {
   listByRoom(roomId: string): Message[]
   sendToRoom(roomId: string, text: string): Message
+  toggleReaction(messageId: Message['id'], emoji: MessageReactionEmoji): Message
 }
 
 export interface ProfileService {

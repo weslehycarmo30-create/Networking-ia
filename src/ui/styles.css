@@ -104,6 +104,12 @@
 .message-body p{margin-top:7px;overflow-wrap:anywhere;color:#d0d6ce;font-size:13px;line-height:1.65}
 .own-message .message-body p{background:#293b39;text-align:left}
 .message-report-button{min-height:36px;margin-left:auto;border-color:rgba(193,147,94,.28);color:#e2c49a;font-size:9px}
+.message-reactions{display:flex;flex:0 0 100%;align-items:center;flex-wrap:wrap;gap:6px}
+.message-reaction{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:44px;min-height:44px;padding:7px 9px;border:1px solid rgba(193,147,94,.24);border-radius:4px;background:#1a282d;color:#d8ddd5;font-size:11px}
+.message-reaction:hover{border-color:rgba(117,217,208,.55);background:#223438}
+.message-reaction.selected{border-color:rgba(117,217,208,.62);background:rgba(61,112,105,.32);color:#e4fff4;box-shadow:inset 0 0 0 1px rgba(117,217,208,.12)}
+.message-reaction-count{min-width:16px;padding:1px 4px;border-radius:8px;background:rgba(117,217,208,.16);font:10px var(--mono);text-align:center}
+.message-reaction-context{flex-basis:100%;color:#aebbb3;font-size:10px;line-height:1.45}
 
 .chat-compose{min-height:62px;border-color:rgba(193,147,94,.25);background:#111c21}
 .chat-compose:focus-within{border-color:rgba(117,217,208,.55);box-shadow:0 0 0 1px rgba(117,217,208,.12)}

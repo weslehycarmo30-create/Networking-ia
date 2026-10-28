@@ -59,6 +59,7 @@ export function createMessage(input: {
     avatar: input.profile.avatar,
     createdAt: input.createdAt,
     text: normalizeMessageText(input.text),
+    reactions: [],
   }
 }
 
