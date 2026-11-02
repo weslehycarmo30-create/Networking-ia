@@ -34,7 +34,8 @@ Resultados vazios mostram orientação para ajustar ou limpar os filtros. Afinid
 2. Ao entrar, o serviço marca o perfil atual como presente naquela sala sem criar duplicata; a sala mostra a presença temporária do participante atual e os perfis fictícios de catálogo, mensagens iniciais e um prompt de conversa.
 3. A pessoa pode selecionar um participante para abrir seu perfil.
 4. Uma mensagem demonstrativa pode ser enviada. O serviço valida texto vazio e limite de 300 caracteres e a guarda na sala correspondente.
-5. Voltar à Praça Central remove o perfil atual da presença da sala. Alternar entre as vistas 2D e 3D da praça não altera a presença. Quantidades por sala são mostradas nos cartões e seletores da praça e na sala. Presença é apenas demonstrativa, temporária e local; não há atualização entre usuários, abas ou dispositivos.
+5. O texto não enviado é mantido como rascunho local independente por sala. Ao sair e voltar ou trocar de sala, o campo carrega o rascunho daquela sala sem enviar nem misturar textos. Sugestões estáticas acrescentam ou substituem somente o rascunho atual e obedecem ao limite de 300 caracteres. O estado do campo indica que o rascunho é local e ainda não foi enviado.
+6. Voltar à Praça Central remove o perfil atual da presença da sala. Alternar entre as vistas 2D e 3D da praça não altera a presença. Quantidades por sala são mostradas nos cartões e seletores da praça e na sala. Presença é apenas demonstrativa, temporária e local; não há atualização entre usuários, abas ou dispositivos.
 
 **Estado:** implementado localmente. Não há mensagens privadas nem conversa compartilhada entre navegadores. Presença não é persistida no `localStorage`.
 
@@ -121,5 +122,12 @@ Não há backend, autenticação, sincronização nem comunicação externa para
 1. No perfil próprio, em **Transferir dados locais**, a pessoa escolhe **Exportar dados locais** para baixar um JSON validado. O arquivo inclui o estado demonstrativo persistido; presença e estado visual da interface são excluídos. O arquivo pode conter mensagens e deve ser guardado com cuidado no dispositivo.
 2. Para transferir manualmente para outro navegador/computador, a pessoa escolhe **Importar dados locais** e seleciona um arquivo JSON OLIMPO. O limite é 5 MiB. A interface valida formato, versão, estrutura, limites e conteúdo antes de mostrar uma prévia com avatar e contagens.
 3. A prévia explica que importar substituirá os dados atuais. **Importar e substituir dados atuais** pede confirmação explícita; cancelar mantém o estado atual. Arquivo inválido, incompatível ou acima do limite é rejeitado sem alteração dos dados.
-4. Formatos de exportação versão 1 com schemas de estado `1` a `7` são reconhecidos; as migrações existentes convertem versões antigas para schema `7`, quando válidas. O arquivo exportado contém apenas dados fictícios e persiste somente no dispositivo. Não há sincronização automática, criptografia ou envio a servidores.
+4. Formatos de exportação versão 1 com schemas de estado `1` a `8` são reconhecidos; as migrações convertem versões antigas para schema `8`, criando rascunhos vazios para schemas `1` a `7`. O schema `8` exporta os rascunhos por sala junto dos dados persistidos. Rascunhos inválidos são ignorados sem descartar o restante do estado. O arquivo exportado contém apenas dados fictícios e persiste somente no dispositivo. Não há sincronização automática, criptografia ou envio a servidores.
 5. Depois da confirmação, a interface atualiza usando o mesmo serviço e snapshot e retorna à Praça. Se o armazenamento local falhar, os dados importados permanecem em memória nesta sessão e a interface avisa que serão perdidos ao fechar a aba. O reset continua restaurando os dados iniciais locais.
+
+## 14. Manter rascunhos por sala (OLIMPO-070)
+
+1. Enquanto escreve no campo de mensagem, o serviço demonstrativo salva o rascunho associado ao ID da sala atual; nada é enviado por digitar, trocar de sala ou usar uma sugestão.
+2. Ao entrar em outra sala, o campo mostra somente o rascunho dessa sala. Ao retornar, o rascunho anterior continua disponível até ser editado ou enviado com sucesso.
+3. Um envio inválido ou com falha mantém o texto. Depois de um envio bem-sucedido, o serviço limpa somente o rascunho da sala atual. A interface mantém o contador de até 300 caracteres.
+4. O estado é local a este navegador, não é compartilhado nem enviado. Se o armazenamento falhar, os rascunhos duram apenas durante a sessão; **Reiniciar demonstração** os limpa. Exportação/importação schema `8` inclui os rascunhos; arquivos schemas `1` a `7` importam sem rascunhos.

@@ -4,7 +4,7 @@ import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from
 import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 7 as const
+export const DEMO_STATE_VERSION = 8 as const
 export const DEMO_EXPORT_FORMAT = 'olimpo-demo-data'
 export const DEMO_EXPORT_FORMAT_VERSION = 1 as const
 export const MAX_DEMO_IMPORT_BYTES = 5 * 1024 * 1024
@@ -13,6 +13,7 @@ export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
   avatarId: Avatar['id']
   messages: Record<string, Message[]>
+  draftsByRoom: Record<string, string>
   savedMessages: SavedMessageReference[]
   connections: Connection[]
   reports: DemoReport[]
@@ -32,6 +33,7 @@ export type DemoImportSummary = {
   sourceSchemaVersion: number
   avatarLabel: string
   messages: number
+  drafts: number
   savedMessages: number
   connections: number
   reports: number
@@ -163,7 +165,7 @@ function validateNotificationPreferences(value: unknown): NotificationPreference
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
   if (!isRecord(value)) return undefined
   const version = value.version
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== DEMO_STATE_VERSION) return undefined
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7 && version !== DEMO_STATE_VERSION) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -209,6 +211,12 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   const notifications = (parsedNotifications as DemoNotification[]).filter((notification) => notificationPreferenceEnabled(notificationPreferences, notification.kind))
   if (new Set(notifications.map((notification) => notification.id)).size !== notifications.length) return undefined
   const availableMessages = new Set(Object.values(messages).flat().map((message) => `${message.roomId}:${message.id}`))
+  const draftsByRoom: Record<string, string> = {}
+  if (version >= 8 && isRecord(value.draftsByRoom)) {
+    for (const [roomId, draft] of Object.entries(value.draftsByRoom)) {
+      if (roomIds.includes(roomId) && typeof draft === 'string' && draft.length <= 300 && draft.length > 0) draftsByRoom[roomId] = draft
+    }
+  }
   const rawSavedMessages = version < 7 ? [] : Array.isArray(value.savedMessages) ? value.savedMessages.slice(0, 2500) : []
   const savedMessages: SavedMessageReference[] = []
   const savedKeys = new Set<string>()
@@ -219,7 +227,7 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
     savedKeys.add(key)
     savedMessages.push({ messageId: reference.messageId, roomId: reference.roomId })
   }
-  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, savedMessages, connections: validConnections, reports: validReports, eventRegistrations, notifications, notificationPreferences }
+  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, draftsByRoom, savedMessages, connections: validConnections, reports: validReports, eventRegistrations, notifications, notificationPreferences }
 }
 
 export function createDemoExportDocument(value: unknown): DemoExportDocument {
@@ -234,13 +242,13 @@ export function validateDemoImportDocument(value: unknown): ValidatedDemoImport 
   }
   if (!isRecord(value.state) || typeof value.state.version !== 'number') throw new Error('O arquivo não contém um estado demonstrativo válido.')
   const sourceSchemaVersion = value.state.version
-  if (![1, 2, 3, 4, 5, 6, 7].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
-  if (sourceSchemaVersion === DEMO_STATE_VERSION) {
+  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
+  if (sourceSchemaVersion >= 7) {
     if (!Array.isArray(value.state.savedMessages) || value.state.savedMessages.length > 2500) throw new Error('A lista de mensagens salvas do arquivo é inválida ou excede o limite de 2.500 itens.')
   }
   const state = validatePersistedDemoState(value.state)
   if (!state) throw new Error('Os dados do arquivo são inválidos ou incompatíveis; nenhum dado atual foi alterado.')
-  if (sourceSchemaVersion === DEMO_STATE_VERSION && state.savedMessages.length !== (value.state.savedMessages as unknown[]).length) {
+  if (sourceSchemaVersion >= 7 && state.savedMessages.length !== (value.state.savedMessages as unknown[]).length) {
     throw new Error('O arquivo contém referências salvas inválidas, antigas ou duplicadas; nenhum dado atual foi alterado.')
   }
   const messageCount = Object.values(state.messages).reduce((total, roomMessages) => total + roomMessages.length, 0)
@@ -251,6 +259,7 @@ export function validateDemoImportDocument(value: unknown): ValidatedDemoImport 
       sourceSchemaVersion,
       avatarLabel,
       messages: messageCount,
+      drafts: Object.keys(state.draftsByRoom).length,
       savedMessages: state.savedMessages.length,
       connections: state.connections.length,
       reports: state.reports.length,
@@ -288,7 +297,7 @@ export function createDemoStateStorage() {
           return { status }
         }
         status = { persistent: true }
-        if (isRecord(parsed) && parsed.version !== DEMO_STATE_VERSION) status = this.save(state)
+        if (isRecord(parsed) && (parsed.version !== DEMO_STATE_VERSION || JSON.stringify(parsed.draftsByRoom) !== JSON.stringify(state.draftsByRoom))) status = this.save(state)
         return { state, status }
       } catch {
         status = { persistent: false, message: localOnlyMessage }

@@ -34,10 +34,11 @@ export function createDemoServices(): OlimpoServices {
     reactions: [],
   }))]))
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
+  let draftsByRoom: Record<string, string> = loaded.state?.draftsByRoom ?? {}
   let savedMessages: SavedMessageReference[] = loaded.state?.savedMessages.map((reference) => ({ ...reference })) ?? []
 
   function currentState() {
-    return { version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, savedMessages, connections, reports, eventRegistrations, notifications, notificationPreferences }
+    return { version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, draftsByRoom, savedMessages, connections, reports, eventRegistrations, notifications, notificationPreferences }
   }
 
   function saveState(): DemoPersistenceStatus {
@@ -102,6 +103,14 @@ export function createDemoServices(): OlimpoServices {
     },
     messages: {
       listByRoom: (roomId) => (messages[roomId] ?? []).map((message) => ({ ...message, avatar: structuredClone(message.avatar), reactions: message.reactions.map((reaction) => ({ ...reaction })) })),
+      getDraft: (roomId) => draftsByRoom[roomId] ?? '',
+      setDraft: (roomId, text) => {
+        if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
+        if (typeof text !== 'string' || text.length > 300) throw new Error('O rascunho deve ter até 300 caracteres.')
+        if (text.length === 0) delete draftsByRoom[roomId]
+        else draftsByRoom[roomId] = text
+        saveState()
+      },
       listSaved: () => savedMessages.map((reference) => ({ ...reference })),
       isSaved: (messageId) => savedMessages.some((reference) => reference.messageId === messageId),
       toggleSaved: (messageId) => {
@@ -125,6 +134,7 @@ export function createDemoServices(): OlimpoServices {
           createdAt: new Date().toISOString(),
         })
         messages[roomId].push(message)
+        delete draftsByRoom[roomId]
         saveState()
         return { ...message, avatar: structuredClone(message.avatar) }
       },
@@ -277,6 +287,7 @@ export function createDemoServices(): OlimpoServices {
         if (!avatar) throw new Error('O avatar do arquivo não existe nesta demonstração.')
         currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
         messages = structuredClone(state.messages)
+        draftsByRoom = structuredClone(state.draftsByRoom)
         savedMessages = structuredClone(state.savedMessages)
         connections = structuredClone(state.connections)
         reports = structuredClone(state.reports)
@@ -291,6 +302,7 @@ export function createDemoServices(): OlimpoServices {
         currentRoomId = undefined
         currentProfile = structuredClone(demoProfile)
         messages = createInitialMessages()
+        draftsByRoom = {}
         savedMessages = []
         connections = createInitialConnections()
         reports = []

@@ -15,6 +15,8 @@ export interface ParticipantService {
 
 export interface MessageService {
   listByRoom(roomId: string): Message[]
+  getDraft(roomId: string): string
+  setDraft(roomId: string, text: string): void
   listSaved(): SavedMessageReference[]
   isSaved(messageId: Message['id']): boolean
   toggleSaved(messageId: Message['id']): boolean
