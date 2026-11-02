@@ -5,7 +5,7 @@
 ## Estado de segurança do protótipo
 
 - Dados e perfis de catálogo são fictícios.
-- Avatar escolhido, mensagens, convites/conexões, denúncias, inscrições locais em eventos, notificações demonstrativas, estados de leitura e preferências locais de categorias são salvos no navegador sob `olimpo:demo-state`, com versão e validação de conteúdo. Presença e estado de interface não são salvos. A demonstração não envia esses dados a um backend.
+- Avatar escolhido, mensagens, convites/conexões, denúncias, inscrições locais em eventos, notificações demonstrativas, estados de leitura e preferências locais de categorias e referências de mensagens salvas são salvos no navegador sob `olimpo:demo-state`, com versão e validação de conteúdo. Presença e estado de interface não são salvos. A demonstração não envia esses dados a um backend.
 - Se o acesso ao `localStorage` falhar ou exceder a quota, a demonstração continua em memória e mostra um aviso de que as mudanças duram apenas a sessão. Dados inválidos voltam aos valores iniciais fictícios.
 - O controle **Reiniciar demonstração** remove o snapshot anterior de `olimpo:demo-state` e restaura os dados fictícios iniciais, deixando inscrições e notificações vazias e reativando as preferências padrão; não limpa outras chaves do site ou do navegador.
 - Limite de 300 caracteres e validação de mensagem vazia são regras de domínio locais.
@@ -53,3 +53,9 @@ O fluxo de denúncia é somente uma simulação local: os registros ficam neste 
 Não há processo de incidentes, monitoramento, backups ou SLA para o protótipo. Antes de produção, definir responsáveis, severidade, contenção, comunicação, restauração, revisão de acesso e contato de privacidade. Os custos não foram estimados.
 
 Ver [modelo de dados](OLIMPO_DATA_MODEL.md), [arquitetura](OLIMPO_2D_3D_ARCHITECTURE.md) e [plano de fase 2](OLIMPO_PHASE_2_PLAN.md).
+
+## Transferência manual de dados (OLIMPO-068)
+
+A exportação gera um JSON no dispositivo com o estado demonstrativo validado. O arquivo pode conter texto de mensagens e demais dados fictícios locais; não é criptografado nem enviado a servidores. A interface recomenda guardá-lo com cuidado. A importação limita arquivos a 5 MiB, valida o envelope reconhecido, schemas `1` a `7`, limites e conteúdo antes da prévia e exige confirmação explícita antes de substituir o estado local. Arquivos inválidos são rejeitados sem sobrescrever o snapshot atual. A transferência é manual; não há sincronização, backend ou envio automático.
+
+Se o armazenamento local falhar durante uma importação confirmada, o serviço mantém o estado importado em memória e avisa que ele não persistirá após fechar a aba. Esta validação no cliente protege contra arquivos malformados acidentalmente; não é uma fronteira de segurança contra adulteração deliberada, pois o estado fictício e o código cliente podem ser inspecionados ou modificados pelo usuário.

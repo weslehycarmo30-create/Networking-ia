@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type ErrorInfo, type FormEvent, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type ErrorInfo, type FormEvent, type ReactNode } from 'react'
 import { guide } from '../data/territories'
 import { demoAvatars } from '../data/demo'
 import { findConnectionBetween } from '../domain/rules'
@@ -12,6 +12,7 @@ import CommunityEvents from './CommunityEvents'
 import ConversationSuggestions from './ConversationSuggestions'
 import MessageReactionControls from './MessageReactionControls'
 import NotificationCenter from './NotificationCenter'
+import { MAX_DEMO_IMPORT_BYTES, parseDemoImportText, type DemoImportSummary } from '../services/demo-storage'
 
 const City3D = lazy(() => import('../scenes/City3D'))
 const plazaGuideSteps = [
@@ -56,7 +57,10 @@ export default function App() {
   const [draft, setDraft] = useState('')
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'warning' | 'error' } | null>(null)
   const [reportTarget, setReportTarget] = useState<{ targetType: ReportTargetType; targetId: string; itemLabel: string } | null>(null)
+  const [importSelection, setImportSelection] = useState<{ fileName: string; payload: unknown; summary: DemoImportSummary } | null>(null)
+  const [importError, setImportError] = useState('')
   const reportTrigger = useRef<HTMLButtonElement | null>(null)
+  const importFileInput = useRef<HTMLInputElement | null>(null)
   const messageInput = useRef<HTMLInputElement | null>(null)
   const plazaGuideTrigger = useRef<HTMLButtonElement | null>(null)
   const profileFocusOrigin = useRef<HTMLElement | null>(null)
@@ -351,9 +355,71 @@ export default function App() {
     if (!window.confirm('Reiniciar a demonstração OLIMPO? Isso apaga somente o estado salvo por OLIMPO neste navegador, incluindo mensagens salvas e registros de denúncia demonstrativa, e restaura os dados iniciais.')) return
     const status = services.demoState.reset()
     setDraft('')
+    setImportSelection(null)
+    setImportError('')
     setNav({ screen: 'city' })
     refreshServices()
     showFeedback(status.persistent ? 'Demonstração reiniciada com os dados fictícios iniciais.' : 'Demonstração reiniciada nesta sessão; o armazenamento do navegador está indisponível.', status.persistent ? 'success' : 'warning')
+  }
+
+  function exportLocalData() {
+    try {
+      const document = services.demoState.exportData()
+      const blob = new Blob([JSON.stringify(document, null, 2)], { type: 'application/json;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = `olimpo-demo-${new Date().toISOString().slice(0, 10)}.json`
+      link.click()
+      window.setTimeout(() => URL.revokeObjectURL(url), 0)
+      showFeedback('Arquivo JSON exportado para este dispositivo. Guarde-o com cuidado; ele pode conter dados da demonstração.')
+    } catch (error) {
+      showFeedback(error instanceof Error ? error.message : 'Não foi possível exportar os dados locais.', 'error')
+    }
+  }
+
+  async function handleImportFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget
+    const file = input.files?.[0]
+    if (!file) return
+    setImportSelection(null)
+    setImportError('')
+    try {
+      if (file.size > MAX_DEMO_IMPORT_BYTES) throw new Error('O arquivo excede o limite de 5 MiB.')
+      const text = await file.text()
+      const validated = parseDemoImportText(text)
+      const payload: unknown = JSON.parse(text)
+      setImportSelection({ fileName: file.name, payload, summary: validated.summary })
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'Não foi possível validar o arquivo. Os dados atuais foram preservados.')
+    } finally {
+      input.value = ''
+    }
+  }
+
+  function confirmImport() {
+    if (!importSelection) return
+    const accepted = window.confirm(`Importar “${importSelection.fileName}” e substituir todos os dados locais atuais? Revise a prévia antes de continuar.`)
+    if (!accepted) return
+    try {
+      const status = services.demoState.importData(importSelection.payload)
+      services.participants.clearCurrentPresence()
+      setDraft('')
+      setImportSelection(null)
+      setImportError('')
+      setNav({ screen: 'city' })
+      refreshServices()
+      showFeedback(status.persistent
+        ? 'Importação concluída e salva neste navegador.'
+        : 'Importação aplicada somente nesta sessão. O armazenamento local falhou; os dados não estarão disponíveis após fechar a aba.', status.persistent ? 'success' : 'warning')
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'A importação falhou; os dados atuais foram preservados.')
+    }
+  }
+
+  function cancelImportPreview() {
+    setImportSelection(null)
+    setImportError('')
   }
 
   function connectionPerson(connection: Connection, ownerId: string): Profile | undefined {
@@ -411,7 +477,7 @@ export default function App() {
       {nav.screen === 'room' && <main className="room-page"><button className="back-link room-back" onClick={goCity}><span aria-hidden="true">←</span> Voltar à Praça Central</button><section className="room-heading"><span className="room-icon" aria-hidden="true" style={{ '--territory': active.color } as CSSProperties}>{active.symbol}</span><div><div className="eyebrow">{active.domain} <span>·</span> TERRITÓRIO</div><h1>{active.name}</h1><p>{active.description}</p></div><span className="room-presence" aria-label={`${participants.length} perfis fictícios nesta sala`}><span aria-hidden="true">✦</span> {participants.length} PERFIS FICTÍCIOS</span></section><div className="room-layout"><section className="chat-panel" aria-label={`Conversa demonstrativa de ${active.name}`}><div className="chat-top"><div><b>Sala de conversa</b><span>Mensagens, reações e salvos ficam neste navegador; não há atividade de outras pessoas.</span></div><span className="chat-room-label">{active.name}<small>{active.domain} · DEMONSTRAÇÃO</small></span></div><div className="message-list" aria-live="polite">{messages.length === 0 && <p className="message-empty"><span className="empty-state-mark" aria-hidden="true">✧</span>Ainda não há mensagens nesta sala. Use o campo abaixo para iniciar a conversa fictícia local.</p>}{messages.map((message) => { const alreadyReported = services.reports.hasReport('message', message.id); return <article className={`message ${message.authorId === profile.id ? 'own-message' : ''}`} key={message.id} id={`message-${message.id}`} tabIndex={-1}><span className="message-avatar" aria-hidden="true">{message.avatar.emoji}</span><div className="message-body"><div><b>{message.authorName}{message.authorId === profile.id && <span className="message-you">VOCÊ</span>}</b><time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time></div><p>{message.text}</p></div><MessageReactionControls message={message} onToggle={toggleMessageReaction} /><button type="button" className={`message-save-button ${services.messages.isSaved(message.id) ? 'saved' : ''}`} aria-pressed={services.messages.isSaved(message.id)} aria-label={`${services.messages.isSaved(message.id) ? 'Remover das' : 'Salvar nas'} mensagens salvas: mensagem de ${message.authorName}: ${message.text.slice(0, 80)}`} onClick={() => toggleSavedMessage(message.id)}>{services.messages.isSaved(message.id) ? '★ Salva' : '☆ Salvar'}</button><button className="message-report-button" aria-disabled={alreadyReported} onClick={(event) => { if (!alreadyReported) openReportDialog('message', message.id, `mensagem de ${message.authorName}`, event.currentTarget) }} aria-label={alreadyReported ? `Mensagem de ${message.authorName} já sinalizada nesta demonstração` : `Sinalizar mensagem de ${message.authorName}`} >{alreadyReported ? 'Já sinalizada · demo local' : 'Sinalizar · demo local'}</button></article> })}</div><ConversationSuggestions suggestions={active.suggestions} draft={draft} onApply={applyConversationSuggestion} /><form className="chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="message">Escreva uma mensagem nesta demonstração local, até 300 caracteres</label><input id="message" ref={messageInput} aria-describedby="message-local-note" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Escreva uma mensagem…" maxLength={300}/><span className="local-only" id="message-local-note">DEMO LOCAL · {draft.length}/300</span><button className="send-button" aria-label="Enviar mensagem demonstrativa" disabled={!draft.trim()}>↑</button></form></section><aside className="room-sidebar"><div className="sidebar-card"><div className="sidebar-title">Perfis nesta sala <span>{participants.length} demo</span></div><p className="presence-demo-note">Lista fictícia desta sessão; não indica pessoas conectadas agora.</p>{participants.length === 0 && <p className="participant-empty" role="status"><span className="empty-state-mark" aria-hidden="true">✧</span>Nenhum perfil fictício está listado. Volte à Praça Central para explorar outros territórios.</p>}{participants.map((person) => <button id={'room-participant-' + person.profileId} type="button" className="person-row participant-button" key={person.id} onClick={() => openProfile(person.profileId)} aria-label={`Abrir perfil demonstrativo de ${person.displayName}`}><span className="person-avatar" aria-hidden="true">{person.avatar.emoji}</span><span><b>{person.displayName}</b><small>{person.role}</small></span><span className="participant-open">Perfil →</span></button>)}</div><div className="sidebar-card room-about"><div className="sidebar-title">Tema do território</div><p>{active.description}</p><span className="demo-badge">✦ Atividade e perfis fictícios</span></div></aside></div></main>}
 
     {nav.screen === 'profile' && <main className="profile-page"><button className="back-link" onClick={closeProfile}>← {profileReturnLabel}</button><div className="profile-card"><div className="profile-cover"><span>✦</span><span>OLIMPO · {isOwnProfile ? 'EXPLORADOR' : 'COMUNIDADE'}</span></div><div className="profile-details"><div className="profile-avatar-large" aria-label={`Avatar: ${viewedProfile.avatar.label}`}>{viewedProfile.avatar.emoji}</div><div className="eyebrow">{isOwnProfile ? 'MEU PERFIL DEMONSTRATIVO' : 'PERFIL DA COMUNIDADE'}</div><h1>{viewedProfile.displayName}</h1><span className="handle">{viewedProfile.handle}</span><p>{viewedProfile.bio}</p><p className="profile-demo-context">Perfil fictício de demonstração. Interesses, afinidades e progresso são exemplos locais.</p><div className="profile-interests"><span>INTERESSES</span><div>{viewedProfile.interests.map((interest) => <i key={interest}>{interest}</i>)}</div></div><div className="profile-affinities"><span>AFINIDADES TEMÁTICAS</span><p>Temas de interesse, não presença atual em salas.</p><ul>{viewedProfile.territoryAffinities.map((territoryId) => { const territory = rooms.find((room) => room.id === territoryId); return territory ? <li key={territoryId}><span aria-hidden="true">{territory.symbol}</span> {territory.name}</li> : null })}</ul></div><div className="profile-gamification"><b>Nível {viewedProgress?.level ?? 1}</b><span>{viewedProgress?.points ?? 0} pontos</span>{viewedProgress?.badges.map((badge) => <i key={badge}>{badge}</i>)}</div>
-        {isOwnProfile && <><div className="profile-avatar-picker"><b>Seu avatar</b><div className="avatar-options compact" role="group" aria-label="Trocar avatar">{demoAvatars.map((option) => <button key={option.id} className={`avatar-option ${profile.avatar.id === option.id ? 'selected' : ''}`} aria-label={option.label} aria-pressed={profile.avatar.id === option.id} onClick={() => chooseAvatar(option.id)}><span>{option.emoji}</span></button>)}</div></div><section className="networking-panel"><h2>Networking demonstrativo</h2><p className="networking-demo-note">Convites e conexões são simulados com perfis fictícios e ficam somente neste navegador. Não há contato com pessoas reais.</p><button type="button" id="profile-discovery-link" className="network-empty-action" onClick={goDiscovery}>Descobrir membros na Ágora</button><button className="reset-demo-button" onClick={resetDemonstration}>Reiniciar demonstração</button>
+        {isOwnProfile && <><div className="profile-avatar-picker"><b>Seu avatar</b><div className="avatar-options compact" role="group" aria-label="Trocar avatar">{demoAvatars.map((option) => <button key={option.id} className={`avatar-option ${profile.avatar.id === option.id ? 'selected' : ''}`} aria-label={option.label} aria-pressed={profile.avatar.id === option.id} onClick={() => chooseAvatar(option.id)}><span>{option.emoji}</span></button>)}</div></div><section className="networking-panel"><h2>Networking demonstrativo</h2><p className="networking-demo-note">Convites e conexões são simulados com perfis fictícios e ficam somente neste navegador. Não há contato com pessoas reais.</p><section className="demo-transfer" aria-labelledby="demo-transfer-title"><h3 id="demo-transfer-title">Transferir dados locais</h3><p>O arquivo fica no seu dispositivo e pode conter mensagens e outros dados fictícios da demonstração. Guarde-o com cuidado; não há criptografia nem envio para servidores.</p><div className="demo-transfer-actions"><button type="button" onClick={exportLocalData}>Exportar dados locais</button><button type="button" onClick={() => { setImportError(''); setImportSelection(null); importFileInput.current?.click() }}>Importar dados locais</button><input ref={importFileInput} className="sr-only" type="file" accept="application/json,.json" aria-label="Selecionar arquivo JSON de dados OLIMPO" tabIndex={-1} aria-hidden="true" onChange={handleImportFileChange} /></div>{importError && <p className="demo-transfer-error" role="alert">{importError}</p>}{importSelection && <section className="demo-import-preview" aria-labelledby="demo-import-preview-title" role="status" aria-live="polite"><h4 id="demo-import-preview-title">Prévia do arquivo</h4><p><b>Arquivo:</b> {importSelection.fileName}<br/><b>Schema recebido:</b> {importSelection.summary.sourceSchemaVersion}<br/><b>Avatar:</b> {importSelection.summary.avatarLabel}</p><dl><div><dt>Mensagens</dt><dd>{importSelection.summary.messages}</dd></div><div><dt>Salvas</dt><dd>{importSelection.summary.savedMessages}</dd></div><div><dt>Conexões/convites</dt><dd>{importSelection.summary.connections}</dd></div><div><dt>Denúncias demo</dt><dd>{importSelection.summary.reports}</dd></div><div><dt>Inscrições</dt><dd>{importSelection.summary.eventRegistrations}</dd></div><div><dt>Notificações</dt><dd>{importSelection.summary.notifications}</dd></div></dl><p className="demo-import-replace-note">Ao confirmar, esses dados substituirão o estado demonstrativo local atual. A confirmação não envia o arquivo.</p><div className="demo-transfer-actions"><button type="button" className="demo-import-confirm" onClick={confirmImport}>Importar e substituir dados atuais</button><button type="button" className="demo-import-cancel" onClick={cancelImportPreview}>Cancelar</button></div></section>}</section><button type="button" id="profile-discovery-link" className="network-empty-action" onClick={goDiscovery}>Descobrir membros na Ágora</button><button className="reset-demo-button" onClick={resetDemonstration}>Reiniciar demonstração</button>
           <div className="network-group"><h3>Convites recebidos <span>{incomingInvites.length}</span></h3>{incomingInvites.length === 0 && <p className="network-empty"><span className="empty-state-mark" aria-hidden="true">✧</span>Nenhum convite recebido. Convites fictícios enviados a este perfil aparecem aqui.</p>}{incomingInvites.map((invite) => { const person = connectionPerson(invite, profile.id); return person && <article className="network-row" key={invite.id}><button className="network-person" onClick={() => openProfile(person.id)}><span>{person.avatar.emoji}</span><span><b>{person.displayName}</b><small>{person.handle}</small></span></button><div className="network-actions"><button className="network-accept" onClick={() => respondToInvite(invite.id, profile.id, 'accepted')}>Aceitar</button><button className="network-decline" onClick={() => respondToInvite(invite.id, profile.id, 'declined')}>Recusar</button></div></article> })}</div>
           <div className="network-group"><h3>Convites enviados <span>{outgoingInvites.length}</span></h3>{outgoingInvites.length === 0 && <p className="network-empty"><span className="empty-state-mark" aria-hidden="true">✧</span>Nenhum convite enviado. Convide um perfil fictício para acompanhar a resposta aqui.</p>}{outgoingInvites.map((invite) => { const person = connectionPerson(invite, profile.id); return person && <article className="network-row" key={invite.id}><button className="network-person" onClick={() => openProfile(person.id)}><span>{person.avatar.emoji}</span><span><b>{person.displayName}</b><small>{person.handle} · Aguardando resposta</small></span></button><button className="network-cancel" onClick={() => cancelInvite(invite.id, profile.id)}>Cancelar convite</button></article> })}</div>
           <div className="network-group"><h3>Conexões aceitas <span>{acceptedConnections.length}</span></h3>{acceptedConnections.length === 0 && <p className="network-empty"><span className="empty-state-mark" aria-hidden="true">✧</span>Quando um convite fictício for aceito, a conexão aparecerá aqui.</p>}{acceptedConnections.map((connection) => { const person = connectionPerson(connection, profile.id); return person && <button className="network-person accepted-person" key={connection.id} onClick={() => openProfile(person.id)}><span>{person.avatar.emoji}</span><span><b>{person.displayName}</b><small>{person.handle} · Conexão aceita</small></span><span className="connection-check">✓ Conectados</span></button> })}</div>

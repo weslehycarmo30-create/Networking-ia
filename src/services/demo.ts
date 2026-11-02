@@ -3,7 +3,7 @@ import { messageReactionEmojis, type Avatar, type Connection, type DemoNotificat
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import { demoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
-import { createDemoStateStorage, DEMO_STATE_VERSION } from './demo-storage'
+import { createDemoExportDocument, createDemoStateStorage, DEMO_STATE_VERSION, validateDemoImportDocument, type DemoPersistenceStatus } from './demo-storage'
 
 export function createDemoServices(): OlimpoServices {
   const storage = createDemoStateStorage()
@@ -36,8 +36,12 @@ export function createDemoServices(): OlimpoServices {
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
   let savedMessages: SavedMessageReference[] = loaded.state?.savedMessages.map((reference) => ({ ...reference })) ?? []
 
-  function saveState() {
-    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, savedMessages, connections, reports, eventRegistrations, notifications, notificationPreferences })
+  function currentState() {
+    return { version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, savedMessages, connections, reports, eventRegistrations, notifications, notificationPreferences }
+  }
+
+  function saveState(): DemoPersistenceStatus {
+    return storage.save(currentState())
   }
 
   function recordEventNotification(eventId: string, action: 'registered' | 'cancelled') {
@@ -266,6 +270,22 @@ export function createDemoServices(): OlimpoServices {
     },
     demoState: {
       getStatus: () => storage.getStatus(),
+      exportData: () => createDemoExportDocument(currentState()),
+      importData: (value) => {
+        const { state } = validateDemoImportDocument(value)
+        const avatar = demoAvatars.find((candidate) => candidate.id === state.avatarId)
+        if (!avatar) throw new Error('O avatar do arquivo não existe nesta demonstração.')
+        currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
+        messages = structuredClone(state.messages)
+        savedMessages = structuredClone(state.savedMessages)
+        connections = structuredClone(state.connections)
+        reports = structuredClone(state.reports)
+        eventRegistrations = structuredClone(state.eventRegistrations)
+        notifications = structuredClone(state.notifications)
+        notificationPreferences = structuredClone(state.notificationPreferences)
+        currentRoomId = undefined
+        return saveState()
+      },
       reset: () => {
         storage.reset()
         currentRoomId = undefined

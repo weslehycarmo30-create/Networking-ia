@@ -1,5 +1,5 @@
 import type { Avatar, CommunityEvent, Connection, DemoNotification, DemoReport, EventRegistration, GamificationProgress, Message, MessageReactionEmoji, NotificationPreferences, Presence, Profile, ReportReason, ReportTargetType, SavedMessageReference, TerritoryId, TerritoryRoom } from '../domain/models'
-import type { DemoPersistenceStatus } from './demo-storage'
+import type { DemoExportDocument, DemoPersistenceStatus } from './demo-storage'
 
 export interface RoomService {
   listRooms(): TerritoryRoom[]
@@ -64,6 +64,8 @@ export interface NotificationService {
 
 export interface DemoStateService {
   getStatus(): DemoPersistenceStatus
+  exportData(): DemoExportDocument
+  importData(value: unknown): DemoPersistenceStatus
   reset(): DemoPersistenceStatus
 }
 

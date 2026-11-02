@@ -115,3 +115,11 @@ Itens, datas de leitura e preferências são validados e salvos na chave namespa
 5. O schema `7` migra o estado `6` preservando avatar, mensagens, reações, convites, notificações, preferências e inscrições, e acrescenta uma lista vazia de salvos. Referências inválidas, duplicadas ou antigas são ignoradas ao carregar. Se `localStorage` falhar, os salvos funcionam em memória nesta sessão. **Reiniciar demonstração** apaga todos os salvos junto ao restante do estado local.
 
 Não há backend, autenticação, sincronização nem comunicação externa para este recurso. Nenhum dado real é usado.
+
+## 13. Transferir dados locais (OLIMPO-068)
+
+1. No perfil próprio, em **Transferir dados locais**, a pessoa escolhe **Exportar dados locais** para baixar um JSON validado. O arquivo inclui o estado demonstrativo persistido; presença e estado visual da interface são excluídos. O arquivo pode conter mensagens e deve ser guardado com cuidado no dispositivo.
+2. Para transferir manualmente para outro navegador/computador, a pessoa escolhe **Importar dados locais** e seleciona um arquivo JSON OLIMPO. O limite é 5 MiB. A interface valida formato, versão, estrutura, limites e conteúdo antes de mostrar uma prévia com avatar e contagens.
+3. A prévia explica que importar substituirá os dados atuais. **Importar e substituir dados atuais** pede confirmação explícita; cancelar mantém o estado atual. Arquivo inválido, incompatível ou acima do limite é rejeitado sem alteração dos dados.
+4. Formatos de exportação versão 1 com schemas de estado `1` a `7` são reconhecidos; as migrações existentes convertem versões antigas para schema `7`, quando válidas. O arquivo exportado contém apenas dados fictícios e persiste somente no dispositivo. Não há sincronização automática, criptografia ou envio a servidores.
+5. Depois da confirmação, a interface atualiza usando o mesmo serviço e snapshot e retorna à Praça. Se o armazenamento local falhar, os dados importados permanecem em memória nesta sessão e a interface avisa que serão perdidos ao fechar a aba. O reset continua restaurando os dados iniciais locais.

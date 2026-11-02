@@ -5,6 +5,9 @@ import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
 export const DEMO_STATE_VERSION = 7 as const
+export const DEMO_EXPORT_FORMAT = 'olimpo-demo-data'
+export const DEMO_EXPORT_FORMAT_VERSION = 1 as const
+export const MAX_DEMO_IMPORT_BYTES = 5 * 1024 * 1024
 
 export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
@@ -16,6 +19,29 @@ export type PersistedDemoState = {
   eventRegistrations: EventRegistration[]
   notifications: DemoNotification[]
   notificationPreferences: NotificationPreferences
+}
+
+export type DemoExportDocument = {
+  format: typeof DEMO_EXPORT_FORMAT
+  formatVersion: typeof DEMO_EXPORT_FORMAT_VERSION
+  exportedAt: string
+  state: PersistedDemoState
+}
+
+export type DemoImportSummary = {
+  sourceSchemaVersion: number
+  avatarLabel: string
+  messages: number
+  savedMessages: number
+  connections: number
+  reports: number
+  eventRegistrations: number
+  notifications: number
+}
+
+export type ValidatedDemoImport = {
+  state: PersistedDemoState
+  summary: DemoImportSummary
 }
 
 export type DemoPersistenceStatus = {
@@ -194,6 +220,52 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
     savedMessages.push({ messageId: reference.messageId, roomId: reference.roomId })
   }
   return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, savedMessages, connections: validConnections, reports: validReports, eventRegistrations, notifications, notificationPreferences }
+}
+
+export function createDemoExportDocument(value: unknown): DemoExportDocument {
+  const state = validatePersistedDemoState(value)
+  if (!state) throw new Error('O estado atual da demonstração não passou na validação de exportação.')
+  return { format: DEMO_EXPORT_FORMAT, formatVersion: DEMO_EXPORT_FORMAT_VERSION, exportedAt: new Date().toISOString(), state }
+}
+
+export function validateDemoImportDocument(value: unknown): ValidatedDemoImport {
+  if (!isRecord(value) || value.format !== DEMO_EXPORT_FORMAT || value.formatVersion !== DEMO_EXPORT_FORMAT_VERSION || !isValidDate(value.exportedAt)) {
+    throw new Error('O arquivo não está no formato de exportação OLIMPO reconhecido.')
+  }
+  if (!isRecord(value.state) || typeof value.state.version !== 'number') throw new Error('O arquivo não contém um estado demonstrativo válido.')
+  const sourceSchemaVersion = value.state.version
+  if (![1, 2, 3, 4, 5, 6, 7].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
+  if (sourceSchemaVersion === DEMO_STATE_VERSION) {
+    if (!Array.isArray(value.state.savedMessages) || value.state.savedMessages.length > 2500) throw new Error('A lista de mensagens salvas do arquivo é inválida ou excede o limite de 2.500 itens.')
+  }
+  const state = validatePersistedDemoState(value.state)
+  if (!state) throw new Error('Os dados do arquivo são inválidos ou incompatíveis; nenhum dado atual foi alterado.')
+  if (sourceSchemaVersion === DEMO_STATE_VERSION && state.savedMessages.length !== (value.state.savedMessages as unknown[]).length) {
+    throw new Error('O arquivo contém referências salvas inválidas, antigas ou duplicadas; nenhum dado atual foi alterado.')
+  }
+  const messageCount = Object.values(state.messages).reduce((total, roomMessages) => total + roomMessages.length, 0)
+  const avatarLabel = knownAvatars.get(state.avatarId)?.label ?? 'Avatar da demonstração'
+  return {
+    state,
+    summary: {
+      sourceSchemaVersion,
+      avatarLabel,
+      messages: messageCount,
+      savedMessages: state.savedMessages.length,
+      connections: state.connections.length,
+      reports: state.reports.length,
+      eventRegistrations: state.eventRegistrations.length,
+      notifications: state.notifications.length,
+    },
+  }
+}
+
+export function parseDemoImportText(text: string): ValidatedDemoImport {
+  if (new TextEncoder().encode(text).byteLength > MAX_DEMO_IMPORT_BYTES) throw new Error('O arquivo excede o limite de 5 MiB.')
+  let parsed: unknown
+  try { parsed = JSON.parse(text) }
+  catch { throw new Error('O arquivo não contém JSON válido.') }
+  return validateDemoImportDocument(parsed)
 }
 
 export function createDemoStateStorage() {
