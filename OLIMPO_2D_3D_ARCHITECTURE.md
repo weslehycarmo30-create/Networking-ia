@@ -26,11 +26,20 @@ src/ui/App.tsx ──┬── services/contracts.ts
 
 1. A página abre na landing; a etapa de avatar antecede a entrada na praça.
 2. A Praça Central começa no mapa 2D. A cena 3D é um `React.lazy()` carregado apenas após escolha explícita.
-3. Na entrada, a aplicação verifica disponibilidade de WebGL. Se indisponível, o botão 3D fica indisponível e o mapa 2D permanece ativo.
-4. Erro de renderização tratado por `SceneBoundary`, perda de contexto WebGL ou desempenho abaixo de 20 FPS em duas janelas consecutivas de 1,5 s retornam a interface ao 2D.
-5. Controles HTML de território e perfil continuam ao redor da cena; a alternativa 2D oferece mapa, cartões de território e acesso às salas.
+3. Na entrada e antes de cada tentativa, a aplicação verifica a criação de um contexto WebGL temporário e libera esse contexto de sondagem. Se WebGL não estiver disponível nessa verificação, o botão 3D fica indisponível, o mapa 2D permanece ativo e a pessoa pode verificar novamente.
+4. Erro tratado por `SceneBoundary`, perda de contexto WebGL e desempenho abaixo de 20 FPS em duas janelas consecutivas de 1,5 s são causas separadas de fallback. Todas retornam ao mapa 2D sem alterar a disponibilidade detectada de WebGL.
+5. Após falha recuperável, uma mensagem informa a causa e oferece **Tentar 3D novamente**; o controle de visualização 3D também permanece disponível. Cada pedido explícito incrementa a chave da cena e remonta `City3D`/Canvas, reiniciando o monitor de frames e o limite de tentativa. Não há repetição automática nem ciclo de fallback. A seleção de território pertence a `App` e é preservada.
+6. Controles HTML de território e perfil continuam ao redor da cena; a alternativa 2D oferece mapa, cartões de território e acesso às salas.
 
 O fallback não substitui a necessidade de validar o comportamento em navegadores e dispositivos reais. Os marcadores geométricos no Canvas são selecionáveis por ponteiro; os controles HTML adjacentes oferecem seleção por teclado/toque.
+
+### Diagnóstico de retorno ao 3D (OLIMPO-069)
+
+A causa do bloqueio era o estado de fallback no `App.tsx`: `failScene` tratava erro de renderização, perda de contexto e FPS baixo como `webgl=false`. Isso mostrava a mensagem incorreta de WebGL indisponível e desabilitava o controle 3D. Voltar ao mapa 2D apenas mudava `view`, portanto não removia essa flag. Agora `webgl` representa apenas o resultado da sondagem de suporte; `sceneFailure` registra `render-error`, `context-lost` ou `performance`. Falha recuperável preserva o controle de nova tentativa. Um resultado negativo da sondagem diz somente que WebGL não foi disponibilizado naquele momento e oferece nova verificação; não atribui a causa exclusivamente ao navegador.
+
+**Verificação manual em navegador com WebGL:** (1) abrir a Praça Central em 2D; (2) escolher **Explorar 3D** e aguardar a cena; (3) escolher **Mapa 2D**; (4) escolher **Explorar 3D** de novo. A cena deve remontar sem aviso de WebGL indisponível, mantendo o território selecionado. Repetir 2D→3D deve continuar sendo uma ação manual. Para verificar o fallback de contexto em DevTools, com a cena aberta, pode-se executar `const c=document.querySelector('.city-map canvas'); const g=c?.getContext('webgl2')||c?.getContext('webgl'); g?.getExtension('WEBGL_lose_context')?.loseContext()`; deve aparecer a causa de contexto perdido e uma ação para tentar novamente. Para verificar o fallback por FPS, reduzir o desempenho do dispositivo/emulador até o monitor registrar duas janelas consecutivas abaixo de 20 FPS; a mensagem deve identificar desempenho, e nova tentativa permanece explícita. Se a sondagem de suporte falhar, o mapa 2D continua operável e **Verificar WebGL novamente** pode reavaliar a condição.
+
+Na auditoria OLIMPO-069, a inspeção de código confirmou o estado compartilhado, os três motivos de fallback e o remount explícito. O inventário do controlador de computador desta sessão não retornou aplicativos, navegadores nem provedor de browser; portanto, não foi possível reproduzir nem conferir visualmente o ciclo ou os fallbacks. Os passos acima permanecem validação manual pendente.
 
 ## Desempenho observado e limite
 

@@ -29,7 +29,21 @@ class SceneBoundary extends Component<{ children: ReactNode; onFailure: () => vo
 }
 
 function hasWebGL() {
-  try { const canvas = document.createElement('canvas'); return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl')) } catch { return false }
+  try {
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
+    if (!context) return false
+    try { context.getExtension('WEBGL_lose_context')?.loseContext() } catch { /* Capability was already established by context creation. */ }
+    return true
+  } catch { return false }
+}
+
+type SceneFailureReason = 'render-error' | 'context-lost' | 'performance'
+
+const sceneFailureMessages: Record<SceneFailureReason, string> = {
+  'render-error': 'A inicialização ou renderização 3D falhou. O mapa 2D continua disponível; você pode tentar o 3D novamente.',
+  'context-lost': 'O contexto WebGL foi perdido durante a cena. O mapa 2D continua disponível; você pode tentar o 3D novamente.',
+  performance: 'A cena 3D foi pausada após desempenho abaixo do limite. O mapa 2D continua disponível; tente novamente quando quiser.',
 }
 
 function formatTime(value: string) {
@@ -53,7 +67,10 @@ export default function App() {
   const [focusEventId, setFocusEventId] = useState('')
   const pendingSavedMessageId = useRef<string | null>(null)
   const [mapSelectedId, setMapSelectedId] = useState('athena')
+  // `webgl` tracks capability only; recoverable scene failures live separately below.
   const [webgl, setWebgl] = useState(true)
+  const [sceneFailure, setSceneFailure] = useState<SceneFailureReason | null>(null)
+  const [sceneAttempt, setSceneAttempt] = useState(0)
   const [draft, setDraft] = useState('')
   const [toast, setToast] = useState<{ id: number; message: string; tone: 'success' | 'warning' | 'error' } | null>(null)
   const [reportTarget, setReportTarget] = useState<{ targetType: ReportTargetType; targetId: string; itemLabel: string } | null>(null)
@@ -101,7 +118,9 @@ export default function App() {
   const goCity = () => {
     if (nav.screen === 'room') services.participants.leaveRoom(nav.territoryId ?? '')
     else services.participants.clearCurrentPresence()
-    setWebgl(hasWebGL())
+    const available = hasWebGL()
+    setWebgl(available)
+    if (!available) setSceneFailure(null)
     setNav({ screen: 'city' })
   }
   const goRoom = (room: TerritoryRoom) => {
@@ -137,7 +156,9 @@ export default function App() {
     setFocusEventId(eventId)
   }
   const enterCity = () => {
-    setWebgl(hasWebGL())
+    const available = hasWebGL()
+    setWebgl(available)
+    if (!available) setSceneFailure(null)
     if (!plazaGuideCompleted) setPlazaGuideStep(0)
     setNav({ screen: 'city' })
   }
@@ -147,7 +168,20 @@ export default function App() {
     try { window.sessionStorage.setItem('olimpo-plaza-guide-completed', '1') } catch { /* Session storage can be unavailable. */ }
     window.requestAnimationFrame(() => plazaGuideTrigger.current?.focus({ preventScroll: true }))
   }
-  const failScene = () => { setView('2d'); setWebgl(false) }
+  const failScene = (reason: SceneFailureReason) => { setView('2d'); setSceneFailure(reason) }
+  const retryWebGLCheck = () => {
+    const available = hasWebGL()
+    setWebgl(available)
+    if (available) setSceneFailure(null)
+  }
+  const request3D = () => {
+    const available = hasWebGL()
+    setWebgl(available)
+    if (!available) { setSceneFailure(null); setView('2d'); return }
+    setSceneFailure(null)
+    setSceneAttempt((attempt) => attempt + 1)
+    setView('3d')
+  }
 
   function openProfile(profileId: string, returnFocusSelector?: string) {
     if (nav.screen !== 'profile') {
@@ -446,7 +480,7 @@ export default function App() {
     {nav.screen === 'avatar' && <main className="avatar-page"><div className="avatar-step"><button className="back-link avatar-back" onClick={() => setNav({ screen: 'landing' })}>← Voltar à apresentação</button><div className="eyebrow"><span /> PERSONAGEM DA DEMONSTRAÇÃO</div><h1>Escolha seu avatar</h1><p>Escolha um personagem fictício para representar você nesta demonstração. Nenhuma conta será criada; você pode trocar o avatar depois.</p><div className="avatar-options" role="group" aria-label="Avatares demonstrativos">{demoAvatars.map((option) => <button key={option.id} className={`avatar-option ${profile.avatar.id === option.id ? 'selected' : ''}`} aria-pressed={profile.avatar.id === option.id} onClick={() => chooseAvatar(option.id)}><span aria-hidden="true">{option.emoji}</span><b>{option.label}</b>{profile.avatar.id === option.id && <small>Selecionado</small>}</button>)}</div><div className="avatar-actions"><button className="primary-button" onClick={enterCity}>Continuar para a Praça Central <span>→</span></button><span>Perfis e conversas são fictícios · experiência local.</span></div></div></main>}
 
     {nav.screen === 'city' && <main className="city-page">
-      <section className="city-heading"><div><div className="eyebrow"><span /> VOCÊ ESTÁ NA PRAÇA</div><h1>Praça Central</h1><p>Escolha um território no mapa ou nos cartões. Os números mostram participantes fictícios.</p></div><div className="city-actions"><button id="city-discovery-link" className="discovery-link" onClick={goDiscovery}><span aria-hidden="true">☿</span> Descobrir membros · Ágora de Hermes</button><button className="events-link" aria-expanded={showEvents} aria-controls={showEvents ? 'community-events' : undefined} onClick={() => setShowEvents((value) => !value)}>{showEvents ? 'Ocultar encontros' : 'Encontros da comunidade'}</button><button type="button" ref={plazaGuideTrigger} className="plaza-guide-trigger" aria-expanded={plazaGuideStep !== null} aria-controls={plazaGuideStep !== null ? 'plaza-first-visit-guide' : undefined} onClick={() => plazaGuideStep === null ? setPlazaGuideStep(0) : closePlazaGuide()}>{plazaGuideStep === null ? 'Abrir guia da Praça' : 'Fechar guia da Praça'}</button></div><div className="view-switch" role="group" aria-label="Visualização da praça"><button className={view === '2d' ? 'active' : ''} onClick={() => setView('2d')} aria-pressed={view === '2d'}>▦ <span>Mapa 2D</span></button><button className={view === '3d' && webgl ? 'active' : ''} onClick={() => { if (webgl) setView('3d'); else showFeedback('3D indisponível neste dispositivo. Mapa 2D ativo.', 'warning') }} aria-pressed={view === '3d'} disabled={!webgl}>◇ <span>Explorar 3D · opcional</span></button></div></section>
+      <section className="city-heading"><div><div className="eyebrow"><span /> VOCÊ ESTÁ NA PRAÇA</div><h1>Praça Central</h1><p>Escolha um território no mapa ou nos cartões. Os números mostram participantes fictícios.</p></div><div className="city-actions"><button id="city-discovery-link" className="discovery-link" onClick={goDiscovery}><span aria-hidden="true">☿</span> Descobrir membros · Ágora de Hermes</button><button className="events-link" aria-expanded={showEvents} aria-controls={showEvents ? 'community-events' : undefined} onClick={() => setShowEvents((value) => !value)}>{showEvents ? 'Ocultar encontros' : 'Encontros da comunidade'}</button><button type="button" ref={plazaGuideTrigger} className="plaza-guide-trigger" aria-expanded={plazaGuideStep !== null} aria-controls={plazaGuideStep !== null ? 'plaza-first-visit-guide' : undefined} onClick={() => plazaGuideStep === null ? setPlazaGuideStep(0) : closePlazaGuide()}>{plazaGuideStep === null ? 'Abrir guia da Praça' : 'Fechar guia da Praça'}</button></div><div className="view-switch" role="group" aria-label="Visualização da praça"><button className={view === '2d' ? 'active' : ''} onClick={() => setView('2d')} aria-pressed={view === '2d'}>▦ <span>Mapa 2D</span></button><button className={view === '3d' && webgl ? 'active' : ''} onClick={request3D} aria-pressed={view === '3d'} disabled={!webgl}>◇ <span>Explorar 3D · opcional</span></button></div></section>
       {plazaGuideStep !== null && <section id="plaza-first-visit-guide" className="plaza-first-visit-guide" aria-labelledby="plaza-guide-title">
         <div className="plaza-guide-copy"><h2 id="plaza-guide-title">Primeiros passos na Praça</h2><div aria-live="polite" aria-atomic="true"><span className="plaza-guide-progress">Passo {plazaGuideStep + 1} de {plazaGuideSteps.length}</span><h3>{plazaGuideSteps[plazaGuideStep].title}</h3><p>{plazaGuideSteps[plazaGuideStep].text}</p></div></div>
         <div className="plaza-guide-actions"><button type="button" onClick={closePlazaGuide}>Dispensar</button><button type="button" disabled={plazaGuideStep === 0} onClick={() => setPlazaGuideStep(plazaGuideStep - 1)}>Voltar</button><button type="button" className="plaza-guide-next" onClick={() => plazaGuideStep === plazaGuideSteps.length - 1 ? closePlazaGuide() : setPlazaGuideStep(plazaGuideStep + 1)}>{plazaGuideStep === plazaGuideSteps.length - 1 ? 'Concluir' : 'Próximo'}</button></div>
@@ -459,11 +493,11 @@ export default function App() {
           <li><b>Entrar:</b> use “Entrar na sala” para abrir o território selecionado. Em celulares, use a lista HTML e esse mesmo botão; não é necessário controlar a câmera.</li>
         </ul></div>
       </details>}
-      {!webgl && <div className="fallback-note" role="status">Seu navegador não disponibiliza WebGL. Você está vendo o mapa 2D.</div>}
+      {!webgl && <div className="fallback-note" role="status"><span>WebGL não foi disponibilizado nesta verificação. Pode estar bloqueado pelo navegador ou dispositivo; o mapa 2D continua funcional.</span><button type="button" onClick={retryWebGLCheck}>Verificar WebGL novamente</button></div>}{webgl && sceneFailure && view === '2d' && <div className="fallback-note" role="status"><span>{sceneFailureMessages[sceneFailure]}</span><button type="button" onClick={request3D}>Tentar 3D novamente</button></div>}
       <div className="city-grid"><section className={`city-map ${view === '3d' ? 'city-map-3d' : ''}`} aria-label={view === '3d' ? 'Mapa tridimensional dos territórios' : 'Mapa 2D dos territórios'}>
         {view === '3d' && webgl && <div className="scene-territories" role="group" aria-label="Selecionar território no mapa 3D">{rooms.map((room) => { const count = services.participants.listByRoom(room.id).length; return <button key={room.id} className={room.id === mapSelected.id ? 'selected' : ''} aria-pressed={room.id === mapSelected.id} aria-label={`Selecionar ${room.name}; ${count} participantes fictícios`} onClick={() => setMapSelectedId(room.id)}>{room.symbol} <span>{room.name} · {count} demo</span></button> })}</div>}
         {view === '3d' && webgl && mapEnterButton}
-        {view === '3d' && webgl ? <SceneBoundary onFailure={failScene}><Suspense fallback={<div className="scene-loading" role="status">Carregando visualização 3D…</div>}><City3D rooms={rooms} profiles={communityProfiles} avatar={profile.avatar} selectedProfileId={selectedProfileId} activeId={mapSelected.id} onSelect={(room) => setMapSelectedId(room.id)} onSelectProfile={(person) => openProfile(person.id)} onFailure={failScene} /></Suspense></SceneBoundary> : <div className="map-orbit"><div className="map-center"><span className="sanctuary-symbol" aria-hidden="true">{guide.avatar.emoji}</span><b>Santuário de Zeus</b><small>Marco central da praça</small></div>{rooms.map((room, index) => { const count = services.participants.listByRoom(room.id).length; return <button key={room.id} className={`map-node node-${index + 1} ${room.id === mapSelected.id ? 'selected' : ''}`} onClick={() => setMapSelectedId(room.id)} aria-label={`Selecionar ${room.name}; ${count} participantes fictícios`} aria-pressed={room.id === mapSelected.id}><span>{room.symbol}</span><b>{room.name}</b><small>{room.domain}</small><small>{count} na demo</small></button> })}</div>}
+        {view === '3d' && webgl ? <SceneBoundary key={sceneAttempt} onFailure={() => failScene('render-error')}><Suspense fallback={<div className="scene-loading" role="status">Carregando visualização 3D…</div>}><City3D key={sceneAttempt} rooms={rooms} profiles={communityProfiles} avatar={profile.avatar} selectedProfileId={selectedProfileId} activeId={mapSelected.id} onSelect={(room) => setMapSelectedId(room.id)} onSelectProfile={(person) => openProfile(person.id)} onFailure={(reason) => failScene(reason)} /></Suspense></SceneBoundary> : <div className="map-orbit"><div className="map-center"><span className="sanctuary-symbol" aria-hidden="true">{guide.avatar.emoji}</span><b>Santuário de Zeus</b><small>Marco central da praça</small></div>{rooms.map((room, index) => { const count = services.participants.listByRoom(room.id).length; return <button key={room.id} className={`map-node node-${index + 1} ${room.id === mapSelected.id ? 'selected' : ''}`} onClick={() => setMapSelectedId(room.id)} aria-label={`Selecionar ${room.name}; ${count} participantes fictícios`} aria-pressed={room.id === mapSelected.id}><span>{room.symbol}</span><b>{room.name}</b><small>{room.domain}</small><small>{count} na demo</small></button> })}</div>}
         {!(view === '3d' && webgl) && mapEnterButton}
         <div className="map-legend"><span className="legend-dot" /> Praça Central <span>·</span> {rooms.length} territórios</div>
       </section>

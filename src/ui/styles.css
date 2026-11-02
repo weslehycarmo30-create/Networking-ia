@@ -383,6 +383,10 @@
 .demo-import-preview dd{margin:4px 0 0;color:#f0e9dc;font:12px var(--mono)}
 .demo-import-preview .demo-import-replace-note{padding:9px;border-left:3px solid var(--bronze);background:rgba(193,147,94,.06);color:#f0d9b2}
 @media(max-width:680px){.demo-transfer{padding:12px}.demo-transfer-actions{display:grid;grid-template-columns:1fr}.demo-transfer-actions button{width:100%;overflow-wrap:anywhere}.demo-import-preview{padding:10px}.demo-import-preview dl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fallback-note{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fallback-note>span{min-width:0;flex:1}
+.fallback-note>button{min-height:44px;flex:none;padding:8px 12px;border:1px solid rgba(117,217,208,.38);border-radius:3px;background:#203438;color:#d0eee6;font-size:11px}
+@media(max-width:520px){.fallback-note>button{width:100%}}
 
 /* OLIMPO-032: make field guidance and disabled/validated states explicit. */
 .report-dialog select:invalid{border-color:rgba(230,167,102,.72)}

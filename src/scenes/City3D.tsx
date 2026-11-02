@@ -4,6 +4,8 @@ import { CanvasTexture, CylinderGeometry, InstancedMesh, MeshStandardMaterial, O
 import type { Avatar, Profile, TerritoryRoom } from '../domain/models'
 import ProfilePicker from '../ui/ProfilePicker'
 
+type City3DFailureReason = 'context-lost' | 'performance'
+
 const avatarAccents: Record<string, string> = {
   explorer: '#75d9d0', botanist: '#86b58a', builder: '#e6a34d',
   creative: '#c4a7ff', observer: '#86b9ff', solar: '#ffd16f',
@@ -169,7 +171,7 @@ function RadialPath({ room }: { room: TerritoryRoom }) {
   </mesh>
 }
 
-function Scene({ rooms, activeId, onSelect, onFailure, onSettled }: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: () => void; onSettled: () => void }) {
+function Scene({ rooms, activeId, onSelect, onFailure, onSettled }: { rooms: TerritoryRoom[]; activeId: string; onSelect: (item: TerritoryRoom) => void; onFailure: (reason: City3DFailureReason) => void; onSettled: () => void }) {
   const performanceWindow = useRef({ elapsed: 0, frames: 0, slowWindows: 0, healthyWindows: 0, failed: false, settled: false })
   useEffect(() => {
     const originalCursor = document.body.style.cursor
@@ -186,7 +188,7 @@ function Scene({ rooms, activeId, onSelect, onFailure, onSettled }: { rooms: Ter
     monitor.healthyWindows = fps >= 20 ? monitor.healthyWindows + 1 : 0
     monitor.elapsed = 0
     monitor.frames = 0
-    if (monitor.slowWindows >= 2) { monitor.failed = true; onFailure() }
+    if (monitor.slowWindows >= 2) { monitor.failed = true; onFailure('performance') }
     else if (monitor.healthyWindows >= 2) { monitor.settled = true; onSettled() }
   })
   return <>
@@ -200,7 +202,7 @@ function Scene({ rooms, activeId, onSelect, onFailure, onSettled }: { rooms: Ter
   </>
 }
 
-export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profile[]; avatar: Avatar; activeId: string; selectedProfileId?: string; onSelect: (item: TerritoryRoom) => void; onSelectProfile: (profile: Profile) => void; onFailure: () => void }) {
+export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profile[]; avatar: Avatar; activeId: string; selectedProfileId?: string; onSelect: (item: TerritoryRoom) => void; onSelectProfile: (profile: Profile) => void; onFailure: (reason: City3DFailureReason) => void }) {
   const [azimuth, setAzimuth] = useState(0.675)
   const [elevation, setElevation] = useState(0.96)
   const [monitoring, setMonitoring] = useState(true)
@@ -223,7 +225,7 @@ export default function City3D(props: { rooms: TerritoryRoom[]; profiles: Profil
   }
 
   return <div className="scene-with-profiles"><Canvas frameloop={monitoring ? 'always' : 'demand'} camera={{ position: [8, 9, 10], fov: 42 }} dpr={[1, 1.15]} onCreated={({ gl }) => {
-    gl.domElement.addEventListener('webglcontextlost', (event) => { event.preventDefault(); props.onFailure() }, { once: true })
+    gl.domElement.addEventListener('webglcontextlost', (event) => { event.preventDefault(); props.onFailure('context-lost') }, { once: true })
   }} gl={{ antialias: false, powerPreference: 'low-power' }}>
     <CameraOrbit azimuth={azimuth} elevation={elevation} />
     <Scene rooms={props.rooms} activeId={props.activeId} onSelect={props.onSelect} onFailure={props.onFailure} onSettled={() => setMonitoring(false)} />
