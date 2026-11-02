@@ -4,7 +4,7 @@ import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from
 import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 8 as const
+export const DEMO_STATE_VERSION = 9 as const
 export const DEMO_EXPORT_FORMAT = 'olimpo-demo-data'
 export const DEMO_EXPORT_FORMAT_VERSION = 1 as const
 export const MAX_DEMO_IMPORT_BYTES = 5 * 1024 * 1024
@@ -81,7 +81,7 @@ function avatarForMessage(authorId: string, avatarId: unknown): Avatar | undefin
   return author.avatar.id === avatarId ? author.avatar : undefined
 }
 
-function validateMessage(value: unknown, roomId: string, allowMissingReactions: boolean): Message | undefined {
+function validateMessage(value: unknown, roomId: string, allowMissingReactions: boolean, allowReplies: boolean): Message | undefined {
   if (!isRecord(value)) return undefined
   if (!isShortString(value.id, 120) || value.roomId !== roomId || !isShortString(value.authorId, 80)) return undefined
   const author = knownProfileById.get(value.authorId)
@@ -96,7 +96,22 @@ function validateMessage(value: unknown, roomId: string, allowMissingReactions: 
     return { profileId: demoProfile.id, emoji: reaction.emoji as MessageReactionEmoji }
   })
   if (reactions.some((reaction) => reaction === undefined)) return undefined
-  return { id: value.id, roomId, authorId: author.id, authorName: author.displayName, avatar: { ...avatar }, createdAt: value.createdAt, text: value.text, reactions: reactions as MessageReaction[] }
+  const replyToMessageId = allowReplies && isShortString(value.replyToMessageId, 120) && value.replyToMessageId !== value.id
+    ? value.replyToMessageId
+    : undefined
+  const replyUnavailable = allowReplies && !replyToMessageId && (Object.hasOwn(value, 'replyToMessageId') || value.replyUnavailable === true)
+  return {
+    id: value.id,
+    roomId,
+    authorId: author.id,
+    authorName: author.displayName,
+    avatar: { ...avatar },
+    createdAt: value.createdAt,
+    text: value.text,
+    reactions: reactions as MessageReaction[],
+    ...(replyToMessageId ? { replyToMessageId } : {}),
+    ...(replyUnavailable ? { replyUnavailable: true } : {}),
+  }
 }
 
 function validateConnection(value: unknown): Connection | undefined {
@@ -165,7 +180,7 @@ function validateNotificationPreferences(value: unknown): NotificationPreference
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
   if (!isRecord(value)) return undefined
   const version = value.version
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7 && version !== DEMO_STATE_VERSION) return undefined
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7 && version !== 8 && version !== DEMO_STATE_VERSION) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -173,11 +188,21 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   for (const roomId of roomIds) {
     const roomMessages = value.messages[roomId]
     if (!Array.isArray(roomMessages) || roomMessages.length > 500) return undefined
-    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version < 6))
+    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version < 6, version >= 9))
     if (parsed.some((message) => message === undefined)) return undefined
     const validMessages = parsed as Message[]
     if (new Set(validMessages.map((message) => message.id)).size !== validMessages.length) return undefined
     messages[roomId] = validMessages
+  }
+  for (const roomId of roomIds) {
+    const availableRoomMessages = new Map(messages[roomId].map((message) => [message.id, message]))
+    for (const message of messages[roomId]) {
+      if (!message.replyToMessageId) continue
+      if (!availableRoomMessages.has(message.replyToMessageId)) {
+        delete message.replyToMessageId
+        message.replyUnavailable = true
+      }
+    }
   }
   if (value.connections.length > 200) return undefined
   const connections = value.connections.map(validateConnection)
@@ -242,7 +267,7 @@ export function validateDemoImportDocument(value: unknown): ValidatedDemoImport 
   }
   if (!isRecord(value.state) || typeof value.state.version !== 'number') throw new Error('O arquivo não contém um estado demonstrativo válido.')
   const sourceSchemaVersion = value.state.version
-  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
   if (sourceSchemaVersion >= 7) {
     if (!Array.isArray(value.state.savedMessages) || value.state.savedMessages.length > 2500) throw new Error('A lista de mensagens salvas do arquivo é inválida ou excede o limite de 2.500 itens.')
   }

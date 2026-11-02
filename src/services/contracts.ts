@@ -20,7 +20,7 @@ export interface MessageService {
   listSaved(): SavedMessageReference[]
   isSaved(messageId: Message['id']): boolean
   toggleSaved(messageId: Message['id']): boolean
-  sendToRoom(roomId: string, text: string): Message
+  sendToRoom(roomId: string, text: string, replyToMessageId?: Message['id']): Message
   toggleReaction(messageId: Message['id'], emoji: MessageReactionEmoji): Message
 }
 

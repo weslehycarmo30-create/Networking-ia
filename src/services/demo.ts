@@ -124,8 +124,14 @@ export function createDemoServices(): OlimpoServices {
         saveState()
         return index < 0
       },
-      sendToRoom: (roomId, text) => {
+      sendToRoom: (roomId, text, replyToMessageId) => {
         if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
+        const replySource = replyToMessageId
+          ? messages[roomId].find((candidate) => candidate.id === replyToMessageId)
+          : undefined
+        if (replyToMessageId && !replySource) {
+          throw new Error('A mensagem original não está disponível nesta sala; escolha outra mensagem ou cancele a resposta.')
+        }
         const message = createMessage({
           id: `demo-message-${crypto.randomUUID()}`,
           roomId,
@@ -133,6 +139,8 @@ export function createDemoServices(): OlimpoServices {
           text,
           createdAt: new Date().toISOString(),
         })
+        if (replySource && replySource.id !== message.id) message.replyToMessageId = replySource.id
+        else if (replySource) throw new Error('Uma mensagem não pode responder a si mesma.')
         messages[roomId].push(message)
         delete draftsByRoom[roomId]
         saveState()

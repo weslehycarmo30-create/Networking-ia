@@ -52,6 +52,8 @@ export type Message = {
   createdAt: string
   text: string
   reactions: MessageReaction[]
+  replyToMessageId?: Message['id']
+  replyUnavailable?: boolean
 }
 
 export type SavedMessageReference = {
