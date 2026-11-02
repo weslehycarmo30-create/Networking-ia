@@ -332,6 +332,39 @@
 @media(max-width:380px){.topbar{gap:5px}.wordmark{gap:7px;letter-spacing:1px}.brand-mark{width:30px;height:30px;flex:none}.top-nav{gap:2px}.top-nav button{min-width:44px;padding:0 1px;font-size:9px}.profile-chip{min-width:44px;min-height:44px;justify-content:center;padding:4px}.profile-chip-name{display:none}}
 @media(max-width:680px){.message-report-button{min-height:44px}}
 
+/* OLIMPO-067: local saved messages, distinct from reactions. */
+.saved-nav-button{min-height:44px;padding:8px 11px;border:1px solid rgba(193,147,94,.3);border-radius:3px;background:#202c31;color:#e2c49a;font-size:11px;white-space:nowrap}
+.saved-nav-button.selected{border-color:rgba(193,147,94,.7);background:#302f29;color:#fff0d1}
+.message-save-button{min-height:40px;padding:8px 12px;border:1px solid rgba(117,217,208,.38);border-radius:3px;background:#1d3033;color:#d0eee6;font-size:11px}
+.message-save-button.saved{border-color:rgba(193,147,94,.62);background:#342f26;color:#ffe0ad}
+.message:focus{outline:2px solid var(--aqua);outline-offset:3px}
+.saved-page{max-width:1040px;min-height:calc(100vh - 160px);margin:0 auto;padding:35px 0 60px}
+.saved-heading{margin:22px 0 24px;padding:20px;border:1px solid rgba(193,147,94,.28);border-radius:4px;background:linear-gradient(140deg,rgba(193,147,94,.06),#172229 65%)}
+.saved-heading h1{margin:7px 0 9px;color:#f0e9dc;font-size:clamp(25px,4vw,34px)}
+.saved-heading p{margin:0;color:#c1cbc3;font-size:13px;line-height:1.6}
+.saved-heading>span{display:block;margin-top:12px;color:#e2c49a;font:11px var(--mono)}
+.saved-groups{display:grid;gap:17px}
+.saved-group{min-width:0;padding:16px;border:1px solid var(--line);border-radius:4px;background:#172229}
+.saved-group>header{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.saved-group>header>span{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid rgba(193,147,94,.38);border-radius:50%;color:#e2c49a}
+.saved-group h2{margin:0;color:#f0e9dc;font-size:17px}
+.saved-group header p{margin:4px 0 0;color:#c1cbc3;font-size:11px}
+.saved-message-card{min-width:0;margin-top:10px;padding:13px;border:1px solid rgba(231,223,207,.12);border-left:2px solid rgba(193,147,94,.62);border-radius:3px;background:#1c2a30}
+.saved-message-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:#e9e5dc;font-size:12px}
+.saved-message-meta time{color:#c1cbc3;font-size:11px}
+.saved-message-card>p{margin:9px 0 12px;color:#e1e5dd;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.saved-message-actions{display:flex;flex-wrap:wrap;gap:8px}
+.saved-message-actions button,.saved-remove-button,.saved-empty button{min-height:44px;padding:9px 12px;border:1px solid rgba(117,217,208,.35);border-radius:3px;background:#203438;color:#d0eee6;font-size:11px}
+.saved-message-actions .saved-remove-button,.saved-remove-button{border-color:rgba(193,147,94,.38);background:#302d27;color:#f0d9b2}
+.saved-unavailable{color:#e2c49a!important}
+.saved-empty{padding:30px 18px;border:1px dashed rgba(193,147,94,.42);border-radius:4px;background:rgba(193,147,94,.035);text-align:center}
+.saved-empty h2{margin:0 0 8px;color:#f0e9dc;font-size:18px}
+.saved-empty p{max-width:55ch;margin:0 auto 15px;color:#c1cbc3;font-size:13px;line-height:1.6}
+@media(max-width:680px){.saved-nav-button{width:44px;padding:8px 5px}.saved-page{padding:22px 0 42px}.saved-heading{padding:15px}.saved-group{padding:12px}.saved-message-actions{display:grid;grid-template-columns:1fr}.saved-message-actions button{width:100%;overflow-wrap:anywhere}}
+@media(max-width:440px){.saved-nav-button span{display:none}.saved-nav-button{flex:none;width:44px}.topbar{gap:clamp(4px,1.2vw,7px)}}
+@media(max-width:440px){.profile-chip{display:none}}
+@media(prefers-reduced-motion:reduce){.saved-page *{scroll-behavior:auto}}
+
 /* OLIMPO-032: make field guidance and disabled/validated states explicit. */
 .report-dialog select:invalid{border-color:rgba(230,167,102,.72)}
 .report-dialog select:valid{border-color:rgba(117,217,208,.48)}

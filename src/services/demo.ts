@@ -1,5 +1,5 @@
 import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
-import { messageReactionEmojis, type Avatar, type Connection, type DemoNotification, type DemoReport, type EventRegistration, type Message, type NotificationPreferences, type Presence, type Profile, type TerritoryId } from '../domain/models'
+import { messageReactionEmojis, type Avatar, type Connection, type DemoNotification, type DemoReport, type EventRegistration, type Message, type NotificationPreferences, type Presence, type Profile, type SavedMessageReference, type TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import { demoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
@@ -34,9 +34,10 @@ export function createDemoServices(): OlimpoServices {
     reactions: [],
   }))]))
   let messages: Record<string, Message[]> = loaded.state?.messages ?? createInitialMessages()
+  let savedMessages: SavedMessageReference[] = loaded.state?.savedMessages.map((reference) => ({ ...reference })) ?? []
 
   function saveState() {
-    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, connections, reports, eventRegistrations, notifications, notificationPreferences })
+    storage.save({ version: DEMO_STATE_VERSION, avatarId: currentProfile.avatar.id, messages, savedMessages, connections, reports, eventRegistrations, notifications, notificationPreferences })
   }
 
   function recordEventNotification(eventId: string, action: 'registered' | 'cancelled') {
@@ -97,6 +98,19 @@ export function createDemoServices(): OlimpoServices {
     },
     messages: {
       listByRoom: (roomId) => (messages[roomId] ?? []).map((message) => ({ ...message, avatar: structuredClone(message.avatar), reactions: message.reactions.map((reaction) => ({ ...reaction })) })),
+      listSaved: () => savedMessages.map((reference) => ({ ...reference })),
+      isSaved: (messageId) => savedMessages.some((reference) => reference.messageId === messageId),
+      toggleSaved: (messageId) => {
+        const message = Object.values(messages).flat().find((candidate) => candidate.id === messageId)
+        const index = savedMessages.findIndex((reference) => reference.messageId === messageId)
+        if (index >= 0) savedMessages.splice(index, 1)
+        else {
+          if (!message) throw new Error('Esta mensagem não existe nesta demonstração.')
+          savedMessages.push({ messageId: message.id, roomId: message.roomId })
+        }
+        saveState()
+        return index < 0
+      },
       sendToRoom: (roomId, text) => {
         if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
         const message = createMessage({
@@ -257,6 +271,7 @@ export function createDemoServices(): OlimpoServices {
         currentRoomId = undefined
         currentProfile = structuredClone(demoProfile)
         messages = createInitialMessages()
+        savedMessages = []
         connections = createInitialConnections()
         reports = []
         eventRegistrations = []

@@ -54,6 +54,11 @@ export type Message = {
   reactions: MessageReaction[]
 }
 
+export type SavedMessageReference = {
+  messageId: Message['id']
+  roomId: TerritoryRoom['id']
+}
+
 export type Presence = {
   id: string
   roomId: TerritoryRoom['id']

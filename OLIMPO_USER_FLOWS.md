@@ -105,3 +105,13 @@ Itens, datas de leitura e preferências são validados e salvos na chave namespa
 2. Escolher outra opção troca a reação; escolher novamente a opção ativa remove-a. A interface indica a seleção com estado pressionado e identifica a reação como sendo do perfil atual.
 3. A ação altera somente a reação da mensagem no serviço demonstrativo local; não envia a mensagem nem cria reação de outros perfis. A reação fica no navegador atual, ou apenas em memória quando o armazenamento local não está disponível.
 4. Estados salvos anteriores migram sem reações. **Reiniciar demonstração** também remove todas as reações locais.
+
+## 12. Salvar mensagens importantes (OLIMPO-067)
+
+1. Em uma sala, cada mensagem fictícia tem a ação independente **Salvar**/**Salva**, separada dos controles de reação. O estado pressionado e o rótulo acessível indicam quando a mensagem está salva; a ação pode ser usada por teclado.
+2. No cabeçalho, **Mensagens salvas** abre a lista local. As mensagens são agrupadas por território e mostram autor, horário e texto. A lista vazia explica como salvar a primeira mensagem.
+3. **Abrir sala e localizar mensagem** retorna à sala de origem, rola até a mensagem e move o foco para ela; movimento reduzido evita rolagem animada. Uma referência indisponível tem texto explicativo e pode ser removida.
+4. A interface informa que os itens ficam neste navegador e não são compartilhados com pessoas ou servidores. Só são persistidos os IDs da mensagem e da sala; o conteúdo continua associado à mensagem original. 2D e 3D usam o mesmo serviço demonstrativo.
+5. O schema `7` migra o estado `6` preservando avatar, mensagens, reações, convites, notificações, preferências e inscrições, e acrescenta uma lista vazia de salvos. Referências inválidas, duplicadas ou antigas são ignoradas ao carregar. Se `localStorage` falhar, os salvos funcionam em memória nesta sessão. **Reiniciar demonstração** apaga todos os salvos junto ao restante do estado local.
+
+Não há backend, autenticação, sincronização nem comunicação externa para este recurso. Nenhum dado real é usado.

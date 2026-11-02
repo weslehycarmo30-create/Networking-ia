@@ -1,15 +1,16 @@
-import { messageReactionEmojis, type Avatar, type Connection, type CommunityEvent, type DemoNotification, type DemoReport, type EventRegistration, type Message, type MessageReaction, type MessageReactionEmoji, type NotificationPreferences, type ReportReason } from '../domain/models'
+import { messageReactionEmojis, type Avatar, type Connection, type CommunityEvent, type DemoNotification, type DemoReport, type EventRegistration, type Message, type MessageReaction, type MessageReactionEmoji, type NotificationPreferences, type ReportReason, type SavedMessageReference } from '../domain/models'
 import { defaultNotificationPreferences, notificationPreferenceEnabled } from '../domain/rules'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from '../data/demo'
 import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 6 as const
+export const DEMO_STATE_VERSION = 7 as const
 
 export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
   avatarId: Avatar['id']
   messages: Record<string, Message[]>
+  savedMessages: SavedMessageReference[]
   connections: Connection[]
   reports: DemoReport[]
   eventRegistrations: EventRegistration[]
@@ -136,7 +137,7 @@ function validateNotificationPreferences(value: unknown): NotificationPreference
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
   if (!isRecord(value)) return undefined
   const version = value.version
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== DEMO_STATE_VERSION) return undefined
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== DEMO_STATE_VERSION) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -144,7 +145,7 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   for (const roomId of roomIds) {
     const roomMessages = value.messages[roomId]
     if (!Array.isArray(roomMessages) || roomMessages.length > 500) return undefined
-    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version < DEMO_STATE_VERSION))
+    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version < 6))
     if (parsed.some((message) => message === undefined)) return undefined
     const validMessages = parsed as Message[]
     if (new Set(validMessages.map((message) => message.id)).size !== validMessages.length) return undefined
@@ -176,12 +177,23 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   if (!Array.isArray(rawNotifications) || rawNotifications.length > 500) return undefined
   const parsedNotifications = rawNotifications.map((notification) => validateNotification(notification, validConnections))
   if (parsedNotifications.some((notification) => notification === undefined)) return undefined
-  const rawPreferences = version < DEMO_STATE_VERSION ? defaultNotificationPreferences : value.notificationPreferences
+  const rawPreferences = version < 6 ? defaultNotificationPreferences : value.notificationPreferences
   const notificationPreferences = validateNotificationPreferences(rawPreferences)
   if (!notificationPreferences) return undefined
   const notifications = (parsedNotifications as DemoNotification[]).filter((notification) => notificationPreferenceEnabled(notificationPreferences, notification.kind))
   if (new Set(notifications.map((notification) => notification.id)).size !== notifications.length) return undefined
-  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, connections: validConnections, reports: validReports, eventRegistrations, notifications, notificationPreferences }
+  const availableMessages = new Set(Object.values(messages).flat().map((message) => `${message.roomId}:${message.id}`))
+  const rawSavedMessages = version < 7 ? [] : Array.isArray(value.savedMessages) ? value.savedMessages.slice(0, 2500) : []
+  const savedMessages: SavedMessageReference[] = []
+  const savedKeys = new Set<string>()
+  for (const reference of rawSavedMessages) {
+    if (!isRecord(reference) || !isShortString(reference.messageId, 120) || typeof reference.roomId !== 'string' || !roomIds.includes(reference.roomId)) continue
+    const key = `${reference.roomId}:${reference.messageId}`
+    if (!availableMessages.has(key) || savedKeys.has(key)) continue
+    savedKeys.add(key)
+    savedMessages.push({ messageId: reference.messageId, roomId: reference.roomId })
+  }
+  return { version: DEMO_STATE_VERSION, avatarId: value.avatarId, messages, savedMessages, connections: validConnections, reports: validReports, eventRegistrations, notifications, notificationPreferences }
 }
 
 export function createDemoStateStorage() {
