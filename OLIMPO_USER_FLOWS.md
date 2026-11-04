@@ -145,3 +145,10 @@ Não há backend, autenticação, sincronização nem comunicação externa para
 2. A edição abre um campo rotulado de até 300 caracteres. O serviço aplica as mesmas regras do envio (texto não vazio após trim e limite de 300) e altera somente o texto; sala, autor, horário, reações, respostas e denúncias permanecem.
 3. A remoção pede confirmação do navegador e marca a mensagem como removida pelo autor. O marcador mantém ID e referências válidos; respostas e salvos mostram que a origem foi removida, reações e denúncias continuam associadas ao registro. A mensagem não pode voltar a ser editada.
 4. Serviço valida sala, ID e autoria do perfil atual para cada operação. As alterações ficam somente neste navegador ou, se armazenamento falhar, na sessão atual. Schema `10` adiciona o marcador de remoção; estados e arquivos schemas `1` a `9` migram como mensagens ativas. Exportação/importação preserva marcadores e vínculos; **Reiniciar demonstração** restaura as mensagens iniciais.
+
+## 17. Buscar no histórico da sala (OLIMPO-073)
+
+1. Em uma sala, **Buscar no histórico** abre um campo de busca local. A pesquisa consulta somente o texto das mensagens da sala aberta, sem alterar nem salvar o conteúdo. Ela ignora maiúsculas/minúsculas e acentos; o contador mostra quantos resultados correspondem.
+2. **Anterior** e **Próximo** percorrem os resultados em ciclo. A mensagem ativa recebe destaque e é trazida à área visível; a busca mantém o foco no controle para continuar a navegação pelo teclado. A região de status anuncia o resultado somente quando a pessoa navega ou confirma a busca.
+3. Mensagens removidas aparecem sempre como marcador, inclusive quando referenciadas por respostas ou salvas, e são excluídas da pesquisa. Fechar ou limpar a busca não afeta a sala, o rascunho ou o histórico. Ao trocar de sala, a busca é limpa e os resultados são calculados novamente para a sala atual.
+4. A pesquisa existe apenas na interface da sessão e consulta mensagens fictícias armazenadas neste navegador ou mantidas em memória nesta sessão. O termo, índice e resultados não entram no estado persistido nem na exportação.
