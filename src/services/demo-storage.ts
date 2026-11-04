@@ -4,7 +4,7 @@ import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories } from
 import { demoEvents } from '../data/events'
 
 export const DEMO_STORAGE_KEY = 'olimpo:demo-state'
-export const DEMO_STATE_VERSION = 9 as const
+export const DEMO_STATE_VERSION = 10 as const
 export const DEMO_EXPORT_FORMAT = 'olimpo-demo-data'
 export const DEMO_EXPORT_FORMAT_VERSION = 1 as const
 export const MAX_DEMO_IMPORT_BYTES = 5 * 1024 * 1024
@@ -81,7 +81,7 @@ function avatarForMessage(authorId: string, avatarId: unknown): Avatar | undefin
   return author.avatar.id === avatarId ? author.avatar : undefined
 }
 
-function validateMessage(value: unknown, roomId: string, allowMissingReactions: boolean, allowReplies: boolean): Message | undefined {
+function validateMessage(value: unknown, roomId: string, allowMissingReactions: boolean, allowReplies: boolean, allowDeleted: boolean): Message | undefined {
   if (!isRecord(value)) return undefined
   if (!isShortString(value.id, 120) || value.roomId !== roomId || !isShortString(value.authorId, 80)) return undefined
   const author = knownProfileById.get(value.authorId)
@@ -100,6 +100,7 @@ function validateMessage(value: unknown, roomId: string, allowMissingReactions: 
     ? value.replyToMessageId
     : undefined
   const replyUnavailable = allowReplies && !replyToMessageId && (Object.hasOwn(value, 'replyToMessageId') || value.replyUnavailable === true)
+  if (value.deleted !== undefined && (!allowDeleted || value.deleted !== true)) return undefined
   return {
     id: value.id,
     roomId,
@@ -111,6 +112,7 @@ function validateMessage(value: unknown, roomId: string, allowMissingReactions: 
     reactions: reactions as MessageReaction[],
     ...(replyToMessageId ? { replyToMessageId } : {}),
     ...(replyUnavailable ? { replyUnavailable: true } : {}),
+    ...(value.deleted === true ? { deleted: true } : {}),
   }
 }
 
@@ -180,7 +182,7 @@ function validateNotificationPreferences(value: unknown): NotificationPreference
 export function validatePersistedDemoState(value: unknown): PersistedDemoState | undefined {
   if (!isRecord(value)) return undefined
   const version = value.version
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7 && version !== 8 && version !== DEMO_STATE_VERSION) return undefined
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7 && version !== 8 && version !== 9 && version !== DEMO_STATE_VERSION) return undefined
   if (typeof value.avatarId !== 'string' || !knownAvatars.has(value.avatarId) || !isRecord(value.messages) || !Array.isArray(value.connections)) return undefined
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
@@ -188,7 +190,7 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   for (const roomId of roomIds) {
     const roomMessages = value.messages[roomId]
     if (!Array.isArray(roomMessages) || roomMessages.length > 500) return undefined
-    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version < 6, version >= 9))
+    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version < 6, version >= 9, version >= 10))
     if (parsed.some((message) => message === undefined)) return undefined
     const validMessages = parsed as Message[]
     if (new Set(validMessages.map((message) => message.id)).size !== validMessages.length) return undefined
@@ -267,7 +269,7 @@ export function validateDemoImportDocument(value: unknown): ValidatedDemoImport 
   }
   if (!isRecord(value.state) || typeof value.state.version !== 'number') throw new Error('O arquivo não contém um estado demonstrativo válido.')
   const sourceSchemaVersion = value.state.version
-  if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
   if (sourceSchemaVersion >= 7) {
     if (!Array.isArray(value.state.savedMessages) || value.state.savedMessages.length > 2500) throw new Error('A lista de mensagens salvas do arquivo é inválida ou excede o limite de 2.500 itens.')
   }

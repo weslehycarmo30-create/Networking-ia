@@ -63,6 +63,11 @@ export function createMessage(input: {
   }
 }
 
+export function editMessageText(message: Message, text: string): Message {
+  if (message.deleted) throw new Error('Esta mensagem foi removida e não pode mais ser editada.')
+  return { ...message, text: normalizeMessageText(text) }
+}
+
 export function createConnection(input: {
   id: string
   fromProfileId: string

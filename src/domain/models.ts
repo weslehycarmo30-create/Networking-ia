@@ -54,6 +54,7 @@ export type Message = {
   reactions: MessageReaction[]
   replyToMessageId?: Message['id']
   replyUnavailable?: boolean
+  deleted?: boolean
 }
 
 export type SavedMessageReference = {

@@ -1,4 +1,4 @@
-import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
+import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, editMessageText, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
 import { messageReactionEmojis, type Avatar, type Connection, type DemoNotification, type DemoReport, type EventRegistration, type Message, type NotificationPreferences, type Presence, type Profile, type SavedMessageReference, type TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import { demoEvents } from '../data/events'
@@ -145,6 +145,30 @@ export function createDemoServices(): OlimpoServices {
         delete draftsByRoom[roomId]
         saveState()
         return { ...message, avatar: structuredClone(message.avatar) }
+      },
+      editInRoom: (roomId, messageId, text) => {
+        if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
+        const message = messages[roomId].find((candidate) => candidate.id === messageId)
+        if (!message) throw new Error('Esta mensagem não existe nesta sala.')
+        if (message.roomId !== roomId) throw new Error('A mensagem não pertence à sala selecionada.')
+        if (message.authorId !== currentProfile.id) throw new Error('Somente o perfil atual pode editar as próprias mensagens.')
+        const updated = editMessageText(message, text)
+        Object.assign(message, updated)
+        saveState()
+        return { ...message, avatar: structuredClone(message.avatar), reactions: message.reactions.map((reaction) => ({ ...reaction })) }
+      },
+      removeFromRoom: (roomId, messageId) => {
+        if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
+        const message = messages[roomId].find((candidate) => candidate.id === messageId)
+        if (!message) throw new Error('Esta mensagem não existe nesta sala.')
+        if (message.roomId !== roomId) throw new Error('A mensagem não pertence à sala selecionada.')
+        if (message.authorId !== currentProfile.id) throw new Error('Somente o perfil atual pode remover as próprias mensagens.')
+        if (!message.deleted) {
+          message.text = 'Esta mensagem foi removida pelo autor.'
+          message.deleted = true
+          saveState()
+        }
+        return { ...message, avatar: structuredClone(message.avatar), reactions: message.reactions.map((reaction) => ({ ...reaction })) }
       },
       toggleReaction: (messageId, emoji) => {
         if (!messageReactionEmojis.includes(emoji)) throw new Error('Selecione uma reação disponível nesta demonstração.')
