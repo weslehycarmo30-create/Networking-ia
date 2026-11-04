@@ -61,6 +61,7 @@ const roomIds = demoTerritories.map((room) => room.id)
 const knownEvents = new Map(demoEvents.map((event) => [event.id, event]))
 const allowedStatuses = new Set<Connection['status']>(['pending', 'accepted', 'declined', 'cancelled'])
 const allowedReportReasons = new Set<ReportReason>(['spam', 'harassment', 'inappropriate', 'scam', 'other'])
+const removedMessageText = 'Esta mensagem foi removida pelo autor.'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -81,26 +82,26 @@ function avatarForMessage(authorId: string, avatarId: unknown): Avatar | undefin
   return author.avatar.id === avatarId ? author.avatar : undefined
 }
 
-function validateMessage(value: unknown, roomId: string, allowMissingReactions: boolean, allowReplies: boolean, allowDeleted: boolean): Message | undefined {
+function validateMessage(value: unknown, roomId: string, allowReplies: boolean): Message | undefined {
   if (!isRecord(value)) return undefined
   if (!isShortString(value.id, 120) || value.roomId !== roomId || !isShortString(value.authorId, 80)) return undefined
   const author = knownProfileById.get(value.authorId)
   const avatar = avatarForMessage(value.authorId, isRecord(value.avatar) ? value.avatar.id : undefined)
   if (!author || !avatar || value.authorName !== author.displayName || !isValidDate(value.createdAt)) return undefined
-  if (typeof value.text !== 'string' || value.text.trim().length === 0 || value.text.length > 300) return undefined
-  const rawReactions = value.reactions === undefined && allowMissingReactions ? [] : value.reactions
-  if (!Array.isArray(rawReactions) || rawReactions.length > 1) return undefined
-  const reactions = rawReactions.map((reaction): MessageReaction | undefined => {
-    if (!isRecord(reaction) || reaction.profileId !== demoProfile.id || typeof reaction.emoji !== 'string') return undefined
-    if (!messageReactionEmojis.includes(reaction.emoji as MessageReactionEmoji)) return undefined
-    return { profileId: demoProfile.id, emoji: reaction.emoji as MessageReactionEmoji }
-  })
-  if (reactions.some((reaction) => reaction === undefined)) return undefined
+  const deleted = Object.hasOwn(value, 'deleted')
+  if (!deleted && (typeof value.text !== 'string' || value.text.trim().length === 0 || value.text.length > 300)) return undefined
+  const rawReactions = Array.isArray(value.reactions) ? value.reactions : []
+  const reactions: MessageReaction[] = []
+  for (const reaction of rawReactions) {
+    if (!isRecord(reaction) || reaction.profileId !== demoProfile.id || typeof reaction.emoji !== 'string') continue
+    if (!messageReactionEmojis.includes(reaction.emoji as MessageReactionEmoji)) continue
+    reactions.push({ profileId: demoProfile.id, emoji: reaction.emoji as MessageReactionEmoji })
+    break
+  }
   const replyToMessageId = allowReplies && isShortString(value.replyToMessageId, 120) && value.replyToMessageId !== value.id
     ? value.replyToMessageId
     : undefined
   const replyUnavailable = allowReplies && !replyToMessageId && (Object.hasOwn(value, 'replyToMessageId') || value.replyUnavailable === true)
-  if (value.deleted !== undefined && (!allowDeleted || value.deleted !== true)) return undefined
   return {
     id: value.id,
     roomId,
@@ -108,11 +109,11 @@ function validateMessage(value: unknown, roomId: string, allowMissingReactions: 
     authorName: author.displayName,
     avatar: { ...avatar },
     createdAt: value.createdAt,
-    text: value.text,
-    reactions: reactions as MessageReaction[],
+    text: deleted ? removedMessageText : value.text as string,
+    reactions,
     ...(replyToMessageId ? { replyToMessageId } : {}),
     ...(replyUnavailable ? { replyUnavailable: true } : {}),
-    ...(value.deleted === true ? { deleted: true } : {}),
+    ...(deleted ? { deleted: true } : {}),
   }
 }
 
@@ -135,7 +136,9 @@ function validateReport(value: unknown, messages: Record<string, Message[]>): De
   if (value.targetType !== 'message' && value.targetType !== 'profile') return undefined
   if (!isShortString(value.targetId, 120) || !isValidDate(value.createdAt)) return undefined
   if (typeof value.reason !== 'string' || !allowedReportReasons.has(value.reason as ReportReason)) return undefined
-  if (value.note !== undefined && (typeof value.note !== 'string' || value.note.trim().length === 0 || value.note.length > 240)) return undefined
+  const note = typeof value.note === 'string' && value.note.trim().length > 0 && value.note.length <= 240
+    ? value.note.trim()
+    : undefined
   if (value.targetType === 'profile') {
     if (!knownProfileById.has(value.targetId) || value.targetId === demoProfile.id) return undefined
   } else if (!Object.values(messages).some((roomMessages) => roomMessages.some((message) => message.id === value.targetId))) return undefined
@@ -144,15 +147,14 @@ function validateReport(value: unknown, messages: Record<string, Message[]>): De
     targetType: value.targetType,
     targetId: value.targetId,
     reason: value.reason as ReportReason,
-    ...(typeof value.note === 'string' ? { note: value.note } : {}),
+    ...(note ? { note } : {}),
     createdAt: value.createdAt,
   }
 }
 
 function validateNotification(value: unknown, connections: Connection[]): DemoNotification | undefined {
   if (!isRecord(value) || !isShortString(value.id, 160) || !isValidDate(value.createdAt)) return undefined
-  if (value.readAt !== undefined && !isValidDate(value.readAt)) return undefined
-  const readAt = typeof value.readAt === 'string' ? value.readAt : undefined
+  const readAt = isValidDate(value.readAt) ? value.readAt : undefined
   if (value.kind === 'connection_invite') {
     if (!isShortString(value.connectionId, 120) || !isShortString(value.profileId, 80)) return undefined
     const connection = connections.find((item) => item.id === value.connectionId)
@@ -187,13 +189,16 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   const storedRoomIds = Object.keys(value.messages)
   if (storedRoomIds.length !== roomIds.length || roomIds.some((roomId) => !Object.hasOwn(value.messages as object, roomId))) return undefined
   const messages: Record<string, Message[]> = {}
+  const allMessageIds = new Set<string>()
   for (const roomId of roomIds) {
     const roomMessages = value.messages[roomId]
     if (!Array.isArray(roomMessages) || roomMessages.length > 500) return undefined
-    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version < 6, version >= 9, version >= 10))
+    const parsed = roomMessages.map((message) => validateMessage(message, roomId, version >= 9))
     if (parsed.some((message) => message === undefined)) return undefined
     const validMessages = parsed as Message[]
     if (new Set(validMessages.map((message) => message.id)).size !== validMessages.length) return undefined
+    if (validMessages.some((message) => allMessageIds.has(message.id))) return undefined
+    for (const message of validMessages) allMessageIds.add(message.id)
     messages[roomId] = validMessages
   }
   for (const roomId of roomIds) {
@@ -211,14 +216,20 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   if (connections.some((connection) => connection === undefined)) return undefined
   const validConnections = connections as Connection[]
   if (new Set(validConnections.map((connection) => connection.id)).size !== validConnections.length) return undefined
-  const rawReports = version === 1 && value.reports === undefined ? [] : value.reports
-  if (!Array.isArray(rawReports) || rawReports.length > 4000) return undefined
-  const parsedReports = rawReports.map((report) => validateReport(report, messages))
-  if (parsedReports.some((report) => report === undefined)) return undefined
-  const validReports = parsedReports as DemoReport[]
-  if (new Set(validReports.map((report) => report.id)).size !== validReports.length) return undefined
-  const reportTargets = validReports.map((report) => `${report.targetType}:${report.targetId}`)
-  if (new Set(reportTargets).size !== reportTargets.length) return undefined
+  if (Array.isArray(value.reports) && value.reports.length > 4000) return undefined
+  const rawReports = Array.isArray(value.reports) ? value.reports : []
+  const validReports: DemoReport[] = []
+  const reportIds = new Set<string>()
+  const reportTargets = new Set<string>()
+  for (const rawReport of rawReports) {
+    const report = validateReport(rawReport, messages)
+    if (!report) continue
+    const target = `${report.targetType}:${report.targetId}`
+    if (reportIds.has(report.id) || reportTargets.has(target)) continue
+    reportIds.add(report.id)
+    reportTargets.add(target)
+    validReports.push(report)
+  }
   const rawRegistrations = version < 3 ? [] : value.eventRegistrations
   if (!Array.isArray(rawRegistrations) || rawRegistrations.length > knownEvents.size) return undefined
   const eventRegistrations = rawRegistrations.flatMap((registration): EventRegistration[] => {
@@ -270,14 +281,9 @@ export function validateDemoImportDocument(value: unknown): ValidatedDemoImport 
   if (!isRecord(value.state) || typeof value.state.version !== 'number') throw new Error('O arquivo não contém um estado demonstrativo válido.')
   const sourceSchemaVersion = value.state.version
   if (![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(sourceSchemaVersion)) throw new Error('A versão dos dados deste arquivo não é compatível com esta demonstração.')
-  if (sourceSchemaVersion >= 7) {
-    if (!Array.isArray(value.state.savedMessages) || value.state.savedMessages.length > 2500) throw new Error('A lista de mensagens salvas do arquivo é inválida ou excede o limite de 2.500 itens.')
-  }
+  if (sourceSchemaVersion >= 7 && Array.isArray(value.state.savedMessages) && value.state.savedMessages.length > 2500) throw new Error('A lista de mensagens salvas do arquivo excede o limite de 2.500 itens.')
   const state = validatePersistedDemoState(value.state)
   if (!state) throw new Error('Os dados do arquivo são inválidos ou incompatíveis; nenhum dado atual foi alterado.')
-  if (sourceSchemaVersion >= 7 && state.savedMessages.length !== (value.state.savedMessages as unknown[]).length) {
-    throw new Error('O arquivo contém referências salvas inválidas, antigas ou duplicadas; nenhum dado atual foi alterado.')
-  }
   const messageCount = Object.values(state.messages).reduce((total, roomMessages) => total + roomMessages.length, 0)
   const avatarLabel = knownAvatars.get(state.avatarId)?.label ?? 'Avatar da demonstração'
   return {
@@ -324,7 +330,16 @@ export function createDemoStateStorage() {
           return { status }
         }
         status = { persistent: true }
-        if (isRecord(parsed) && (parsed.version !== DEMO_STATE_VERSION || JSON.stringify(parsed.draftsByRoom) !== JSON.stringify(state.draftsByRoom))) status = this.save(state)
+        if (isRecord(parsed) && (parsed.version !== DEMO_STATE_VERSION
+          || parsed.avatarId !== state.avatarId
+          || JSON.stringify(parsed.messages) !== JSON.stringify(state.messages)
+          || JSON.stringify(parsed.draftsByRoom) !== JSON.stringify(state.draftsByRoom)
+          || JSON.stringify(parsed.savedMessages) !== JSON.stringify(state.savedMessages)
+          || JSON.stringify(parsed.connections) !== JSON.stringify(state.connections)
+          || JSON.stringify(parsed.reports) !== JSON.stringify(state.reports)
+          || JSON.stringify(parsed.eventRegistrations) !== JSON.stringify(state.eventRegistrations)
+          || JSON.stringify(parsed.notifications) !== JSON.stringify(state.notifications)
+          || JSON.stringify(parsed.notificationPreferences) !== JSON.stringify(state.notificationPreferences))) status = this.save(state)
         return { state, status }
       } catch {
         status = { persistent: false, message: localOnlyMessage }
