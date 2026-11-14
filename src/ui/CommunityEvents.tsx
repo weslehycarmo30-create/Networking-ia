@@ -75,7 +75,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
             <span className="event-organizer-avatar" aria-hidden="true">{organizer.avatar.emoji}</span><span><small>Organizado por</small><b>{organizer.displayName}</b></span><span className="event-profile-link">Ver perfil →</span>
           </button>}
           <div className="event-card-bottom"><span className="event-count">{event.participantCount} participantes demonstrativos</span>
-            <button type="button" className={`event-rsvp ${registered ? 'registered' : ''}`} aria-pressed={registered} onClick={() => toggleRegistration(event.id)}>{registered ? 'Cancelar inscrição' : 'Inscrever-se'}</button>
+            <button type="button" className={`event-rsvp ${registered ? 'registered' : ''}`} aria-label={`${registered ? 'Cancelar inscrição em' : 'Inscrever-se em'} ${event.title}`} onClick={() => toggleRegistration(event.id)}>{registered ? 'Cancelar inscrição' : 'Inscrever-se'}</button>
           </div>
           <p className={`event-rsvp-status ${registered ? 'registered' : 'not-registered'}`}>{registered ? getPersistenceStatus().persistent ? 'Inscrição demonstrativa ativa somente neste navegador; não é compartilhada.' : 'Inscrição demonstrativa ativa somente nesta sessão; não é compartilhada.' : 'Sem inscrição neste encontro demonstrativo.'}</p>
         </article>
