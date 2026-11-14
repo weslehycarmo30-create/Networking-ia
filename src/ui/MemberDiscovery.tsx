@@ -26,7 +26,7 @@ export default function MemberDiscovery({ profiles, territories, currentProfileI
   const clearFilters = () => onFiltersChange({ query: '', interest: '', territoryId: '' })
 
   return <main className="discovery-page">
-    <button className="back-link" onClick={onBack}>← {backLabel}</button>
+    <button className="back-link" onClick={onBack}><span aria-hidden="true">←</span> {backLabel}</button>
     <header className="discovery-heading">
       <div className="discovery-symbol" aria-hidden="true">☿</div>
       <div><div className="eyebrow">ÁGORA DE HERMES · COMUNIDADE</div><h1>Descobrir membros</h1><p>Encontre pessoas fictícias por nome, apresentação ou interesse.</p></div>
@@ -51,8 +51,8 @@ export default function MemberDiscovery({ profiles, territories, currentProfileI
         <div className="member-tag-group"><span>Interesses</span><ul className="member-result-interests" aria-label={`Interesses de ${member.displayName}`}>{member.interests.map((item) => <li key={item}>{item}</li>)}</ul></div>
         <div className="member-tag-group affinity-group"><span>Afinidades temáticas · não presença</span><ul className="member-result-affinities" aria-label={`Afinidades temáticas, não presença em sala, de ${member.displayName}`}>{member.territoryAffinities.map((id) => { const territory = territories.find((item) => item.id === id); return territory ? <li key={id}>{territory.symbol} {territory.name}</li> : null })}</ul></div>
         <p className={`member-connection-state status-${stateClass}`}>{stateLabel}</p>
-        <div className="member-result-actions"><button id={`member-profile-${member.id}`} className="member-profile-button" onClick={() => onOpenProfile(member.id)}>Ver perfil</button>
-          {isConnected ? <span className="connection-check">✓ Conectados</span> : isOutgoing && connection ? <button className="network-cancel" onClick={() => onCancelInvite(connection.id)}>Cancelar convite</button> : isIncoming && connection ? <div className="member-invite-actions"><button className="network-accept" onClick={() => onRespondToInvite(connection.id, 'accepted')}>Aceitar convite</button><button className="network-decline" onClick={() => onRespondToInvite(connection.id, 'declined')}>Recusar</button></div> : <button className="connect-button" onClick={() => onRequestConnection(member.id)}>{connection?.status === 'declined' ? 'Enviar novo convite' : 'Enviar convite'}</button>}
+        <div className="member-result-actions"><button id={`member-profile-${member.id}`} className="member-profile-button" onClick={() => onOpenProfile(member.id)} aria-label={`Ver perfil de ${member.displayName}`}>Ver perfil</button>
+          {isConnected ? <span className="connection-check">✓ Conectados</span> : isOutgoing && connection ? <button className="network-cancel" onClick={() => onCancelInvite(connection.id)} aria-label={`Cancelar convite para ${member.displayName}`}>Cancelar convite</button> : isIncoming && connection ? <div className="member-invite-actions"><button className="network-accept" onClick={() => onRespondToInvite(connection.id, 'accepted')} aria-label={`Aceitar convite de ${member.displayName}`}>Aceitar convite</button><button className="network-decline" onClick={() => onRespondToInvite(connection.id, 'declined')} aria-label={`Recusar convite de ${member.displayName}`}>Recusar convite</button></div> : <button className="connect-button" onClick={() => onRequestConnection(member.id)} aria-label={`${connection?.status === 'declined' ? 'Enviar novo convite' : 'Enviar convite'} para ${member.displayName}`}>{connection?.status === 'declined' ? 'Enviar novo convite' : 'Enviar convite'}</button>}
         </div>
       </article>
     })}</div>}

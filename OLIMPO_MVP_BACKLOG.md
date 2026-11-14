@@ -57,6 +57,21 @@ As decisões do proprietário que bloqueiam esses itens e a prontidão do produt
 
 **Ainda pendente:** leitor de tela (nenhum foi usado), emulação de `prefers-reduced-motion` (a regra CSS existe, mas não foi emulada), contraste renderizado de gradientes, cena 3D com WebGL real, telas de perfil/conexões, encontros, notificações, salvas e reset. Também falta verificar em dispositivo móvel real.
 
+### OLIMPO-076 — telas restantes no navegador
+
+**Status: parcial; P0 permanece aberto.** Em 13/11/2026 foram percorridas com teclado real, no mesmo navegador e com o mesmo substituto de rAF da OLIMPO-075, as telas de perfil/conexões, descoberta de membros, notificações, encontros, mensagens salvas e reinício. Nenhuma delas tem rolagem horizontal em 320 e 768 px; o painel de notificações fica dentro da tela em 320 px.
+
+**Falhas corrigidas:**
+- **Foco perdido ao remover o controle acionado:** aceitar/recusar/cancelar convite no perfil, “Marcar como lida”, “Marcar todas como lidas” (que se desabilita) e “Remover das salvas” levavam o foco ao `body`. Agora ele vai para a próxima ação do mesmo grupo/cartão ou, se não houver, para o título do grupo; no painel de notificações, para o destino do item ou para “Fechar notificações”. O retorno do aviso (toast) acompanha o novo foco.
+- **Nomes repetidos sem contexto:** “Aceitar”, “Recusar”, “Cancelar convite”, “Enviar convite”, “Ver perfil”, “Inscrever-se”, “Marcar como lida”, “Abrir sala…” e “Remover das salvas” agora incluem a pessoa, o encontro ou o aviso no nome acessível.
+- **Inscrição em encontro:** o botão trocava o texto e também usava `aria-pressed`, anunciando “Cancelar inscrição, pressionado”; o `aria-pressed` foi removido e o estado continua no texto e na nota de status.
+- **Plural:** “1 não lidas” virou “1 não lida” no gatilho, no texto para leitor de tela e no painel.
+- Emojis de avatar e setas de “Voltar” saíram dos nomes acessíveis.
+
+**Confirmado sem mudança:** descoberta mantém o foco ao alternar “Enviar convite”/“Cancelar convite”; o Esc fecha o painel de notificações e devolve o foco ao gatilho; reiniciar a demonstração leva o foco ao título da Praça e mostra o aviso.
+
+**Ainda pendente:** leitor de tela real, `prefers-reduced-motion` emulado, contraste renderizado de gradientes, cena 3D com WebGL real e dispositivo móvel físico.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
