@@ -72,6 +72,10 @@ As decisões do proprietário que bloqueiam esses itens e a prontidão do produt
 
 **Ainda pendente:** leitor de tela real, `prefers-reduced-motion` emulado, contraste renderizado de gradientes, cena 3D com WebGL real e dispositivo móvel físico.
 
+### OLIMPO-077 — cena 3D com WebGL real
+
+**Status: parcial.** O ciclo 2D↔3D, o teclado da câmera e os três fallbacks (perda de contexto, erro de renderização e FPS baixo) foram exercitados no navegador. Foram corrigidas duas perdas de foco (queda da cena e nova tentativa) e o nome acessível dos perfis. Detalhes e limites do teste em [arquitetura 2D/3D](OLIMPO_2D_3D_ARCHITECTURE.md#validação-olimpo-077-em-navegador). FPS e tempo de carregamento reais continuam sem medição, porque o painel do navegador estava oculto.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |

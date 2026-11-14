@@ -99,6 +99,13 @@ export default function App() {
   const plazaGuideTrigger = useRef<HTMLButtonElement | null>(null)
   const view3DButton = useRef<HTMLButtonElement | null>(null)
   const webglRetryButton = useRef<HTMLButtonElement | null>(null)
+  const sceneRetryButton = useRef<HTMLButtonElement | null>(null)
+  const lastFocusedElement = useRef<Element | null>(null)
+  useEffect(() => {
+    const track = (event: FocusEvent) => { lastFocusedElement.current = event.target instanceof Element ? event.target : null }
+    document.addEventListener('focusin', track)
+    return () => document.removeEventListener('focusin', track)
+  }, [])
   const profileFocusOrigin = useRef<HTMLElement | null>(null)
   const pendingRouteFocus = useRef<HTMLElement | null>(null)
   const pendingRouteFocusSelector = useRef<string | null>(null)
@@ -209,7 +216,19 @@ export default function App() {
     try { window.sessionStorage.setItem('olimpo-plaza-guide-completed', '1') } catch { /* Session storage can be unavailable. */ }
     window.requestAnimationFrame(() => plazaGuideTrigger.current?.focus({ preventScroll: true }))
   }
-  const failScene = (reason: SceneFailureReason) => { setView('2d'); setSceneFailure(reason) }
+  // A scene failure unmounts the 3D map; if keyboard focus was inside it (camera, territory or
+  // profile controls), move it to the retry action instead of letting it fall to <body>.
+  // On the error-boundary path React has already removed the scene when this runs, so a
+  // last-focused element that is now detached while <body> holds focus counts as "in the scene".
+  const failScene = (reason: SceneFailureReason) => {
+    const active = document.activeElement
+    const previous = lastFocusedElement.current
+    const focusDropped = (!active || active === document.body) && previous !== null && !previous.isConnected
+    const focusWasInScene = (active instanceof HTMLElement && Boolean(active.closest('.city-map-3d'))) || focusDropped
+    setView('2d')
+    setSceneFailure(reason)
+    if (focusWasInScene) window.requestAnimationFrame(() => sceneRetryButton.current?.focus({ preventScroll: true }))
+  }
   // The 3D toggle becomes disabled and the retry note mounts/unmounts with WebGL availability;
   // move keyboard focus to the control that remains usable instead of letting it fall to <body>.
   const retryWebGLCheck = () => {
@@ -229,9 +248,12 @@ export default function App() {
       window.requestAnimationFrame(() => webglRetryButton.current?.focus({ preventScroll: true }))
       return
     }
+    // Clearing the failure unmounts the note that holds "Tentar 3D novamente"; keep focus on the view toggle.
+    const retryHadFocus = document.activeElement === sceneRetryButton.current
     setSceneFailure(null)
     setSceneAttempt((attempt) => attempt + 1)
     setView('3d')
+    if (retryHadFocus) window.requestAnimationFrame(() => view3DButton.current?.focus({ preventScroll: true }))
   }
 
   function openProfile(profileId: string, returnFocusSelector?: string) {
@@ -669,7 +691,7 @@ export default function App() {
           <li><b>Entrar:</b> use “Entrar na sala” para abrir o território selecionado. Em celulares, use a lista HTML e esse mesmo botão; não é necessário controlar a câmera.</li>
         </ul></div>
       </details>}
-      {!webgl && <div className="fallback-note" role="status"><span>WebGL não foi disponibilizado nesta verificação. Pode estar bloqueado pelo navegador ou dispositivo; o mapa 2D continua funcional.</span><button type="button" ref={webglRetryButton} onClick={retryWebGLCheck}>Verificar WebGL novamente</button></div>}{webgl && sceneFailure && view === '2d' && <div className="fallback-note" role="status"><span>{sceneFailureMessages[sceneFailure]}</span><button type="button" onClick={request3D}>Tentar 3D novamente</button></div>}
+      {!webgl && <div className="fallback-note" role="status"><span>WebGL não foi disponibilizado nesta verificação. Pode estar bloqueado pelo navegador ou dispositivo; o mapa 2D continua funcional.</span><button type="button" ref={webglRetryButton} onClick={retryWebGLCheck}>Verificar WebGL novamente</button></div>}{webgl && sceneFailure && view === '2d' && <div className="fallback-note" role="status"><span>{sceneFailureMessages[sceneFailure]}</span><button type="button" ref={sceneRetryButton} onClick={request3D}>Tentar 3D novamente</button></div>}
       <div className="city-grid"><section className={`city-map ${view === '3d' ? 'city-map-3d' : ''}`} aria-label={view === '3d' ? 'Mapa tridimensional dos territórios' : 'Mapa 2D dos territórios'}>
         {view === '3d' && webgl && <div className="scene-territories" role="group" aria-label="Selecionar território no mapa 3D">{rooms.map((room) => { const count = services.participants.listByRoom(room.id).length; return <button key={room.id} className={room.id === mapSelected.id ? 'selected' : ''} aria-pressed={room.id === mapSelected.id} aria-label={`Selecionar ${room.name}; ${count} participantes fictícios`} onClick={() => setMapSelectedId(room.id)}>{room.symbol} <span>{room.name} · {count} demo</span></button> })}</div>}
         {view === '3d' && webgl && mapEnterButton}
