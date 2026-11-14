@@ -45,6 +45,18 @@ As decisões do proprietário que bloqueiam esses itens e a prontidão do produt
 
 **Validação manual pendente:** (1) abrir `http://127.0.0.1:5173/` no navegador local e percorrer avatar, Praça Central 2D/3D, sala/chat, perfil/conexões, encontros, notificações e reset com Tab/Shift+Tab/Enter/Espaço/Esc; observar ordem, contorno, retorno de foco e ausência de armadilhas; (2) inspecionar 320, 390, 768 e 1280 px; (3) emular `prefers-reduced-motion`; (4) desativar WebGL ou provocar falha reversível e confirmar o mapa 2D; (5) se houver leitor de tela utilizável, registrar nome/versão e resultados de nomes e atualizações; (6) revisar contraste renderizado de gradientes, estados e cores territoriais. Registrar ambiente, resultado e falha de cada passo. Não declarar o P0 concluído até registrar essas validações.
 
+### OLIMPO-075 — primeira validação em navegador real
+
+**Status: parcial; P0 permanece aberto.** Em 13/11/2026 o servidor Vite rodou em `http://localhost:5173/` e os fluxos foram percorridos no navegador embutido do Claude desktop (Chromium), com `localStorage` limpo. O painel estava oculto durante parte do teste; como o Chromium não executa `requestAnimationFrame` em páginas ocultas, as verificações de foco que dependem de rAF foram repetidas com rAF substituído por `setTimeout(16 ms)` apenas na sessão de teste.
+
+**Verificado com teclado real (Tab/Enter/Esc):** landing → avatar (foco vai ao `h1` “Escolha seu avatar”; avatares usam `aria-pressed`); avatar → Praça Central (foco no `h1`); ordem de Tab da Praça lógica, todos os 32 controles com contorno visível de 2 px e nome acessível; Praça → sala Templo de Atena (foco no `h1`); envio de mensagem pelo campo rotulado mantém o foco no campo; diálogo “Sinalizar mensagem” abre como `<dialog>` modal, mantém o foco dentro e o Esc devolve o foco ao botão de origem. Fallback sem WebGL (`getContext('webgl*')` retornando `null`) mostra o aviso `role="status"` e o mapa 2D com os seis territórios.
+
+**Viewports (Praça e sala):** 320, 390 e 1280 px sem rolagem horizontal. **Falha corrigida:** de 681 a ~900 px, os cinco itens do topo com espaçamento de 54 px estouravam (19 px em 768 px, chip de perfil cortado). Agora uma regra intermediária reduz o espaçamento; 690, 768 e 860 px foram verificados sem estouro.
+
+**Outras falhas corrigidas:** (1) sem WebGL, ativar “Explorar 3D” desabilitava o botão focado e o foco caía no `body`; agora vai para “Verificar WebGL novamente”, e uma nova verificação bem-sucedida devolve o foco a “Explorar 3D”; (2) símbolos decorativos (`→`, `↗`, `▦`, `◇`) entravam no nome acessível de botões; agora usam `aria-hidden`.
+
+**Ainda pendente:** leitor de tela (nenhum foi usado), emulação de `prefers-reduced-motion` (a regra CSS existe, mas não foi emulada), contraste renderizado de gradientes, cena 3D com WebGL real, telas de perfil/conexões, encontros, notificações, salvas e reset. Também falta verificar em dispositivo móvel real.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |

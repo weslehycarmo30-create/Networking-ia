@@ -532,3 +532,5 @@
 .reply-composer-context>div{min-width:0}
 .reply-composer-context button{flex:none;min-height:44px;padding:8px 10px;border:1px solid rgba(193,147,94,.4);border-radius:3px;background:#202c31;color:#ead7b8;font-size:10px}
 @media(max-width:420px){.reply-composer-context{flex-direction:column}.reply-composer-context button{width:100%}.message-reply-button{min-width:80px}}
+/* OLIMPO-075: at 681–900 px the five topbar items plus the 54px desktop gap overflowed (19px at 768px). */
+@media(min-width:681px) and (max-width:900px){.topbar{gap:clamp(12px,2.6vw,24px)}.top-nav{gap:clamp(10px,2vw,20px);min-width:0}}
