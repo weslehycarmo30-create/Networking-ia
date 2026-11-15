@@ -57,7 +57,7 @@ export function createDemoServices(): OlimpoServices {
     if (notifications.length > 500) notifications.shift()
   }
 
-  if (!loaded.state && notifications.length > 0) saveState()
+  if (!loaded.state && notifications.length > 0) storage.save(currentState(), { keepNotice: true })
 
   return {
     rooms: {

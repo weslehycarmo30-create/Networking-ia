@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "tsc -b --pretty false"
+    "lint": "tsc -b --pretty false",
+    "test": "node --import ./tests/register-ts.mjs --test tests/"
   },
   "dependencies": {
     "@react-three/fiber": "^9.1.2",
