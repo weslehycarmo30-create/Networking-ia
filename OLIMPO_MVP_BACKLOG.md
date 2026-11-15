@@ -76,6 +76,18 @@ As decisões do proprietário que bloqueiam esses itens e a prontidão do produt
 
 **Status: parcial.** O ciclo 2D↔3D, o teclado da câmera e os três fallbacks (perda de contexto, erro de renderização e FPS baixo) foram exercitados no navegador. Foram corrigidas duas perdas de foco (queda da cena e nova tentativa) e o nome acessível dos perfis. Detalhes e limites do teste em [arquitetura 2D/3D](OLIMPO_2D_3D_ARCHITECTURE.md#validação-olimpo-077-em-navegador). FPS e tempo de carregamento reais continuam sem medição, porque o painel do navegador estava oculto.
 
+### OLIMPO-078 — contraste renderizado e movimento reduzido
+
+**Contraste:** em 15/11/2026 um script no navegador mediu cada texto visível contra o fundo efetivo, compondo as camadas de cor e **todas as paradas dos gradientes** dos ancestrais e usando o pior caso. Os limites foram 4,5:1 para texto normal e 3:1 para texto grande. Telas e estados cobertos: landing, avatar, Praça 2D (com território selecionado), encontros, painel de notificações, sala com aviso (toast), diálogo de denúncia, salvas, perfil próprio, descoberta e perfil de outra pessoa.
+
+- **Corrigido:** o rodapé “OLIMPO · UMA CIDADE EM CONSTRUÇÃO” (9 px) passou de `#7b8787` (4,47:1 sobre `#142028`) para `#8a9695` (5,43:1); o fundo do contador de notificações passou de `#a95c46` (4,497:1, abaixo de 4,5) para `#a05540` (5,00:1).
+- **Aceito:** o símbolo ⌘ do território selecionado no mapa (`#c1935e` sobre `#2a3e3c`, 4,11:1) é decorativo, pois fica dentro de um botão com `aria-label`; atende o mínimo de 3:1 para elementos gráficos.
+- **Limites:** estados de `:hover` não foram forçados; cores sobre a cena 3D (canvas) e imagens não entram no cálculo.
+
+**Movimento reduzido:** revisão do código: não há `@keyframes` nem `animation`; as transições curtas (0,18–0,2 s) e a rolagem suave são zeradas pela regra global `prefers-reduced-motion: reduce`, e as três chamadas `scrollIntoView` consultam a preferência antes de usar `smooth`. A cena 3D não tem movimento automático. A preferência não foi emulada no navegador, porque a ferramenta disponível não oferece essa emulação.
+
+**Ainda pendente no P0 de acessibilidade:** leitor de tela real e dispositivo móvel físico.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
