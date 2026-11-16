@@ -41,6 +41,20 @@ A causa do bloqueio era o estado de fallback no `App.tsx`: `failScene` tratava e
 
 Na auditoria OLIMPO-069, a inspeção de código confirmou o estado compartilhado, os três motivos de fallback e o remount explícito. O inventário do controlador de computador desta sessão não retornou aplicativos, navegadores nem provedor de browser; portanto, não foi possível reproduzir nem conferir visualmente o ciclo ou os fallbacks. Os passos acima permanecem validação manual pendente.
 
+### Validação OLIMPO-077 em navegador
+
+Em 14/11/2026 o ciclo pendente da OLIMPO-069 foi executado no navegador embutido do Claude desktop (Chromium, WebGL real). O painel do navegador estava oculto, então o Chromium não executava `requestAnimationFrame` nem `ResizeObserver`; para a cena iniciar, ambos foram substituídos na sessão de teste por temporizadores (quadros a 16 ms e medição a cada 200 ms). Por isso **nenhum número de FPS ou tempo de carregamento desta rodada é medição real**.
+
+- **2D → 3D → 2D → 3D:** a cena desmonta no 2D e remonta no 3D sem aviso de WebGL indisponível; o território selecionado (Oráculo de Delfos) foi preservado nas três vistas.
+- **Teclado na câmera:** ←/→/↑/↓ no grupo de controles chegam ao manipulador (evento com `preventDefault`) e o foco permanece no botão.
+- **Perda de contexto** (`WEBGL_lose_context`): volta ao 2D com a causa “contexto WebGL perdido” e oferece nova tentativa.
+- **Erro de renderização:** falhar a criação do contexto do renderizador (a sondagem continua aceitando) leva ao `SceneBoundary` e à causa “inicialização ou renderização 3D falhou”.
+- **Desempenho:** quadros forçados a 10 FPS acionam o monitor (duas janelas abaixo de 20 FPS) e a causa “desempenho abaixo do limite”, sem repetição automática.
+
+**Falhas corrigidas:** (1) quando a cena caía para o 2D com o foco num controle 3D, o foco ia para o `body`; agora vai para **Tentar 3D novamente** (inclusive no caminho do `SceneBoundary`, em que a cena já foi removida ao avisar a falha — esse ramo foi revisado no código, pois no teste a falha ocorreu antes de existir controle focado); (2) acionar **Tentar 3D novamente** removia o próprio aviso e o foco ia para o `body`; agora fica em **Explorar 3D**; (3) os perfis sobre a cena (e na Praça 2D) incluíam emoji e “→” no nome acessível; agora são “Ver perfil de Nome, @handle”.
+
+**Ainda pendente:** FPS, tempo até interatividade e comportamento térmico com o painel visível e em dispositivos-alvo (D-08). Build atual: `City3D` **884,95 kB / 238,10 kB gzip**.
+
 ## Desempenho observado e limite
 
 O uso direto de `@react-three/drei` foi removido; geometria, antialiasing e DPR foram reduzidos. No build verificado durante OLIMPO-005, o chunk 3D ficou em aproximadamente **872,76 kB** e **235,27 kB gzip**. Esse valor varia com a compilação. Vite ainda avisa que o chunk ultrapassa 500 kB; o projeto não aumenta o limite nem esconde o aviso.
