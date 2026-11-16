@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-Testes automatizados (domínio, descoberta, adaptador demonstrativo e persistência local) usam o executor nativo do Node, sem dependências extras; exigem Node com suporte nativo a TypeScript (testado no 26):
+Testes automatizados (domínio, descoberta, adaptador demonstrativo, persistência local e migração de versões antigas) usam o executor nativo do Node, sem dependências extras; exigem Node com suporte nativo a TypeScript (testado no 26):
 
 ```sh
 npm test

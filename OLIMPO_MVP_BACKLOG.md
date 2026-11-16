@@ -96,6 +96,14 @@ Até aqui toda verificação era manual. Agora `npm test` roda 28 testes com o e
 
 **Limites:** não há testes de componentes React nem de interface; os fluxos de foco e teclado continuam validados manualmente (OLIMPO-075 a 078). Os testes não entram no `npm run build`.
 
+### OLIMPO-080 — testes de migração e fluxos restantes do adaptador
+
+`npm test` passou de 28 para 41 testes. Novos: migração do estado local de **todas as versões 1 a 10** para a atual (incluindo o que cada versão antiga não tinha: inscrições, avisos de evento, preferências, salvas, rascunhos e respostas), resposta órfã virando “indisponível”, regravação do estado antigo ao carregar, versão de origem no resumo de importação; reações (uma por pessoa), respostas só na mesma sala, bloqueio de editar/remover mensagem alheia, rascunho limpo ao enviar, denúncias únicas e persistidas.
+
+**Defeitos encontrados e corrigidos:**
+- **Reiniciar não restaurava o estado inicial:** a demonstração voltava sem o aviso do convite recebido de Lia, que existe num primeiro acesso. `reset()` agora recria os avisos iniciais.
+- **ID de convite repetido:** novos convites usavam `demo-connection-<quantidade+1>`; depois de importar um arquivo, o id podia repetir um existente, e ids duplicados invalidam o estado inteiro na próxima carga (voltando aos dados iniciais). Agora o id é aleatório, como o de mensagens e denúncias.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
