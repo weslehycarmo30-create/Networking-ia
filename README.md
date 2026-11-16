@@ -10,6 +10,12 @@ npm install
 npm run dev
 ```
 
+Testes automatizados (domínio, descoberta, adaptador demonstrativo e persistência local) usam o executor nativo do Node, sem dependências extras; exigem Node com suporte nativo a TypeScript (testado no 26):
+
+```sh
+npm test
+```
+
 Use o botão da landing page para entrar sem conta. A Praça Central oferece um mapa
 2D e uma cena 3D carregada somente quando selecionada. Avatar, mensagens por sala e
 conexões demonstrativas ficam salvos no `localStorage` namespaced do OLIMPO neste

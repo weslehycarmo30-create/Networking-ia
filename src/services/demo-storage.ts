@@ -346,10 +346,12 @@ export function createDemoStateStorage() {
         return { status }
       }
     },
-    save(state: PersistedDemoState): DemoPersistenceStatus {
+    // keepNotice: a bootstrap save right after load() must not erase the load notice
+    // (e.g. "dados inválidos; os dados iniciais foram restaurados") before the UI shows it.
+    save(state: PersistedDemoState, options: { keepNotice?: boolean } = {}): DemoPersistenceStatus {
       try {
         window.localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(state))
-        status = { persistent: true }
+        status = options.keepNotice && status.persistent && status.message ? { persistent: true, message: status.message } : { persistent: true }
       } catch {
         status = { persistent: false, message: localOnlyMessage }
       }

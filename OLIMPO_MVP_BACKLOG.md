@@ -88,6 +88,14 @@ As decisões do proprietário que bloqueiam esses itens e a prontidão do produt
 
 **Ainda pendente no P0 de acessibilidade:** leitor de tela real e dispositivo móvel físico.
 
+### OLIMPO-079 — testes automatizados
+
+Até aqui toda verificação era manual. Agora `npm test` roda 28 testes com o executor nativo do Node (`node:test`), sem instalar pacotes: regras de domínio (mensagens, conexões, denúncias, notificações), descoberta de membros, o adaptador demonstrativo (mensagens, rascunhos, salvas, convites, preferências, encontros) e a persistência local (estado na versão atual, JSON corrompido, falha de escrita, exportar/importar, limites de importação, referências salvas inválidas). Um gancho em `tests/register-ts.mjs` resolve os imports sem extensão só durante os testes; o código do app não muda.
+
+**Defeito encontrado e corrigido:** com dados locais corrompidos, o adaptador regravava os dados iniciais logo ao iniciar, e esse `save()` apagava o aviso “os dados locais da demonstração eram inválidos; os dados iniciais foram restaurados”, que deixava de aparecer no topo. A gravação inicial agora preserva o aviso; confirmado no navegador.
+
+**Limites:** não há testes de componentes React nem de interface; os fluxos de foco e teclado continuam validados manualmente (OLIMPO-075 a 078). Os testes não entram no `npm run build`.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
