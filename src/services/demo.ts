@@ -206,7 +206,9 @@ export function createDemoServices(): OlimpoServices {
         if (hasPendingConnection(connections, currentProfile.id, toProfileId)) throw new Error('Este pedido demonstrativo já foi enviado.')
         if (findConnectionBetween(connections, currentProfile.id, toProfileId)?.status === 'accepted') throw new Error('Vocês já são conexões.')
         const connection = createConnection({
-          id: `demo-connection-${connections.length + 1}`,
+          // Random like message/report ids: a count-based id could repeat one from imported data,
+          // and duplicate ids make the whole persisted state invalid on the next load.
+          id: `demo-connection-${crypto.randomUUID()}`,
           fromProfileId: currentProfile.id,
           toProfileId,
           createdAt: new Date().toISOString(),
@@ -339,8 +341,9 @@ export function createDemoServices(): OlimpoServices {
         connections = createInitialConnections()
         reports = []
         eventRegistrations = []
-        notifications = []
         notificationPreferences = { ...defaultNotificationPreferences }
+        // Same as a first visit: the seeded pending invite also gets its notice.
+        notifications = createInitialNotifications(connections, notificationPreferences)
         saveState()
         return storage.getStatus()
       },
