@@ -110,6 +110,10 @@ A busca no histórico da sala (OLIMPO-073) e a navegação circular entre result
 
 **Anotado, não feito:** testes de componentes React (foco e nomes acessíveis das OLIMPO-075 a 077) precisam de dependências de desenvolvimento novas (`vitest`, `jsdom`, `@testing-library/react`, `@testing-library/dom`); a instalação depende de aprovação do proprietário.
 
+### OLIMPO-082 — testes de navegação, presença, encontros e perfil
+
+`npm test` passou para 64 testes. Novos: regras de navegação (território desconhecido cai no primeiro), presença simulada (o perfil atual aparece só na última sala em que entrou, não persiste entre recargas e usa o avatar escolhido), avatar persistido e recusa de avatar inexistente, gamificação só para o perfil atual, limites de rascunho, contagem de participantes de encontros ao inscrever e cancelar, filtro por território, recusa de inscrição de outro perfil e opt-out de atividade de encontros sem gerar aviso. Nenhum defeito encontrado nesta rodada.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
