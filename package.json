@@ -1,6 +1,9 @@
 {
   "name": "olimpo-networking-prototype",
   "private": true,
+  "engines": {
+    "node": ">=22.18"
+  },
   "version": "0.1.0",
   "type": "module",
   "scripts": {

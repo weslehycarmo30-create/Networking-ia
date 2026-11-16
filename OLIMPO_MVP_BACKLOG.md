@@ -114,6 +114,10 @@ A busca no histórico da sala (OLIMPO-073) e a navegação circular entre result
 
 `npm test` passou para 64 testes. Novos: regras de navegação (território desconhecido cai no primeiro), presença simulada (o perfil atual aparece só na última sala em que entrou, não persiste entre recargas e usa o avatar escolhido), avatar persistido e recusa de avatar inexistente, gamificação só para o perfil atual, limites de rascunho, contagem de participantes de encontros ao inscrever e cancelar, filtro por território, recusa de inscrição de outro perfil e opt-out de atividade de encontros sem gerar aviso. Nenhum defeito encontrado nesta rodada.
 
+### OLIMPO-083 — integração contínua
+
+O repositório não tinha CI; nada rodava lint, testes ou build nos PRs. `.github/workflows/ci.yml` agora executa `npm ci`, `npm run lint`, `npm test` e `npm run build` em todo pull request e em pushes para `codex/olimpo-002-foundation`, com Node 24, permissão somente de leitura e cancelamento de execuções antigas da mesma branch. `package.json` declara `engines.node >=22.18`, a primeira versão com remoção de tipos TypeScript ativada por padrão, exigida por `npm test`. Os mesmos passos passam localmente (64 testes); a primeira execução real só acontece quando a branch chegar ao GitHub.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
