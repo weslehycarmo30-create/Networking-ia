@@ -104,6 +104,12 @@ Até aqui toda verificação era manual. Agora `npm test` roda 28 testes com o e
 - **Reiniciar não restaurava o estado inicial:** a demonstração voltava sem o aviso do convite recebido de Lia, que existe num primeiro acesso. `reset()` agora recria os avisos iniciais.
 - **ID de convite repetido:** novos convites usavam `demo-connection-<quantidade+1>`; depois de importar um arquivo, o id podia repetir um existente, e ids duplicados invalidam o estado inteiro na próxima carga (voltando aos dados iniciais). Agora o id é aleatório, como o de mensagens e denúncias.
 
+### OLIMPO-081 — busca compartilhada e testada
+
+A busca no histórico da sala (OLIMPO-073) e a navegação circular entre resultados estavam dentro de `App.tsx`, sem testes, e havia **duas normalizações de busca diferentes**: a descoberta de membros removia só os acentos do bloco latino básico (`U+0300–U+036F`), enquanto a busca da sala removia qualquer marca combinante (`\p{M}`). Agora ambas usam `src/domain/text-search.ts` (`normalizeSearchText`, `searchRoomMessages`, `wrapResultIndex`), com a regra mais abrangente; para texto em português o resultado é o mesmo. `npm test` passou para 49 testes. No navegador, “acao” encontrou “ação” e “AÇÃO” na sala, e Próximo/Anterior continuam dando a volta na lista.
+
+**Anotado, não feito:** testes de componentes React (foco e nomes acessíveis das OLIMPO-075 a 077) precisam de dependências de desenvolvimento novas (`vitest`, `jsdom`, `@testing-library/react`, `@testing-library/dom`); a instalação depende de aprovação do proprietário.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
