@@ -8,7 +8,7 @@
 2. Escolhe um avatar ilustrativo entre seis opções ou continua sem criar conta.
 3. A aplicação entra na Praça Central com mapa 2D.
 
-**Estado:** implementado; avatar e navegação vivem na sessão local em memória.
+**Estado:** implementado; o avatar escolhido fica salvo no navegador, e a navegação vive só na sessão.
 
 ## 2. Explorar a praça e abrir perfil
 
@@ -47,7 +47,7 @@ Resultados vazios mostram orientação para ajustar ou limpar os filtros. Afinid
 4. O serviço demo registra um convite pendente e a UI confirma a ação com mensagem de status acessível.
 5. O perfil próprio lista o convite em **Convites enviados**; o perfil destinatário oferece ações demonstrativas de resposta.
 
-**Estado:** implementado no adaptador em memória. Não envia notificação e não contata uma pessoa real.
+**Estado:** implementado no adaptador demonstrativo local (estado salvo no navegador). Não envia notificação e não contata uma pessoa real.
 
 ## 5. Responder a um convite recebido
 

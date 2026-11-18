@@ -13,10 +13,10 @@
 
 | Item | Evidência atual | Limite |
 |---|---|---|
-| Entrada sem conta e escolha/troca de avatar | Landing, etapa de avatar e perfil | Estado não persiste após recarga |
+| Entrada sem conta e escolha/troca de avatar | Landing, etapa de avatar e perfil | Avatar salvo no `localStorage` deste navegador; sem conta |
 | Praça, mapa 2D, 3D opcional e seis salas | Catálogo de territórios, cena lazy e fallback | Sem usuários reais; 3D mantém aviso de chunk acima de 500 kB |
 | Chat e presença por sala | Serviço demo filtra por `roomId` | Sem backend, realtime ou presença real |
-| Perfil e networking | Convites enviados/recebidos, aceite, recusa, cancelamento e conexões aceitas | Fluxos simulados em memória |
+| Perfil e networking | Convites enviados/recebidos, aceite, recusa, cancelamento e conexões aceitas | Fluxos simulados; estado salvo no `localStorage` deste navegador |
 | Núcleo de domínio compartilhado | Modelos, regras e contratos TypeScript | Um único adaptador demonstrativo |
 
 ## P0 — antes de um MVP com usuários reais
@@ -117,6 +117,10 @@ A busca no histórico da sala (OLIMPO-073) e a navegação circular entre result
 ### OLIMPO-083 — integração contínua
 
 O repositório não tinha CI; nada rodava lint, testes ou build nos PRs. `.github/workflows/ci.yml` agora executa `npm ci`, `npm run lint`, `npm test` e `npm run build` em todo pull request e em pushes para `codex/olimpo-002-foundation`, com Node 24, permissão somente de leitura e cancelamento de execuções antigas da mesma branch. `package.json` declara `engines.node >=22.18`, a primeira versão com remoção de tipos TypeScript ativada por padrão, exigida por `npm test`. Os mesmos passos passam localmente (64 testes); a primeira execução real só acontece quando a branch chegar ao GitHub.
+
+### OLIMPO-084 — documentos alinhados ao código
+
+Cada afirmação sobre persistência foi conferida no código e nos testes automatizados. Corrigido: o avatar e os vínculos de conexão **persistem** (a tabela “Feito no protótipo” dizia “não persiste após recarga” e “em memória”); os **rascunhos** também persistem (a especificação os listava como efêmeros) e a lista do que é salvo agora inclui reações, respostas, edições, mensagens salvas, denúncias, notificações e preferências; a migração das preferências de aviso vale para as versões **1 a 5** (o modelo de dados dizia 1 a 4). Só documentação mudou.
 
 ## P1 — após validação do núcleo
 
