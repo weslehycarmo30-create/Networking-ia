@@ -5,7 +5,7 @@
 ## Como ler este documento
 
 - **Implementado no protótipo** descreve comportamento verificável no código atual.
-- **Demonstrativo/local** significa estado em memória, perfis fictícios e conteúdo de exemplo; não é dado de produção.
+- **Demonstrativo/local** significa estado local ao navegador (memória e `localStorage`), perfis fictícios e conteúdo de exemplo; não é dado de produção.
 - **Planejado** é trabalho futuro, não disponível hoje.
 - **Em aberto** requer decisão do produto ou validação técnica.
 
@@ -34,7 +34,7 @@ Comunidades digitais podem ser difíceis de explorar quando toda a atividade apa
 
 ### Demonstrativo/local
 
-`createDemoServices()` mantém o perfil atual, mensagens e conexões em memória e salva uma cópia validada de avatar, mensagens por sala, conexões e inscrições locais de encontros no `localStorage` namespaced deste navegador. Uma recarga restaura somente esses dados demonstrativos. Presença, navegação, vista selecionada, rascunhos e feedback temporário continuam efêmeros. **Reiniciar demonstração** remove apenas a chave do OLIMPO e restaura os dados fictícios iniciais. Se o armazenamento estiver indisponível, a aplicação continua em memória e avisa que as mudanças duram apenas a sessão. As listas de salas, mensagens iniciais, presença e perfis vêm de dados fictícios em `src/data/`. Não há conta, servidor, autenticação ou atualização em tempo real; `localStorage` não é persistência de produção.
+`createDemoServices()` mantém o estado em memória e salva uma cópia validada no `localStorage` namespaced deste navegador: avatar, mensagens por sala (com reações, respostas, edições e remoções), rascunhos por sala, mensagens salvas, conexões, denúncias, inscrições locais de encontros, notificações e preferências de aviso. Uma recarga restaura somente esses dados demonstrativos. Presença, navegação, vista selecionada, busca na sala e feedback temporário continuam efêmeros. **Reiniciar demonstração** remove apenas a chave do OLIMPO e restaura os dados fictícios iniciais. Se o armazenamento estiver indisponível, a aplicação continua em memória e avisa que as mudanças duram apenas a sessão. As listas de salas, mensagens iniciais, presença e perfis vêm de dados fictícios em `src/data/`. Não há conta, servidor, autenticação ou atualização em tempo real; `localStorage` não é persistência de produção.
 
 Os pontos, níveis e medalhas são exemplos estáticos; não existe um mecanismo que calcule ou conceda progresso. A presença representa uma lista demonstrativa, não pessoas realmente online. Os convites simulam decisões de perfis fictícios dentro da interface.
 
