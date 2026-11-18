@@ -2,6 +2,7 @@ import { Component, lazy, Suspense, useEffect, useLayoutEffect, useRef, useState
 import { guide } from '../data/territories'
 import { demoAvatars } from '../data/demo'
 import { findConnectionBetween } from '../domain/rules'
+import { searchRoomMessages, wrapResultIndex } from '../domain/text-search'
 import type { Connection, Message, MessageReactionEmoji, Profile, ReportReason, ReportTargetType, TerritoryRoom } from '../domain/models'
 import { createDemoServices } from '../services/demo'
 import { navigateToTerritory, type NavigationState } from '../navigation/routes'
@@ -48,10 +49,6 @@ const sceneFailureMessages: Record<SceneFailureReason, string> = {
 
 function formatTime(value: string) {
   return new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
-}
-
-function normalizeSearchText(value: string) {
-  return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('pt-BR')
 }
 
 export default function App() {
@@ -126,10 +123,7 @@ export default function App() {
   const plazaIsCurrent = nav.screen === 'city' || nav.screen === 'room' || nav.screen === 'discover' || (nav.screen === 'profile' && !isOwnProfile)
   const avatar = profile.avatar.emoji
   const messages = services.messages.listByRoom(active.id)
-  const normalizedSearchQuery = normalizeSearchText(messageSearchQuery.trim())
-  const messageSearchResults = normalizedSearchQuery
-    ? messages.filter((message) => !message.deleted && normalizeSearchText(message.text).includes(normalizedSearchQuery))
-    : []
+  const messageSearchResults = searchRoomMessages(messages, messageSearchQuery)
   const replyTarget = replyToMessageId ? messages.find((message) => message.id === replyToMessageId) : undefined
   const savedReferences = services.messages.listSaved()
   const participants = services.participants.listByRoom(active.id)
@@ -473,7 +467,7 @@ export default function App() {
       setHighlightedSearchMessageId(null)
       return
     }
-    const resultIndex = ((index % messageSearchResults.length) + messageSearchResults.length) % messageSearchResults.length
+    const resultIndex = wrapResultIndex(index, messageSearchResults.length)
     const message = messageSearchResults[resultIndex]
     setMessageSearchResultIndex(resultIndex)
     setHighlightedSearchMessageId(message.id)

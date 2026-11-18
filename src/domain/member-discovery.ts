@@ -1,10 +1,7 @@
 import type { Profile, TerritoryId } from './models'
+import { normalizeSearchText } from './text-search'
 
 export type MemberSearchFilters = { query: string; interest: string; territoryId: TerritoryId | '' }
-
-function normalizeSearchText(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR')
-}
 
 export function searchCommunityMembers(profiles: Profile[], filters: MemberSearchFilters): Profile[] {
   const query = normalizeSearchText(filters.query.trim())
