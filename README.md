@@ -16,6 +16,8 @@ Testes automatizados (domínio, descoberta, adaptador demonstrativo, persistênc
 npm test
 ```
 
+O GitHub Actions (`.github/workflows/ci.yml`) roda lint, testes e build em cada pull request.
+
 Use o botão da landing page para entrar sem conta. A Praça Central oferece um mapa
 2D e uma cena 3D carregada somente quando selecionada. Avatar, mensagens por sala e
 conexões demonstrativas ficam salvos no `localStorage` namespaced do OLIMPO neste
