@@ -122,6 +122,10 @@ O repositório não tinha CI; nada rodava lint, testes ou build nos PRs. `.githu
 
 Cada afirmação sobre persistência foi conferida no código e nos testes automatizados. Corrigido: o avatar e os vínculos de conexão **persistem** (a tabela “Feito no protótipo” dizia “não persiste após recarga” e “em memória”); os **rascunhos** também persistem (a especificação os listava como efêmeros) e a lista do que é salvo agora inclui reações, respostas, edições, mensagens salvas, denúncias, notificações e preferências; a migração das preferências de aviso vale para as versões **1 a 5** (o modelo de dados dizia 1 a 4). Só documentação mudou.
 
+### OLIMPO-085 — integridade dos dados de exemplo
+
+`npm test` passou para 73 testes. Os dados fictícios de `src/data/` agora são verificados: ids únicos (territórios, perfis, avatares, encontros, mensagens e presença), seis territórios com duas sugestões de conversa dentro do limite de 300 caracteres, afinidades de todos os perfis apontando para territórios existentes, @handles únicos, encontros com organizador e território existentes e data válida, mensagens iniciais de autores conhecidos em ordem cronológica, e nome e avatar gravados em cada mensagem iguais aos do perfil do autor (o estado salvo é validado contra esses mesmos campos, então um desvio invalidaria o estado inicial). Nenhum defeito encontrado nos dados; o único problema foi do próprio teste, que contava o guia Zeus em dobro, porque ele já faz parte de `demoCommunityProfiles`.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |
