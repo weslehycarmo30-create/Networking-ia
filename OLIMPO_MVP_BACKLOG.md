@@ -116,7 +116,7 @@ A busca no histórico da sala (OLIMPO-073) e a navegação circular entre result
 
 ### OLIMPO-083 — integração contínua
 
-O repositório não tinha CI; nada rodava lint, testes ou build nos PRs. `.github/workflows/ci.yml` agora executa `npm ci`, `npm run lint`, `npm test` e `npm run build` em todo pull request e em pushes para `codex/olimpo-002-foundation`, com Node 24, permissão somente de leitura e cancelamento de execuções antigas da mesma branch. `package.json` declara `engines.node >=22.18`, a primeira versão com remoção de tipos TypeScript ativada por padrão, exigida por `npm test`. Os mesmos passos passam localmente (64 testes); a primeira execução real só acontece quando a branch chegar ao GitHub.
+O repositório não tinha CI; nada rodava lint, testes ou build nos PRs. `.github/workflows/ci.yml` agora executa `npm ci`, `npm run lint`, `npm test` e `npm run build` em todo pull request e em pushes para `codex/olimpo-002-foundation`, com Node 24, permissão somente de leitura e cancelamento de execuções antigas da mesma branch. `package.json` declara `engines.node >=22.18`, a primeira versão com remoção de tipos TypeScript ativada por padrão, exigida por `npm test`. Os mesmos passos passam localmente (64 testes). **Primeira execução real (21/11/2026):** não disparou nos PRs empilhados, pois o workflow ainda não existia na branch padrão; rodou no push que incorporou a cadeia à `codex/olimpo-002-foundation` e passou (73 testes, lint e build em Linux com Node 24).
 
 ### OLIMPO-084 — documentos alinhados ao código
 
@@ -125,6 +125,10 @@ Cada afirmação sobre persistência foi conferida no código e nos testes autom
 ### OLIMPO-085 — integridade dos dados de exemplo
 
 `npm test` passou para 73 testes. Os dados fictícios de `src/data/` agora são verificados: ids únicos (territórios, perfis, avatares, encontros, mensagens e presença), seis territórios com duas sugestões de conversa dentro do limite de 300 caracteres, afinidades de todos os perfis apontando para territórios existentes, @handles únicos, encontros com organizador e território existentes e data válida, mensagens iniciais de autores conhecidos em ordem cronológica, e nome e avatar gravados em cada mensagem iguais aos do perfil do autor (o estado salvo é validado contra esses mesmos campos, então um desvio invalidaria o estado inicial). Nenhum defeito encontrado nos dados; o único problema foi do próprio teste, que contava o guia Zeus em dobro, porque ele já faz parte de `demoCommunityProfiles`.
+
+### OLIMPO-086 — documentos depois do merge da cadeia
+
+A cadeia OLIMPO-075 a 085 foi incorporada por fast-forward à `codex/olimpo-002-foundation` (`840bae3..e6ab4a2`) em 21/11/2026, e o CI passou nesse push. Esta nota e o aviso no topo de `docs/REVISAO_PRS.md` registram o resultado: o CI não rodou nos PRs empilhados porque o workflow ainda não existia na branch padrão; o GitHub marcou só o PR #1 como mesclado, e os PRs #2 a #11 ficaram abertos e redundantes. Só documentação mudou.
 
 ## P1 — após validação do núcleo
 

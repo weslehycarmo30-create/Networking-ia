@@ -1,5 +1,14 @@
 # Revisão da cadeia de PRs #1 a #11 (OLIMPO-075 a 085)
 
+> **Atualização pós-merge (21/11/2026).** A cadeia inteira foi incorporada por fast-forward à
+> `codex/olimpo-002-foundation` (`840bae3..e6ab4a2`). O CI rodou nesse push e **passou**
+> ([execução](https://github.com/weslehycarmo30-create/Networking-ia/actions/runs/44942097572)):
+> o workflow só passou a valer depois de existir na branch padrão, o que explica por que não
+> disparou nos PRs empilhados. O GitHub marcou só o #1 como mesclado; os #2 a #11 ficaram
+> abertos e redundantes (as bases deles são as branches anteriores). O texto abaixo é o da
+> revisão original, mantido como registro; onde fala em CI não verificado ou em merge futuro,
+> vale esta nota.
+
 Revisão crítica feita como um segundo revisor, em 21/11/2026, sobre o diff completo
 `codex/olimpo-002-foundation..codex/olimpo-085-seed-data-integrity` (11 commits de item mais 1 de
 correção desta revisão; cerca de 1.050 linhas, a maior parte testes e documentação). Nenhuma dependência nova foi
@@ -13,8 +22,8 @@ adicionada em toda a cadeia (`package-lock.json` não mudou).
 - **Código de produção que muda:** `App.tsx`, `NotificationCenter.tsx`, `MemberDiscovery.tsx`,
   `CommunityEvents.tsx`, `ProfilePicker.tsx`, `styles.css`, `demo.ts`, `demo-storage.ts`,
   `member-discovery.ts` e o novo `text-search.ts`. O resto é teste, documentação e CI.
-- **Riscos reais, em ordem:** (1) o CI da #9 nunca rodou, então não há prova de que o workflow
-  funciona; (2) o tratamento de foco em `App.tsx` (PRs #1 a #3) só foi validado à mão, sem
+- **Riscos reais, em ordem:** (1) *(resolvido após o merge: o CI rodou e passou)* o CI da #9 nunca
+  rodou nos PRs, então não havia prova de que o workflow funcionava; (2) o tratamento de foco em `App.tsx` (PRs #1 a #3) só foi validado à mão, sem
   teste automatizado; (3) a validação no navegador foi feita com o painel oculto e quadros
   simulados, sem leitor de tela e sem celular.
 - **Achados da revisão, corrigidos** (commit `9cb3fba`, no topo): um rótulo acessível que não
@@ -36,7 +45,7 @@ dos PRs de testes valem a partir da branch do #5 (`npm test`).
 | [#6](https://github.com/weslehycarmo30-create/Networking-ia/pull/6) | 080 | 41 testes (migração de todas as versões 1 a 10). Corrige "Reiniciar" (faltava o aviso do convite de Lia) e ids de convite que podiam repetir após importar. | Médio-baixo: o formato do id novo é `demo-connection-<uuid>`; ids antigos continuam válidos. | Perfil → "Reiniciar demonstração": o sino volta a mostrar 1 aviso. Descoberta → "Enviar convite": funciona e persiste ao recarregar. |
 | [#7](https://github.com/weslehycarmo30-create/Networking-ia/pull/7) | 081 | Busca da sala e navegação entre resultados movidas para `src/domain/text-search.ts`, usado também pela descoberta. | Baixo: refatoração sem mudança de comportamento para português. | Numa sala, envie "Ação"; busque "acao": acha. Próximo/Anterior dão a volta. |
 | [#8](https://github.com/weslehycarmo30-create/Networking-ia/pull/8) | 082 | 15 testes (navegação, presença, encontros, perfil). | Nenhum no app (só testes). | `npm test`: 64 testes. |
-| [#9](https://github.com/weslehycarmo30-create/Networking-ia/pull/9) | 083 | Workflow de CI e `engines.node >= 22.18`. | Médio, por ser **não verificado**: o workflow nunca rodou no GitHub. | `npm run lint && npm test && npm run build` localmente (é o que o CI repete). Depois, aba **Actions** do repositório. |
+| [#9](https://github.com/weslehycarmo30-create/Networking-ia/pull/9) | 083 | Workflow de CI e `engines.node >= 22.18`. | Médio na revisão por ser **não verificado**; depois do merge o CI rodou e passou. | `npm run lint && npm test && npm run build` localmente (é o que o CI repete). Depois, aba **Actions** do repositório. |
 | [#10](https://github.com/weslehycarmo30-create/Networking-ia/pull/10) | 084 | Documentos alinhados ao código (persistência de avatar, conexões e rascunhos; migração 1 a 5). | Nenhum no app (só documentação). | Leia o diff dos `.md`; confira por amostragem contra `demo-storage.ts`. |
 | [#11](https://github.com/weslehycarmo30-create/Networking-ia/pull/11) | 085 | 9 testes de integridade dos dados de exemplo, as duas correções desta revisão e este documento. | Nenhum no app além do rótulo corrigido. | `npm test` (73 testes). Salvas → o botão dá "Abrir sala e localizar mensagem de …". |
 
@@ -72,9 +81,9 @@ listener (`focusin` é removido no `useEffect`), segredos ou arquivos de ambient
 
 ## O que ainda não foi verificado
 
-- **CI do #9:** o arquivo está na branch e o Actions está habilitado, mas não houve nenhuma
-  execução. O gatilho de PR não filtra base, então não é o filtro. Abra a aba **Actions**; se o
-  arquivo tiver erro, aparece lá.
+- **CI do #9 (resolvido):** nos PRs empilhados não houve execução; o gatilho de PR não filtra
+  base, e a causa era o workflow ainda não existir na branch padrão. Depois do fast-forward ele
+  rodou no push e passou.
 - **Validação no navegador:** foi feita no navegador embutido do app com o painel oculto, e
   `requestAnimationFrame`/`ResizeObserver` foram simulados para a cena 3D iniciar. Portanto:
   **FPS e tempo de carregamento reais nunca foram medidos**.
@@ -103,8 +112,9 @@ Pontos de atenção:
 
 - Isso **altera a branch base no remoto**, e por isso só deve ser feito por você ou com o seu
   aval explícito.
-- Normalmente o GitHub marca como "Merged" os PRs cujos commits passam a existir na base. Se
-  algum ficar aberto, feche-o manualmente; nada se perde.
+- O GitHub marcou como "Merged" apenas o PR cuja base era a própria `codex/olimpo-002-foundation`
+  (#1); os demais ficam abertos (as bases são as branches anteriores) e podem ser fechados à mão;
+  nada se perde.
 - O push na base dispara o CI (`push` na `codex/olimpo-002-foundation`): é um bom primeiro
   teste real do workflow.
 - Você perde a revisão separada por PR; use esta tabela como roteiro.
