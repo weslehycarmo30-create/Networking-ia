@@ -3,7 +3,7 @@ import { messageReactionEmojis, type Avatar, type Connection, type DemoNotificat
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
 import { demoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
-import { createDemoExportDocument, createDemoStateStorage, DEMO_STATE_VERSION, validateDemoImportDocument, type DemoPersistenceStatus } from './demo-storage'
+import { createDemoExportDocument, createDemoStateStorage, DEMO_LIMITS, DEMO_STATE_VERSION, validateDemoImportDocument, type DemoPersistenceStatus } from './demo-storage'
 
 export function createDemoServices(): OlimpoServices {
   const storage = createDemoStateStorage()
@@ -54,7 +54,7 @@ export function createDemoServices(): OlimpoServices {
       action,
       createdAt: new Date().toISOString(),
     })
-    if (notifications.length > 500) notifications.shift()
+    if (notifications.length > DEMO_LIMITS.notifications) notifications.shift()
   }
 
   if (!loaded.state && notifications.length > 0) storage.save(currentState(), { keepNotice: true })
@@ -119,6 +119,7 @@ export function createDemoServices(): OlimpoServices {
         if (index >= 0) savedMessages.splice(index, 1)
         else {
           if (!message) throw new Error('Esta mensagem não existe nesta demonstração.')
+          if (savedMessages.length >= DEMO_LIMITS.savedMessages) throw new Error('A lista chegou ao limite de 2.500 mensagens salvas. Remova alguma para salvar outra.')
           savedMessages.push({ messageId: message.id, roomId: message.roomId })
         }
         saveState()
@@ -126,6 +127,7 @@ export function createDemoServices(): OlimpoServices {
       },
       sendToRoom: (roomId, text, replyToMessageId) => {
         if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
+        if (messages[roomId].length >= DEMO_LIMITS.messagesPerRoom) throw new Error('Esta sala chegou ao limite de 500 mensagens da demonstração. Seu rascunho foi mantido; exporte os dados ou reinicie a demonstração para continuar.')
         const replySource = replyToMessageId
           ? messages[roomId].find((candidate) => candidate.id === replyToMessageId)
           : undefined
@@ -213,6 +215,13 @@ export function createDemoServices(): OlimpoServices {
           toProfileId,
           createdAt: new Date().toISOString(),
         })
+        if (connections.length >= DEMO_LIMITS.connections) {
+          // Cancelled invites are not shown anywhere; drop the oldest one to make room.
+          const stale = connections.findIndex((candidate) => candidate.status === 'cancelled')
+          if (stale < 0) throw new Error('A demonstração chegou ao limite de 200 convites. Exporte os dados ou reinicie para continuar.')
+          const [removed] = connections.splice(stale, 1)
+          notifications = notifications.filter((notification) => notification.kind !== 'connection_invite' || notification.connectionId !== removed.id)
+        }
         connections.push(connection)
         saveState()
         return { ...connection }
@@ -246,6 +255,7 @@ export function createDemoServices(): OlimpoServices {
         } else if (!rooms.some((room) => messages[room.id]?.some((message) => message.id === input.targetId))) {
           throw new Error('Esta mensagem não existe na demonstração.')
         }
+        if (reports.length >= DEMO_LIMITS.reports) throw new Error('A demonstração chegou ao limite de registros de sinalização.')
         const report = createDemoReport({ ...input, id: `demo-report-${crypto.randomUUID()}`, createdAt: new Date().toISOString() })
         reports.push(report)
         saveState()
@@ -314,6 +324,7 @@ export function createDemoServices(): OlimpoServices {
     },
     demoState: {
       getStatus: () => storage.getStatus(),
+      getBackup: () => storage.getBackup(),
       exportData: () => createDemoExportDocument(currentState()),
       importData: (value) => {
         const { state } = validateDemoImportDocument(value)
