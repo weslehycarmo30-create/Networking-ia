@@ -1,11 +1,12 @@
-import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, editMessageText, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
+import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, editMessageText, findConnectionBetween, hasEventStarted, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
 import { messageReactionEmojis, type Avatar, type Connection, type DemoNotification, type DemoReport, type EventRegistration, type Message, type NotificationPreferences, type Presence, type Profile, type SavedMessageReference, type TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
-import { demoEvents } from '../data/events'
+import { buildDemoEvents } from '../data/events'
 import type { OlimpoServices } from './contracts'
 import { createDemoExportDocument, createDemoStateStorage, DEMO_LIMITS, DEMO_STATE_VERSION, validateDemoImportDocument, type DemoPersistenceStatus } from './demo-storage'
 
-export function createDemoServices(): OlimpoServices {
+export function createDemoServices({ now = () => new Date() }: { now?: () => Date } = {}): OlimpoServices {
+  const demoEvents = buildDemoEvents(now())
   const storage = createDemoStateStorage()
   const loaded = storage.load()
   let currentProfile: Profile = structuredClone(demoProfile)
@@ -277,6 +278,7 @@ export function createDemoServices(): OlimpoServices {
         const event = demoEvents.find((candidate) => candidate.id === eventId)
         if (!event) throw new Error('Este encontro nao existe nesta demonstracao.')
         if (profileId !== currentProfile.id) throw new Error('Somente o participante atual pode se inscrever nesta demonstracao.')
+        if (hasEventStarted(event, now())) throw new Error('Este encontro já começou e não aceita novas inscrições.')
         if (eventRegistrations.some((registration) => registration.eventId === eventId && registration.profileId === profileId)) {
           throw new Error('A inscricao neste encontro ja esta ativa.')
         }
