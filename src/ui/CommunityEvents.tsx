@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { hasEventStarted } from '../domain/rules'
 import type { Profile, TerritoryId, TerritoryRoom } from '../domain/models'
 import type { CommunityEventService } from '../services/contracts'
 import type { DemoPersistenceStatus } from '../services/demo-storage'
@@ -66,6 +67,7 @@ export default function CommunityEvents({ service, territories, organizers, curr
         const territory = territories.find((item) => item.id === event.territoryId)
         const organizer = organizers.find((profile) => profile.id === event.organizerProfileId)
         const registered = service.isRegistered(event.id, currentProfileId)
+        const closed = !registered && hasEventStarted(event, new Date())
         return <article className="event-card" id={`community-event-${event.id}`} tabIndex={-1} key={event.id}>
           <div className="event-territory">{territory?.symbol} {territory?.name ?? 'Território demonstrativo'}</div>
           <h3>{event.title}</h3>
@@ -75,9 +77,9 @@ export default function CommunityEvents({ service, territories, organizers, curr
             <span className="event-organizer-avatar" aria-hidden="true">{organizer.avatar.emoji}</span><span><small>Organizado por</small><b>{organizer.displayName}</b></span><span className="event-profile-link">Ver perfil →</span>
           </button>}
           <div className="event-card-bottom"><span className="event-count">{event.participantCount} participantes demonstrativos</span>
-            <button type="button" className={`event-rsvp ${registered ? 'registered' : ''}`} aria-label={`${registered ? 'Cancelar inscrição em' : 'Inscrever-se em'} ${event.title}`} onClick={() => toggleRegistration(event.id)}>{registered ? 'Cancelar inscrição' : 'Inscrever-se'}</button>
+            <button type="button" className={`event-rsvp ${registered ? 'registered' : ''}`} disabled={closed} aria-label={`${registered ? 'Cancelar inscrição em' : closed ? 'Inscrições encerradas em' : 'Inscrever-se em'} ${event.title}`} onClick={() => toggleRegistration(event.id)}>{registered ? 'Cancelar inscrição' : closed ? 'Inscrições encerradas' : 'Inscrever-se'}</button>
           </div>
-          <p className={`event-rsvp-status ${registered ? 'registered' : 'not-registered'}`}>{registered ? getPersistenceStatus().persistent ? 'Inscrição demonstrativa ativa somente neste navegador; não é compartilhada.' : 'Inscrição demonstrativa ativa somente nesta sessão; não é compartilhada.' : 'Sem inscrição neste encontro demonstrativo.'}</p>
+          <p className={`event-rsvp-status ${registered ? 'registered' : 'not-registered'}`}>{registered ? getPersistenceStatus().persistent ? 'Inscrição demonstrativa ativa somente neste navegador; não é compartilhada.' : 'Inscrição demonstrativa ativa somente nesta sessão; não é compartilhada.' : closed ? 'Este encontro já começou.' : 'Sem inscrição neste encontro demonstrativo.'}</p>
         </article>
       })}
     </div>}

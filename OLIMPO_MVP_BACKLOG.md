@@ -126,6 +126,17 @@ Cada afirmação sobre persistência foi conferida no código e nos testes autom
 
 `npm test` passou para 73 testes. Os dados fictícios de `src/data/` agora são verificados: ids únicos (territórios, perfis, avatares, encontros, mensagens e presença), seis territórios com duas sugestões de conversa dentro do limite de 300 caracteres, afinidades de todos os perfis apontando para territórios existentes, @handles únicos, encontros com organizador e território existentes e data válida, mensagens iniciais de autores conhecidos em ordem cronológica, e nome e avatar gravados em cada mensagem iguais aos do perfil do autor (o estado salvo é validado contra esses mesmos campos, então um desvio invalidaria o estado inicial). Nenhum defeito encontrado nos dados; o único problema foi do próprio teste, que contava o guia Zeus em dobro, porque ele já faz parte de `demoCommunityProfiles`.
 
+### OLIMPO-087 — segurança dos dados locais e robustez da demonstração
+
+- **Perda total de dados (corrigida):** uma sala com mais de 500 mensagens, ou mais de 200 registros de convite, tornava o estado ilegível e a recarga substituía tudo pelos dados iniciais. Agora o adaptador aplica os limites no envio (convites cancelados, que não aparecem em nenhuma tela, são descartados para abrir espaço); estados antigos acima do limite são recuperados com os itens mais recentes; e qualquer texto gravado que não possa ser lido como está é copiado antes, com download em Meu perfil. Se a cópia falhar, o original não é sobrescrito. Reiniciar apaga estado e cópias.
+- **Encontros:** as datas fixas já tinham passado. Agora são relativas ao momento em que a demonstração abre (2, 5, 9 e 12 dias à frente) e um encontro já iniciado não aceita nova inscrição; cancelar continua permitido.
+- **Duas abas:** esta aba adota o que outra gravou, sem regravar, em vez de sobrescrever depois.
+- **Fora de HTTPS/localhost:** ids não dependem mais de `crypto.randomUUID`.
+- **Falha de tela:** uma proteção geral mostra aviso, recarregar e baixar os dados, no lugar de página em branco.
+- **Contagem:** “Presenças simuladas” da capa da praça passou a ser calculada (18), no lugar do número fixo 85.
+
+`npm test` passou para 92 testes; os de perda de dados, datas e abas/ids falhavam antes da mudança. **Não verificado:** celular real pela rede local, download efetivo dos arquivos e leitor de tela na tela de erro.
+
 ## P1 — após validação do núcleo
 
 | Prioridade | Item | Dependências |

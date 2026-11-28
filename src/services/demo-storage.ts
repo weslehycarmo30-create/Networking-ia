@@ -8,6 +8,10 @@ export const DEMO_STATE_VERSION = 10 as const
 export const DEMO_EXPORT_FORMAT = 'olimpo-demo-data'
 export const DEMO_EXPORT_FORMAT_VERSION = 1 as const
 export const MAX_DEMO_IMPORT_BYTES = 5 * 1024 * 1024
+// Stored-state limits. The adapter refuses to go past them, so a saved state never becomes unreadable.
+export const DEMO_LIMITS = { messagesPerRoom: 500, connections: 200, reports: 4000, notifications: 500, savedMessages: 2500 } as const
+// Prefix of the safety copies kept before stored data that cannot be read as-is is replaced.
+export const DEMO_BACKUP_PREFIX = `${DEMO_STORAGE_KEY}:backup:`
 
 export type PersistedDemoState = {
   version: typeof DEMO_STATE_VERSION
@@ -54,6 +58,10 @@ export type DemoPersistenceStatus = {
 type LoadResult = { state?: PersistedDemoState; status: DemoPersistenceStatus }
 
 const localOnlyMessage = 'O armazenamento local está indisponível; alterações ficam apenas nesta sessão.'
+const backupHint = 'Uma cópia dos dados anteriores foi guardada: baixe em Meu perfil → Transferir dados locais.'
+const invalidMessage = `Os dados locais da demonstração eram inválidos; os dados iniciais foram restaurados. ${backupHint}`
+const trimmedMessage = `Parte dos dados antigos passava dos limites da demonstração; os itens mais recentes foram mantidos. ${backupHint}`
+const protectedMessage = 'Os dados locais não puderam ser lidos nem copiados. Eles foram preservados sem alteração; o que você fizer agora dura apenas nesta sessão.'
 const knownProfiles = [demoProfile, ...demoCommunityProfiles]
 const knownProfileById = new Map(knownProfiles.map((profile) => [profile.id, profile]))
 const knownAvatars = new Map(demoAvatars.map((avatar) => [avatar.id, avatar]))
@@ -192,7 +200,7 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   const allMessageIds = new Set<string>()
   for (const roomId of roomIds) {
     const roomMessages = value.messages[roomId]
-    if (!Array.isArray(roomMessages) || roomMessages.length > 500) return undefined
+    if (!Array.isArray(roomMessages) || roomMessages.length > DEMO_LIMITS.messagesPerRoom) return undefined
     const parsed = roomMessages.map((message) => validateMessage(message, roomId, version >= 9))
     if (parsed.some((message) => message === undefined)) return undefined
     const validMessages = parsed as Message[]
@@ -211,12 +219,12 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
       }
     }
   }
-  if (value.connections.length > 200) return undefined
+  if (value.connections.length > DEMO_LIMITS.connections) return undefined
   const connections = value.connections.map(validateConnection)
   if (connections.some((connection) => connection === undefined)) return undefined
   const validConnections = connections as Connection[]
   if (new Set(validConnections.map((connection) => connection.id)).size !== validConnections.length) return undefined
-  if (Array.isArray(value.reports) && value.reports.length > 4000) return undefined
+  if (Array.isArray(value.reports) && value.reports.length > DEMO_LIMITS.reports) return undefined
   const rawReports = Array.isArray(value.reports) ? value.reports : []
   const validReports: DemoReport[] = []
   const reportIds = new Set<string>()
@@ -240,7 +248,7 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
   if (eventRegistrations.length !== rawRegistrations.length) return undefined
   if (new Set(eventRegistrations.map((registration) => registration.eventId)).size !== eventRegistrations.length) return undefined
   const rawNotifications = version < 4 ? initialInviteNotifications(validConnections) : value.notifications
-  if (!Array.isArray(rawNotifications) || rawNotifications.length > 500) return undefined
+  if (!Array.isArray(rawNotifications) || rawNotifications.length > DEMO_LIMITS.notifications) return undefined
   const parsedNotifications = rawNotifications.map((notification) => validateNotification(notification, validConnections))
   if (parsedNotifications.some((notification) => notification === undefined)) return undefined
   const rawPreferences = version < 6 ? defaultNotificationPreferences : value.notificationPreferences
@@ -255,7 +263,7 @@ export function validatePersistedDemoState(value: unknown): PersistedDemoState |
       if (roomIds.includes(roomId) && typeof draft === 'string' && draft.length <= 300 && draft.length > 0) draftsByRoom[roomId] = draft
     }
   }
-  const rawSavedMessages = version < 7 ? [] : Array.isArray(value.savedMessages) ? value.savedMessages.slice(0, 2500) : []
+  const rawSavedMessages = version < 7 ? [] : Array.isArray(value.savedMessages) ? value.savedMessages.slice(0, DEMO_LIMITS.savedMessages) : []
   const savedMessages: SavedMessageReference[] = []
   const savedKeys = new Set<string>()
   for (const reference of rawSavedMessages) {
@@ -310,8 +318,53 @@ export function parseDemoImportText(text: string): ValidatedDemoImport {
   return validateDemoImportDocument(parsed)
 }
 
+// Brings an over-limit stored state back within limits, keeping the newest items. Only used on
+// load, after the original text has been copied; imports of over-limit files are still refused.
+function trimToLimits(value: unknown): unknown {
+  if (!isRecord(value) || !isRecord(value.messages) || !Array.isArray(value.connections)) return value
+  const messages = Object.fromEntries(Object.entries(value.messages).map(([roomId, list]) => [roomId, Array.isArray(list) ? list.slice(-DEMO_LIMITS.messagesPerRoom) : list]))
+  let excess = value.connections.length - DEMO_LIMITS.connections
+  // Cancelled invites are not shown anywhere, so they go first.
+  const connections = value.connections.filter((connection) => !(excess > 0 && isRecord(connection) && connection.status === 'cancelled' && excess--)).slice(-DEMO_LIMITS.connections)
+  const keptIds = new Set(connections.map((connection) => isRecord(connection) ? connection.id : undefined))
+  const notifications = Array.isArray(value.notifications)
+    ? value.notifications.filter((item) => !isRecord(item) || item.kind !== 'connection_invite' || keptIds.has(item.connectionId)).slice(-DEMO_LIMITS.notifications)
+    : value.notifications
+  const reports = Array.isArray(value.reports) ? value.reports.slice(-DEMO_LIMITS.reports) : value.reports
+  return { ...value, messages, connections, notifications, reports }
+}
+
+function backupKeys(): string[] {
+  const keys: string[] = []
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index)
+    if (key?.startsWith(DEMO_BACKUP_PREFIX)) keys.push(key)
+  }
+  return keys.sort()
+}
+
 export function createDemoStateStorage() {
   let status: DemoPersistenceStatus = { persistent: true }
+  // True when unreadable data could not be copied: the original must then stay untouched.
+  let protectOriginal = false
+
+  // Copies the stored text aside before anything may replace it. False means it is not safe to write.
+  function preserve(raw: string): boolean {
+    try {
+      if (!backupKeys().some((key) => window.localStorage.getItem(key) === raw)) {
+        window.localStorage.setItem(`${DEMO_BACKUP_PREFIX}${new Date().toISOString()}`, raw)
+      }
+      return true
+    } catch {
+      protectOriginal = true
+      return false
+    }
+  }
+
+  function unreadable(raw: string): LoadResult {
+    status = preserve(raw) ? { persistent: true, message: invalidMessage } : { persistent: false, message: protectedMessage }
+    return { status }
+  }
 
   return {
     load(): LoadResult {
@@ -320,14 +373,18 @@ export function createDemoStateStorage() {
         if (raw === null) { status = { persistent: true }; return { status } }
         let parsed: unknown
         try { parsed = JSON.parse(raw) }
-        catch {
-          status = { persistent: true, message: 'Os dados locais da demonstração eram inválidos; os dados iniciais foram restaurados.' }
-          return { status }
-        }
+        catch { return unreadable(raw) }
         const state = validatePersistedDemoState(parsed)
         if (!state) {
-          status = { persistent: true, message: 'Os dados locais da demonstração eram inválidos; os dados iniciais foram restaurados.' }
-          return { status }
+          const trimmed = validatePersistedDemoState(trimToLimits(parsed))
+          if (!trimmed) return unreadable(raw)
+          if (!preserve(raw)) {
+            status = { persistent: false, message: protectedMessage }
+            return { state: trimmed, status }
+          }
+          const saved = this.save(trimmed)
+          status = saved.persistent ? { persistent: true, message: trimmedMessage } : saved
+          return { state: trimmed, status }
         }
         status = { persistent: true }
         if (isRecord(parsed) && (parsed.version !== DEMO_STATE_VERSION
@@ -349,6 +406,10 @@ export function createDemoStateStorage() {
     // keepNotice: a bootstrap save right after load() must not erase the load notice
     // (e.g. "dados inválidos; os dados iniciais foram restaurados") before the UI shows it.
     save(state: PersistedDemoState, options: { keepNotice?: boolean } = {}): DemoPersistenceStatus {
+      if (protectOriginal) {
+        status = { persistent: false, message: protectedMessage }
+        return { ...status }
+      }
       try {
         window.localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(state))
         status = options.keepNotice && status.persistent && status.message ? { persistent: true, message: status.message } : { persistent: true }
@@ -359,7 +420,10 @@ export function createDemoStateStorage() {
     },
     reset(): DemoPersistenceStatus {
       try {
+        // An explicit reset erases everything OLIMPO stored, including safety copies.
+        for (const key of backupKeys()) window.localStorage.removeItem(key)
         window.localStorage.removeItem(DEMO_STORAGE_KEY)
+        protectOriginal = false
         status = { persistent: true }
       } catch {
         status = { persistent: false, message: localOnlyMessage }
@@ -367,5 +431,12 @@ export function createDemoStateStorage() {
       return { ...status }
     },
     getStatus(): DemoPersistenceStatus { return { ...status } },
+    // Most recent safety copy, as the original text.
+    getBackup(): string | null {
+      try {
+        const latest = backupKeys().at(-1)
+        return latest ? window.localStorage.getItem(latest) : null
+      } catch { return null }
+    },
   }
 }

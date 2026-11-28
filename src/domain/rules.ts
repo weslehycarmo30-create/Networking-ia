@@ -24,6 +24,10 @@ export function createDemoReport(input: {
   return { id: input.id, targetType: input.targetType, targetId: input.targetId, reason: input.reason, ...(note ? { note } : {}), createdAt: input.createdAt }
 }
 
+export function hasEventStarted(event: CommunityEvent, now: Date): boolean {
+  return Date.parse(event.startsAt) <= now.getTime()
+}
+
 export function createEventRegistration(event: CommunityEvent, profileId: Profile['id']): EventRegistration {
   return { eventId: event.id, profileId }
 }

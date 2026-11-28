@@ -1,11 +1,13 @@
-import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, editMessageText, findConnectionBetween, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
+import { cancelConnection, createConnection, createDemoReport, createEventRegistration, createMessage, defaultNotificationPreferences, editMessageText, findConnectionBetween, hasEventStarted, hasPendingConnection, markNotificationRead, markNotificationsRead, notificationPreferenceEnabled, respondToConnection } from '../domain/rules'
 import { messageReactionEmojis, type Avatar, type Connection, type DemoNotification, type DemoReport, type EventRegistration, type Message, type NotificationPreferences, type Presence, type Profile, type SavedMessageReference, type TerritoryId } from '../domain/models'
 import { demoAvatars, demoCommunityProfiles, demoProfile, demoTerritories, messageSeeds, presenceSeeds } from '../data/demo'
-import { demoEvents } from '../data/events'
+import { buildDemoEvents } from '../data/events'
+import { createDemoId } from '../domain/ids'
 import type { OlimpoServices } from './contracts'
-import { createDemoExportDocument, createDemoStateStorage, DEMO_STATE_VERSION, validateDemoImportDocument, type DemoPersistenceStatus } from './demo-storage'
+import { createDemoExportDocument, createDemoStateStorage, DEMO_LIMITS, DEMO_STATE_VERSION, validateDemoImportDocument, validatePersistedDemoState, type DemoPersistenceStatus, type PersistedDemoState } from './demo-storage'
 
-export function createDemoServices(): OlimpoServices {
+export function createDemoServices({ now = () => new Date() }: { now?: () => Date } = {}): OlimpoServices {
+  const demoEvents = buildDemoEvents(now())
   const storage = createDemoStateStorage()
   const loaded = storage.load()
   let currentProfile: Profile = structuredClone(demoProfile)
@@ -48,13 +50,42 @@ export function createDemoServices(): OlimpoServices {
   function recordEventNotification(eventId: string, action: 'registered' | 'cancelled') {
     if (!notificationPreferences.eventActivity) return
     notifications.push({
-      id: `demo-notification-${crypto.randomUUID()}`,
+      id: createDemoId('demo-notification'),
       kind: 'event_registration',
       eventId,
       action,
       createdAt: new Date().toISOString(),
     })
-    if (notifications.length > 500) notifications.shift()
+    if (notifications.length > DEMO_LIMITS.notifications) notifications.shift()
+  }
+
+  // Replaces what is in memory with a validated stored state. Does not write to storage.
+  function applyState(state: PersistedDemoState) {
+    const avatar = demoAvatars.find((candidate) => candidate.id === state.avatarId)
+    if (!avatar) throw new Error('O avatar do arquivo não existe nesta demonstração.')
+    currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
+    messages = structuredClone(state.messages)
+    draftsByRoom = structuredClone(state.draftsByRoom)
+    savedMessages = structuredClone(state.savedMessages)
+    connections = structuredClone(state.connections)
+    reports = structuredClone(state.reports)
+    eventRegistrations = structuredClone(state.eventRegistrations)
+    notifications = structuredClone(state.notifications)
+    notificationPreferences = structuredClone(state.notificationPreferences)
+  }
+
+  // Puts the in-memory state back to a first visit. Does not write to storage.
+  function restoreInitialState() {
+    currentProfile = structuredClone(demoProfile)
+    messages = createInitialMessages()
+    draftsByRoom = {}
+    savedMessages = []
+    connections = createInitialConnections()
+    reports = []
+    eventRegistrations = []
+    notificationPreferences = { ...defaultNotificationPreferences }
+    // Same as a first visit: the seeded pending invite also gets its notice.
+    notifications = createInitialNotifications(connections, notificationPreferences)
   }
 
   if (!loaded.state && notifications.length > 0) storage.save(currentState(), { keepNotice: true })
@@ -119,6 +150,7 @@ export function createDemoServices(): OlimpoServices {
         if (index >= 0) savedMessages.splice(index, 1)
         else {
           if (!message) throw new Error('Esta mensagem não existe nesta demonstração.')
+          if (savedMessages.length >= DEMO_LIMITS.savedMessages) throw new Error('A lista chegou ao limite de 2.500 mensagens salvas. Remova alguma para salvar outra.')
           savedMessages.push({ messageId: message.id, roomId: message.roomId })
         }
         saveState()
@@ -126,6 +158,7 @@ export function createDemoServices(): OlimpoServices {
       },
       sendToRoom: (roomId, text, replyToMessageId) => {
         if (!messages[roomId]) throw new Error('A sala selecionada não existe.')
+        if (messages[roomId].length >= DEMO_LIMITS.messagesPerRoom) throw new Error('Esta sala chegou ao limite de 500 mensagens da demonstração. Seu rascunho foi mantido; exporte os dados ou reinicie a demonstração para continuar.')
         const replySource = replyToMessageId
           ? messages[roomId].find((candidate) => candidate.id === replyToMessageId)
           : undefined
@@ -133,7 +166,7 @@ export function createDemoServices(): OlimpoServices {
           throw new Error('A mensagem original não está disponível nesta sala; escolha outra mensagem ou cancele a resposta.')
         }
         const message = createMessage({
-          id: `demo-message-${crypto.randomUUID()}`,
+          id: createDemoId('demo-message'),
           roomId,
           profile: currentProfile,
           text,
@@ -208,11 +241,18 @@ export function createDemoServices(): OlimpoServices {
         const connection = createConnection({
           // Random like message/report ids: a count-based id could repeat one from imported data,
           // and duplicate ids make the whole persisted state invalid on the next load.
-          id: `demo-connection-${crypto.randomUUID()}`,
+          id: createDemoId('demo-connection'),
           fromProfileId: currentProfile.id,
           toProfileId,
           createdAt: new Date().toISOString(),
         })
+        if (connections.length >= DEMO_LIMITS.connections) {
+          // Cancelled invites are not shown anywhere; drop the oldest one to make room.
+          const stale = connections.findIndex((candidate) => candidate.status === 'cancelled')
+          if (stale < 0) throw new Error('A demonstração chegou ao limite de 200 convites. Exporte os dados ou reinicie para continuar.')
+          const [removed] = connections.splice(stale, 1)
+          notifications = notifications.filter((notification) => notification.kind !== 'connection_invite' || notification.connectionId !== removed.id)
+        }
         connections.push(connection)
         saveState()
         return { ...connection }
@@ -246,7 +286,8 @@ export function createDemoServices(): OlimpoServices {
         } else if (!rooms.some((room) => messages[room.id]?.some((message) => message.id === input.targetId))) {
           throw new Error('Esta mensagem não existe na demonstração.')
         }
-        const report = createDemoReport({ ...input, id: `demo-report-${crypto.randomUUID()}`, createdAt: new Date().toISOString() })
+        if (reports.length >= DEMO_LIMITS.reports) throw new Error('A demonstração chegou ao limite de registros de sinalização.')
+        const report = createDemoReport({ ...input, id: createDemoId('demo-report'), createdAt: new Date().toISOString() })
         reports.push(report)
         saveState()
         return { ...report }
@@ -267,6 +308,7 @@ export function createDemoServices(): OlimpoServices {
         const event = demoEvents.find((candidate) => candidate.id === eventId)
         if (!event) throw new Error('Este encontro nao existe nesta demonstracao.')
         if (profileId !== currentProfile.id) throw new Error('Somente o participante atual pode se inscrever nesta demonstracao.')
+        if (hasEventStarted(event, now())) throw new Error('Este encontro já começou e não aceita novas inscrições.')
         if (eventRegistrations.some((registration) => registration.eventId === eventId && registration.profileId === profileId)) {
           throw new Error('A inscricao neste encontro ja esta ativa.')
         }
@@ -314,36 +356,29 @@ export function createDemoServices(): OlimpoServices {
     },
     demoState: {
       getStatus: () => storage.getStatus(),
+      getBackup: () => storage.getBackup(),
       exportData: () => createDemoExportDocument(currentState()),
       importData: (value) => {
         const { state } = validateDemoImportDocument(value)
-        const avatar = demoAvatars.find((candidate) => candidate.id === state.avatarId)
-        if (!avatar) throw new Error('O avatar do arquivo não existe nesta demonstração.')
-        currentProfile = { ...currentProfile, avatar: structuredClone(avatar) }
-        messages = structuredClone(state.messages)
-        draftsByRoom = structuredClone(state.draftsByRoom)
-        savedMessages = structuredClone(state.savedMessages)
-        connections = structuredClone(state.connections)
-        reports = structuredClone(state.reports)
-        eventRegistrations = structuredClone(state.eventRegistrations)
-        notifications = structuredClone(state.notifications)
-        notificationPreferences = structuredClone(state.notificationPreferences)
+        applyState(state)
         currentRoomId = undefined
         return saveState()
+      },
+      // Another tab changed the stored data: adopt it so this tab does not overwrite it later.
+      syncExternalChange: (raw) => {
+        if (raw === null) { restoreInitialState(); return true }
+        let parsed: unknown
+        try { parsed = JSON.parse(raw) }
+        catch { return false }
+        const state = validatePersistedDemoState(parsed)
+        if (!state) return false
+        applyState(state)
+        return true
       },
       reset: () => {
         storage.reset()
         currentRoomId = undefined
-        currentProfile = structuredClone(demoProfile)
-        messages = createInitialMessages()
-        draftsByRoom = {}
-        savedMessages = []
-        connections = createInitialConnections()
-        reports = []
-        eventRegistrations = []
-        notificationPreferences = { ...defaultNotificationPreferences }
-        // Same as a first visit: the seeded pending invite also gets its notice.
-        notifications = createInitialNotifications(connections, notificationPreferences)
+        restoreInitialState()
         saveState()
         return storage.getStatus()
       },
