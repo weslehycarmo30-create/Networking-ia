@@ -22,8 +22,12 @@ Use o botão da landing page para entrar sem conta. A Praça Central oferece um 
 2D e uma cena 3D carregada somente quando selecionada. Avatar, mensagens por sala e
 conexões demonstrativas ficam salvos no `localStorage` namespaced do OLIMPO neste
 navegador. Presença e estado de interface são temporários. O controle “Reiniciar
-demonstração” restaura os dados iniciais e remove somente a chave do OLIMPO; se o
-armazenamento estiver indisponível, as alterações duram apenas a sessão.
+demonstração” restaura os dados iniciais e remove somente as chaves do OLIMPO (estado e
+cópias de segurança); se o armazenamento estiver indisponível, as alterações duram apenas a
+sessão. A demonstração recusa passar dos limites (500 mensagens por sala, 200 convites, 2.500
+salvas). Se os dados gravados não puderem ser lidos como estão, o texto original é copiado antes
+de qualquer substituição e pode ser baixado em Meu perfil; sem espaço para a cópia, o original
+não é sobrescrito.
 
 ## Organização
 

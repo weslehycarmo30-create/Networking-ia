@@ -13,7 +13,7 @@ import CommunityEvents from './CommunityEvents'
 import ConversationSuggestions from './ConversationSuggestions'
 import MessageReactionControls from './MessageReactionControls'
 import NotificationCenter from './NotificationCenter'
-import { MAX_DEMO_IMPORT_BYTES, parseDemoImportText, type DemoImportSummary } from '../services/demo-storage'
+import { DEMO_STORAGE_KEY, MAX_DEMO_IMPORT_BYTES, parseDemoImportText, type DemoImportSummary } from '../services/demo-storage'
 
 const City3D = lazy(() => import('../scenes/City3D'))
 const plazaGuideSteps = [
@@ -54,6 +54,15 @@ function formatTime(value: string) {
 export default function App() {
   const [services] = useState(createDemoServices)
   const [, setRevision] = useState(0)
+  useEffect(() => {
+    // Fires only for changes made by other tabs of this browser.
+    const onStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage || (event.key !== null && event.key !== DEMO_STORAGE_KEY)) return
+      if (services.demoState.syncExternalChange(event.key === null ? null : event.newValue)) setRevision((revision) => revision + 1)
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [services])
   const [nav, setNav] = useState<NavigationState>({ screen: 'landing' })
   const [profileReturnTo, setProfileReturnTo] = useState<NavigationState>({ screen: 'city' })
   const [discoveryReturnTo, setDiscoveryReturnTo] = useState<NavigationState>({ screen: 'city' })
@@ -137,6 +146,7 @@ export default function App() {
   const outgoingFromCurrentProfile = viewedConnection?.status === 'pending' && viewedConnection.fromProfileId === profile.id
   const viewedProgress = isOwnProfile ? services.gamification.getProgress(profile.id) : viewedProfile.gamification
   const persistenceStatus = services.demoState.getStatus()
+  const simulatedPresences = rooms.reduce((total, room) => total + services.participants.listByRoom(room.id).length, 0)
   const routeKey = `${nav.screen}:${nav.territoryId ?? ''}:${nav.profileId ?? ''}`
 
   const refreshServices = () => setRevision((revision) => revision + 1)
@@ -705,7 +715,7 @@ export default function App() {
         {!(view === '3d' && webgl) && mapEnterButton}
         <div className="map-legend"><span className="legend-dot" /> Praça Central <span>·</span> {rooms.length} territórios</div>
       </section>
-      <aside className="welcome-card"><div className="welcome-top"><div className="zeus-avatar">{guide.avatar.emoji}</div><span className="online-pill">DEMO LOCAL</span></div><div className="eyebrow">ANFITRIÃO DA PRAÇA</div><h2>Bem-vindo ao<br />OLIMPO, {profile.displayName}.</h2><p>Sou Zeus. Pense em mim como seu guia por aqui. Cada território apresenta um tema de conversa diferente.</p><div className="welcome-divider"/><div className="welcome-stat"><span>Presenças simuladas</span><b>85 <i>na demo</i></b></div><button className="text-button" onClick={() => openProfile(profile.id)}>Conheça seu perfil <span aria-hidden="true">→</span></button>{view === '2d' && <div className="plaza-community"><div className="sidebar-title">Conheça a comunidade</div><ProfilePicker profiles={communityProfiles} selectedId={selectedProfileId} onSelect={(person) => openProfile(person.id)} label="Abrir perfil de um participante" /></div>}</aside></div>
+      <aside className="welcome-card"><div className="welcome-top"><div className="zeus-avatar">{guide.avatar.emoji}</div><span className="online-pill">DEMO LOCAL</span></div><div className="eyebrow">ANFITRIÃO DA PRAÇA</div><h2>Bem-vindo ao<br />OLIMPO, {profile.displayName}.</h2><p>Sou Zeus. Pense em mim como seu guia por aqui. Cada território apresenta um tema de conversa diferente.</p><div className="welcome-divider"/><div className="welcome-stat"><span>Presenças simuladas</span><b>{simulatedPresences} <i>na demo</i></b></div><button className="text-button" onClick={() => openProfile(profile.id)}>Conheça seu perfil <span aria-hidden="true">→</span></button>{view === '2d' && <div className="plaza-community"><div className="sidebar-title">Conheça a comunidade</div><ProfilePicker profiles={communityProfiles} selectedId={selectedProfileId} onSelect={(person) => openProfile(person.id)} label="Abrir perfil de um participante" /></div>}</aside></div>
       {showEvents && <CommunityEvents service={services.events} territories={rooms} organizers={communityProfiles} currentProfileId={profile.id} getPersistenceStatus={services.demoState.getStatus} onOpenProfile={openProfile} onRegistrationChange={refreshServices} onFeedback={showFeedback} />}<section className="territory-section"><div className="section-title"><div><div className="eyebrow">ESCOLHA SEU CAMINHO</div><h2>Seis lugares. Infinitas possibilidades.</h2></div><span className="section-count">0{rooms.length} TERRITÓRIOS · PRESENÇA DEMONSTRATIVA</span></div><div className="territory-grid">{rooms.map((room, index) => { const people = services.participants.listByRoom(room.id); return <button className="territory-card" key={room.id} onClick={() => goRoom(room)} style={{ '--territory': room.color } as CSSProperties} aria-label={`Entrar em ${room.name}, território de ${room.domain}. ${people.length} participantes fictícios.`}><span className="territory-number">0{index + 1}</span><span className="territory-symbol">{room.symbol}</span><span className="territory-domain">{room.domain}</span><b>{room.name}</b><span className="territory-description">{room.description}</span><span className="territory-bottom"><span className="people-avatars" aria-hidden="true">{people.slice(0, 3).map((person) => <i key={person.id}>{person.avatar.emoji}</i>)}</span><span className="territory-presence">{people.length} na demonstração</span><span className="territory-entry">Entrar <span className="card-arrow" aria-hidden="true">→</span></span></span></button> })}</div></section>
     </main>}
 

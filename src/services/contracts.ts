@@ -69,6 +69,7 @@ export interface NotificationService {
 export interface DemoStateService {
   getStatus(): DemoPersistenceStatus
   getBackup(): string | null
+  syncExternalChange(raw: string | null): boolean
   exportData(): DemoExportDocument
   importData(value: unknown): DemoPersistenceStatus
   reset(): DemoPersistenceStatus

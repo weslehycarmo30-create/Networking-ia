@@ -534,3 +534,5 @@
 @media(max-width:420px){.reply-composer-context{flex-direction:column}.reply-composer-context button{width:100%}.message-reply-button{min-width:80px}}
 /* OLIMPO-075: at 681–900 px the five topbar items plus the 54px desktop gap overflowed (19px at 768px). */
 @media(min-width:681px) and (max-width:900px){.topbar{gap:clamp(12px,2.6vw,24px)}.top-nav{gap:clamp(10px,2vw,20px);min-width:0}}
+/* OLIMPO-087: fallback shown when the app fails to render. */
+.app-error{max-width:560px;margin:0 auto;padding:64px 20px;line-height:1.6}.app-error-actions{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}.app-error-actions button{min-height:44px;padding:10px 14px;border:1px solid rgba(193,147,94,.45);border-radius:3px;background:#202c31;color:#ead7b8;cursor:pointer}
